@@ -23,7 +23,7 @@ angles:
     PAp: 45                        # position angle of planet in degrees
 
 grid:
-    type: "Cartesian"              # "Cylindrical" or "Cartesian"
+    type: "cartesian"              # "cylindrical" or "cartesian"
     n_x: 200                       # number of x grid points
     n_y: 200                       # number of y grid points
     n_r: 250                       # number of r grid points
@@ -34,7 +34,7 @@ grid:
 mcfost:
     generate_cube: False           # generate fits file to run in mcfost (boolean)
     run_mcfost: False              # generate velocity channels by running mcfost (boolean) -- need {generate_cube: True}
-                                   # and {grid.type: "Cylindrical"} and {grid.r_log: True}
+                                   # and {grid.type: "cylindrical"} and {grid.r_log: True}
 
 # Don't change below parameters unless you know what you are doing
 
@@ -43,5 +43,5 @@ physical:
     damping_malpha: 0              # artificial damping
 
 numerical:
-    CFL: 0.2                       # CFL safety factor for Godunov scheme
-    scale_box: 1                   # scale factor for linear regime box side length
+    CFL: 0.7                       # CFL safety factor for Godunov scheme
+    scale_box: 1.1                 # scale factor for linear regime box side length

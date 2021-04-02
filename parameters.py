@@ -9,11 +9,12 @@ class Constants:
         self.m_solar = 1.988e33
         self.m_jupiter = 1.898e30
 
-# load constants
-c = Constants()
 
-class Parameters:
+class Parameters(Constants):
     def __init__(self, config_file):
+
+        # inherit constants
+        super().__init__()
 
         # read in config file
         config = yaml.load(open(config_file), Loader=yaml.FullLoader)
@@ -64,15 +65,59 @@ class Parameters:
         # get flaring at r_planet
         self.hr_planet = self.hr * (self.r_planet / self.r_ref) ** (0.5 - self.q)
 
-        # sanity checks
-        m_thermal = 0.6666667 * self.hr_planet ** 3 * (self.m_star * c.m_solar / c.m_jupiter)
-        print('mthermal = ', m_thermal)
-        if self.m_planet > m_thermal:
-            cont = input("Planet mass exceeds thermal mass. This may break the solution. Continue? [y/n]: ")
-            if cont != "y":
-                print('Exiting')
-                sys.exit()
-            else:
-                print("Continuing")
+    def do_sanity_checks(self):
 
-Parameters('config.yaml')
+        # check that planet mass does not exceed thermal mass
+        m_thermal = 0.6666667 * self.hr_planet ** 3 * (self.m_star * self.m_solar / self.m_jupiter)
+        #print('Thermal mass = ', m_thermal)
+        if self.m_planet > m_thermal:
+            if not self._warning("Planet mass exceeds thermal mass. This may break the solution."):
+                return False
+
+        # check grid type
+        if self.grid_type != "cartesian" and self.grid_type != "cylindrical":
+            print("Error: Please choose a valid grid type (cartesian or cylindrical)")
+            return False
+        
+        # check settings OK if mcfost is to be run
+        if self.run_mcfost:
+            if not self.generate_cube:
+                print("Error: You must select generate_cube = True to run mcfost")
+                return False
+            if not self.r_log:
+                print("Error: You must select r_log = True to run mcfost")
+                return False
+            if self.grid_type != "cylindrical":
+                print("Error: You must use a cylindrical grid to run mcfost")
+                return False
+
+        # check linear box scale factor
+        if self.scale_box != 1:
+            if not self._warning("Changing linear box scale factor can cause strange results."):
+                return False
+
+        # check CFL
+        if self.CFL > 0.5:
+            if not self._warning("CFL chosen > 0.5, this will likely break the numerical PDE solver."):
+                return False
+
+        print("Continuing")
+        return True
+      
+    def _warning(self, warning_msg):
+        statement = "Warning: " + warning_msg + " Continue? [y/n]: "
+        cont = input(statement)
+        if cont != "y":
+            return False
+        else:
+            return True
+
+            
+        
+
+
+
+p = Parameters('config.yaml')
+if p.do_sanity_checks() != True:
+    print('Exiting')
+    sys.exit()
