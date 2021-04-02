@@ -1,0 +1,47 @@
+# parameter file for running wakeflow
+
+run_info:
+    name: "test_run"               # give your run a name
+    system: "HD 163296"            # name of the system you are modelling
+    date: "02/04/21"               # date of your run
+
+disk:
+    m_star: 1                      # mass of central star in solar masses
+    m_planet: 100                  # mass of embedded planet in Jupiter masses
+    r_outer: 500                   # outer radius of disk in au
+    r_inner: 1                     # inner radius of disk in au
+    r_planet: 50                   # orbital radius of embedded planet in au
+    r_ref: 50                      # reference radius R0 for H/R
+    q: 0.25                        # q index, defined as c_s \propto R^{-q}
+    p: 0.8                         # p index, defined as rho \propto R^{-p}
+    hr: 0.15                       # disc flaring H/R at R0
+    cw_rotation: False             # clockwise rotating disk (boolean)
+
+angles:
+    inclination: 46.7              # inclination of disk in degrees
+    PA: 133.3                      # position angle of disk in degrees
+    PAp: 45                        # position angle of planet in degrees
+
+grid:
+    type: "Cartesian"              # "Cylindrical" or "Cartesian"
+    n_x: 200                       # number of x grid points
+    n_y: 200                       # number of y grid points
+    n_r: 250                       # number of r grid points
+    n_phi: 180                     # number of phi grid points
+    r_log: True                    # use logarithmic scale for r points (boolean)
+    generate_3D: True              # extrapolate results onto 3D grid (boolean)
+
+mcfost:
+    generate_cube: False           # generate fits file to run in mcfost (boolean)
+    run_mcfost: False              # generate velocity channels by running mcfost (boolean) -- need {generate_cube: True}
+                                   # and {grid.type: "Cylindrical"} and {grid.r_log: True}
+
+# Don't change below parameters unless you know what you are doing
+
+physical:
+    adiabatic_index: 1.6666667     # adiabatic index
+    damping_malpha: 0              # artificial damping
+
+numerical:
+    CFL: 0.2                       # CFL safety factor for Godunov scheme
+    scale_box: 1                   # scale factor for linear regime box side length
