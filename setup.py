@@ -4,7 +4,10 @@ import os
 import shutil as sh
 import numpy as np
 
+
 def run_setup():
+    """Runs initial setup. Returns Parameters object with parameters from config file.
+    """
 
     # check that code has been loaded correctly
     if len(sys.argv) != 2:
@@ -30,6 +33,7 @@ def run_setup():
 
     return params
 
+
 class Constants:
     def __init__(self):
 
@@ -45,7 +49,7 @@ class Constants:
 class Parameters(Constants):
     def __init__(self, config_file):
 
-        print("Reading parameters from " + config_file)
+        print(f"Reading parameters from {config_file} ")
 
         # inherit constants
         super().__init__()
@@ -110,7 +114,7 @@ class Parameters(Constants):
         m_thermal = 0.6666667 * self.hr_planet ** 3 * (self.m_star * self.m_solar / self.m_jupiter)
         #print('Thermal mass = ', m_thermal)
         if self.m_planet > m_thermal:
-            if not self._warning("Planet mass exceeds thermal mass. This may break the solution."):
+            if not self.warning("Planet mass exceeds thermal mass. This may break the solution."):
                 return False
 
         # check grid type
@@ -132,18 +136,18 @@ class Parameters(Constants):
 
         # check linear box scale factor
         if self.scale_box != 1:
-            if not self._warning("Changing linear box scale factor can cause strange results."):
+            if not self.warning("Changing linear box scale factor can cause strange results."):
                 return False
 
         # check CFL
         if self.CFL > 0.5:
-            if not self._warning("CFL chosen > 0.5, this will likely break the numerical PDE solver."):
+            if not self.warning("CFL chosen > 0.5, this will likely break the numerical PDE solver."):
                 return False
 
         print("Parameters Ok. Continuing... ")
         return True
       
-    def _warning(self, warning_msg):
+    def warning(self, warning_msg):
         statement = "Warning: " + warning_msg + " Continue? [y/n]: "
         cont = input(statement)
         if cont != "y":
