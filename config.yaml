@@ -1,7 +1,7 @@
 # parameter file for running wakeflow
 
 run_info:
-    name: "test_run"               # give your run a name
+    name: "test_run"               # give your run a name (results are saved a directory called this)
     system: "HD 163296"            # name of the system you are modelling
     date: "02/04/21"               # date of your run
 

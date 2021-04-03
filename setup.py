@@ -1,6 +1,34 @@
 import yaml
 import sys
+import os
+import shutil as sh
 import numpy as np
+
+def run_setup():
+
+    # check that code has been loaded correctly
+    if len(sys.argv) != 2:
+        print("Error: Correct usage is '$python wakeflow.py config_file.yaml'")
+        print('Exiting')
+        sys.exit(1)
+
+    # create Parameters object using configuration file
+    config_file = sys.argv[1]
+    params = Parameters(config_file)
+
+    # do sanity checks and exit if not passed
+    if params.do_sanity_checks() != True:
+        print('Exiting')
+        sys.exit(1)
+
+    # create results directory
+    path = params.name + '/'
+    os.makedirs(path, exist_ok=True)
+
+    # copy configuration file used to results directory
+    sh.copy(config_file, path)
+
+    return params
 
 class Constants:
     def __init__(self):
