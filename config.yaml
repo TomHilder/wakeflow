@@ -7,7 +7,7 @@ run_info:
 
 disk:
     m_star: 1                      # mass of central star in solar masses
-    m_planet: 100                  # mass of embedded planet in Jupiter masses
+    m_planet: 1                    # mass of embedded planet in Jupiter masses
     r_outer: 500                   # outer radius of disk in au
     r_inner: 1                     # inner radius of disk in au
     r_planet: 50                   # orbital radius of embedded planet in au
@@ -29,12 +29,19 @@ grid:
     n_r: 250                       # number of r grid points
     n_phi: 180                     # number of phi grid points
     r_log: True                    # use logarithmic scale for r points (boolean)
-    generate_3D: True              # extrapolate results onto 3D grid (boolean)
+    make_3D: True                  # extrapolate results onto 3D grid (boolean)
+
+plotting:
+    make_plots: True               # create plots of velocity components and density
+    show_plots: False              # show plots after code has finished running
+
+# The following settings require an installation of mcfost and pymcfost
 
 mcfost:
-    generate_cube: False           # generate fits file to run in mcfost (boolean)
+    make_cube: False               # generate fits file to run in mcfost (boolean)
     run_mcfost: False              # generate velocity channels by running mcfost (boolean) -- need {generate_cube: True}
                                    # and {grid.type: "cylindrical"} and {grid.r_log: True}
+    pymcfost_plots: False          # create beam velocity channel plots using pymcfost
 
 # Don't change below parameters unless you know what you are doing
 
@@ -43,5 +50,5 @@ physical:
     damping_malpha: 0              # artificial damping
 
 numerical:
-    CFL: 0.7                       # CFL safety factor for Godunov scheme
-    scale_box: 1.1                 # scale factor for linear regime box side length
+    CFL: 0.2                       # CFL safety factor for Godunov scheme
+    scale_box: 1                   # scale factor for linear regime box side length

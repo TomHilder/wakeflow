@@ -5,13 +5,19 @@ import numpy as np
 class Constants:
     def __init__(self):
 
+        from astropy import constants as c
+
         # all constants given in CGS units
-        self.m_solar = 1.988e33
-        self.m_jupiter = 1.898e30
+        self.m_solar = c.M_sun.cgs.value
+        self.m_jupiter = c.M_jup.cgs.value
+        self.G_const = c.G.cgs.value
+        self.au = c.au.cgs.value
 
 
 class Parameters(Constants):
     def __init__(self, config_file):
+
+        print("Reading parameters from " + config_file)
 
         # inherit constants
         super().__init__()
@@ -48,11 +54,16 @@ class Parameters(Constants):
         self.n_r = int(config["grid"]["n_r"])
         self.n_phi = int(config["grid"]["n_phi"])
         self.r_log = bool(config["grid"]["r_log"])
-        self.generate_3D = bool(config["grid"]["generate_3D"])
+        self.make_3D = bool(config["grid"]["make_3D"])
+
+        # plot parameters
+        self.make_plots = bool(config["plotting"]["make_plots"])
+        self.show_plots = bool(config["plotting"]["show_plots"])
 
         # mcfost parameters
-        self.generate_cube = bool(config["mcfost"]["generate_cube"])
+        self.make_cube = bool(config["mcfost"]["make_cube"])
         self.run_mcfost = bool(config["mcfost"]["run_mcfost"])
+        self.pymcfost_plots = bool(config["mcfost"]["pymcfost_plots"])
 
         # physical parameters
         self.gamma = float(config["physical"]["adiabatic_index"])
@@ -81,8 +92,8 @@ class Parameters(Constants):
         
         # check settings OK if mcfost is to be run
         if self.run_mcfost:
-            if not self.generate_cube:
-                print("Error: You must select generate_cube = True to run mcfost")
+            if not self.make_cube:
+                print("Error: You must select make_cube = True to run mcfost")
                 return False
             if not self.r_log:
                 print("Error: You must select r_log = True to run mcfost")
@@ -101,7 +112,7 @@ class Parameters(Constants):
             if not self._warning("CFL chosen > 0.5, this will likely break the numerical PDE solver."):
                 return False
 
-        print("Continuing")
+        print("Parameters Ok. Continuing... ")
         return True
       
     def _warning(self, warning_msg):
@@ -111,13 +122,3 @@ class Parameters(Constants):
             return False
         else:
             return True
-
-# test change 2
-        
-
-
-
-p = Parameters('config.yaml')
-if p.do_sanity_checks() != True:
-    print('Exiting')
-    sys.exit()
