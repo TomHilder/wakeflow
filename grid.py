@@ -1,5 +1,6 @@
 from setup import Constants
 import numpy as np
+import matplotlib.pyplot as plt
 
 c = Constants()
 
@@ -40,6 +41,9 @@ class Grid:
         # pressure correction
         _corr = (1 - (2*self.p.q + self.p.p) * self.p.hr**2 * (_r / self.p.r_ref)**(1 - 2 * self.p.q))**(1 / 2)
         self.v_phi *= _corr
+
+        # empty densities
+        self.rho = np.zeros((self.info["Size"][0], self.info["Size"][1]))
 
         # update grid info
         self.info["Contains"] = "Keplerian velocity field"
@@ -88,15 +92,31 @@ class Grid:
     def get_r_phi_coords(self):
 
         # often need the equivalent (r,phi) coordinates when using cartesian grid
-        self.r_xy = np.sqrt(self.x**2 + self.y**2)
-        self.phi_xy = np.arctan(self.y / self.x)
-        self.R_xy, self.PHI_xy = np.meshgrid(self.r_xy, self.phi_xy)
+        self.R_xy = np.sqrt(self.X**2 + self.Y**2)
+        self.PHI_xy = np.arctan(self.Y / self.X)
 
     def merge_linear(self):
         pass
 
     def merge_nonlinear(self):
         pass
+
+    def show_disk2D(self):
+
+        # plot v_r
+        plt.imshow(self.v_r)
+        plt.title(r"$v_r$")
+        plt.show()
+
+        # plot v_phi
+        plt.imshow(self.v_phi)
+        plt.title(r"$v_{\phi}$")
+        plt.show()
+
+        # plot rho
+        plt.imshow(self.rho)
+        plt.title(r"$\rho$")
+        plt.show()
 
     def extrapolate_to_3D_grid(self):
         pass

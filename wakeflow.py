@@ -7,5 +7,6 @@ g = Grid(p)
 
 g.make_grid()
 g.make_keplerian_disk()
+g.show_disk2D()
 
-#print(g.info)
+print(g.info)
