@@ -6,16 +6,17 @@ run_info:
     date: "02/04/21"               # date of your run
 
 disk:
-    m_star: 1                      # mass of central star in solar masses
-    m_planet: 1                    # mass of embedded planet in Jupiter masses
+    m_star: 1.9                    # mass of central star in solar masses
+    m_planet: 4                    # mass of embedded planet in Jupiter masses
     r_outer: 500                   # outer radius of disk in au
     r_inner: 1                     # inner radius of disk in au
-    r_planet: 50                   # orbital radius of embedded planet in au
-    r_ref: 50                      # reference radius R0 for H/R
+    r_planet: 235                  # orbital radius of embedded planet in au
+    r_ref: 235                     # reference radius R0 for H/R
     q: 0.25                        # q index, defined as c_s \propto R^{-q}
     p: 0.8                         # p index, defined as rho \propto R^{-p}
-    hr: 0.15                       # disc flaring H/R at R0
-    cw_rotation: False             # clockwise rotating disk (boolean)
+    hr: 0.118                      # disc flaring H/R at R0
+    dens_ref: 1                    # rho at R0 in g/cm^3
+    cw_rotation: True              # clockwise rotating disk (boolean)
 
 angles:
     inclination: 46.7              # inclination of disk in degrees
@@ -28,8 +29,8 @@ grid:
     n_y: 200                       # number of y grid points
     n_r: 250                       # number of r grid points
     n_phi: 180                     # number of phi grid points
+    n_z: 50                        # number of z grid points
     r_log: True                    # use logarithmic scale for r points (boolean)
-    make_3D: True                  # extrapolate results onto 3D grid (boolean)
 
 plotting:
     make_plots: True               # create plots of velocity components and density
@@ -51,4 +52,5 @@ physical:
 
 numerical:
     CFL: 0.2                       # CFL safety factor for Godunov scheme
-    scale_box: 1                   # scale factor for linear regime box side length
+    scale_box: 0.8                   # scale factor for linear regime box side length
+    scale_box_ang: 1.7             # scale factor for linear regime box angular extend

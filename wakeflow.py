@@ -1,12 +1,18 @@
 from setup import run_setup
 from grid import Grid
+from linear_perts import LinearPerts
 
-p = run_setup()
+import numpy as np
 
-g = Grid(p)
+params = run_setup()
 
-g.make_grid()
-g.make_keplerian_disk()
-g.show_disk2D()
+g1 = Grid(params)
 
-print(g.info)
+g1.make_grid()
+g1.make_keplerian_disk()
+g1.show_disk2D(40)
+
+print(g1.info)
+
+lin = LinearPerts(params)
+lin.cut_box_annulus_segment()

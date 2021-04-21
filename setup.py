@@ -4,7 +4,6 @@ import os
 import shutil as sh
 import numpy as np
 
-
 def run_setup():
     """Runs initial setup. Returns Parameters object with parameters from config file.
     """
@@ -72,6 +71,7 @@ class Parameters(Constants):
         self.q = float(config["disk"]["q"])
         self.p = float(config["disk"]["p"])
         self.hr = float(config["disk"]["hr"])
+        self.rho_ref = float(config["disk"]["dens_ref"])
         self.cw_rotation = bool(config["disk"]["cw_rotation"])
 
         # angles parameters
@@ -85,8 +85,8 @@ class Parameters(Constants):
         self.n_y = int(config["grid"]["n_y"])
         self.n_r = int(config["grid"]["n_r"])
         self.n_phi = int(config["grid"]["n_phi"])
+        self.n_z = int(config["grid"]["n_z"])
         self.r_log = bool(config["grid"]["r_log"])
-        self.make_3D = bool(config["grid"]["make_3D"])
 
         # plot parameters
         self.make_plots = bool(config["plotting"]["make_plots"])
@@ -104,9 +104,23 @@ class Parameters(Constants):
         # numerical parameters
         self.CFL = float(config["numerical"]["CFL"])
         self.scale_box = float(config["numerical"]["scale_box"])
+        self.scale_box_ang = float(config["numerical"]["scale_box_ang"])
 
         # get flaring at r_planet
         self.hr_planet = self.hr * (self.r_planet / self.r_ref) ** (0.5 - self.q)
+
+        # get length scale l
+        self.l = (2/3) * self.hr_planet * self.r_planet
+
+        # get sound speed at planet radius
+        v_kep_planet = np.sqrt(self.G_const*self.m_planet*self.m_solar / (self.r_planet*self.au))
+        self.c_s_planet = v_kep_planet*self.hr_planet
+
+        # clockwise rotation factor
+        if self.cw_rotation == True:
+            self.a_cw = -1
+        else:
+            self.a_cw = 1
 
     def do_sanity_checks(self):
 
