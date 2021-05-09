@@ -1,12 +1,9 @@
-import yaml
-import sys
-import os
+import yaml, sys, os
 import shutil as sh
 import numpy as np
+from mcfost_interface import make_mcfost_parameter_file, make_mcfost_grid_data, read_mcfost_grid_data
 
 def run_setup():
-    """Runs initial setup. Returns Parameters object with parameters from config file.
-    """
 
     # check that code has been loaded correctly
     if len(sys.argv) != 2:
@@ -23,12 +20,29 @@ def run_setup():
         print('Exiting')
         sys.exit(1)
 
+    # check if directory for system exists, if not create it
+    system_path = f"{params.system}/"
+    os.makedirs(system_path, exist_ok=True)
+
     # create results directory
-    path = params.name + '/'
-    os.makedirs(path, exist_ok=True)
+    results_path = f"{params.system}/{params.name}/"
+    os.makedirs(results_path, exist_ok=True)
 
     # copy configuration file used to results directory
-    sh.copy(config_file, path)
+    sh.copy(config_file, results_path)
+
+    # run mcfost grid setup if needed
+    if params.run_mcfost or params.grid_type == "mcfost":
+
+        # make directory for mcfost outputs
+        mcfost_path = f"{params.system}/{params.name}/mcfost_output/"
+        os.makedirs(mcfost_path, exist_ok=True)
+
+        # generate mcfost parameter file
+        make_mcfost_parameter_file(params)
+
+        # generate mcfost grid data to run analytics on
+        make_mcfost_grid_data(params)
 
     return params
 
@@ -91,11 +105,16 @@ class Parameters(Constants):
         # plot parameters
         self.make_plots = bool(config["plotting"]["make_plots"])
         self.show_plots = bool(config["plotting"]["show_plots"])
+        self.synthetic_velocity_channels = list(config["plotting"]["synthetic_velocity_channels"])
 
         # mcfost parameters
-        self.make_cube = bool(config["mcfost"]["make_cube"])
         self.run_mcfost = bool(config["mcfost"]["run_mcfost"])
+        self.temp = float(config["mcfost"]["temp_star"])
+        self.distance = float(config["mcfost"]["distance"])
+        self.v_max = float(config["mcfost"]["v_max"])
+        self.n_v = int(config["mcfost"]["n_v"])
         self.pymcfost_plots = bool(config["mcfost"]["pymcfost_plots"])
+        self.velocity_channels = list(config["mcfost"]["velocity_channels"])
 
         # physical parameters
         self.gamma = float(config["physical"]["adiabatic_index"])
@@ -122,6 +141,13 @@ class Parameters(Constants):
         else:
             self.a_cw = 1
 
+        # get height scale at reference radius
+        self.h_ref = self.hr * self.r_ref
+
+        # get flaring exponent beta (exponent for h, NOT h/r) for mcfost
+        self.beta = 1 + 0.5 - self.q
+
+
     def do_sanity_checks(self):
 
         # check that planet mass does not exceed thermal mass
@@ -132,20 +158,14 @@ class Parameters(Constants):
                 return False
 
         # check grid type
-        if self.grid_type != "cartesian" and self.grid_type != "cylindrical":
-            print("Error: Please choose a valid grid type (cartesian or cylindrical)")
+        if self.grid_type != "cartesian" and self.grid_type != "cylindrical" and self.grid_type != "mcfost":
+            print("Error: Please choose a valid grid type (cartesian or cylindrical or mcfost)")
             return False
         
-        # check settings OK if mcfost is to be run
+        # check settings OK if mcfost is to be run  -- NEEDS TO BE UPDATED
         if self.run_mcfost:
-            if not self.make_cube:
-                print("Error: You must select make_cube = True to run mcfost")
-                return False
-            if not self.r_log:
-                print("Error: You must select r_log = True to run mcfost")
-                return False
-            if self.grid_type != "cylindrical":
-                print("Error: You must use a cylindrical grid to run mcfost")
+            if self.grid_type != "mcfost":
+                print("Error: You must use mcfost grid to run mcfost")
                 return False
 
         # check linear box scale factor
@@ -162,7 +182,7 @@ class Parameters(Constants):
         return True
       
     def warning(self, warning_msg):
-        statement = "Warning: " + warning_msg + " Continue? [y/n]: "
+        statement = f"Warning: {warning_msg} Continue? [y/n]: "
         cont = input(statement)
         if cont != "y":
             return False

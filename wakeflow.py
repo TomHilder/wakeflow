@@ -1,7 +1,6 @@
 from setup import run_setup
 from grid import Grid
 from linear_perts import LinearPerts
-
 import numpy as np
 
 params = run_setup()

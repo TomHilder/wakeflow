@@ -1,56 +1,62 @@
 # parameter file for running wakeflow
 
 run_info:
-    name: "test_run"               # give your run a name (results are saved a directory called this)
-    system: "HD 163296"            # name of the system you are modelling
-    date: "02/04/21"               # date of your run
+    name: "test_run"                             # give your run a name (results are saved a directory called this)
+    system: "HD 163296"                          # name of the system you are modelling
+    date: "02/04/21"                             # date of your run
 
 disk:
-    m_star: 1.9                    # mass of central star in solar masses
-    m_planet: 4                    # mass of embedded planet in Jupiter masses
-    r_outer: 500                   # outer radius of disk in au
-    r_inner: 1                     # inner radius of disk in au
-    r_planet: 235                  # orbital radius of embedded planet in au
-    r_ref: 235                     # reference radius R0 for H/R
-    q: 0.25                        # q index, defined as c_s \propto R^{-q}
-    p: 0.8                         # p index, defined as rho \propto R^{-p}
-    hr: 0.118                      # disc flaring H/R at R0
-    dens_ref: 1                    # rho at R0 in g/cm^3
-    cw_rotation: True              # clockwise rotating disk (boolean)
+    m_star: 1.9                                  # mass of central star in solar masses
+    m_planet: 4                                  # mass of embedded planet(s) in Jupiter masses (list)
+    r_outer: 500                                 # outer radius of disk in au
+    r_inner: 1                                   # inner radius of disk in au
+    r_planet: 235                                # orbital radius of embedded planet in au
+    r_ref: 235                                   # reference radius R0 for H/R
+    q: 0.25                                      # q index, defined as c_s \propto R^{-q}
+    p: 0.8                                       # p index, defined as rho \propto R^{-p}
+    hr: 0.118                                    # disc flaring H/R at R0
+    dens_ref: 1                                  # rho at R0 in g/cm^3
+    cw_rotation: True                            # clockwise rotating disk (boolean)
 
 angles:
-    inclination: 46.7              # inclination of disk in degrees
-    PA: 133.3                      # position angle of disk in degrees
-    PAp: 45                        # position angle of planet in degrees
+    inclination: 46.7                            # inclination of disk in degrees
+    PA: 133.3                                    # position angle of disk in degrees
+    PAp: 45                                      # position angle of planet in degrees
 
 grid:
-    type: "cylindrical"            # "cylindrical" or "cartesian"
-    n_x: 200                       # number of x grid points
-    n_y: 200                       # number of y grid points
-    n_r: 250                       # number of r grid points
-    n_phi: 180                     # number of phi grid points
-    n_z: 50                        # number of z grid points
-    r_log: True                    # use logarithmic scale for r points (boolean)
+    type: "mcfost"                          # "cylindrical" or "cartesian" or "mcfost"
+    n_x: 200                                     # number of x grid points
+    n_y: 200                                     # number of y grid points
+    n_r: 250                                     # number of r grid points
+    n_phi: 180                                   # number of phi grid points
+    n_z: 50                                      # number of z grid points
+    r_log: True                                  # use logarithmic scale for r points (boolean) -- ignored for mcfost grid
 
 plotting:
-    make_plots: True               # create plots of velocity components and density
-    show_plots: False              # show plots after code has finished running
+    make_plots: True                             # create plots of velocity components and density
+    show_plots: False                            # show plots after code has finished running
+    synthetic_velocity_channels:
+        [-1.6, -0.9, -0.2, 0.2, 0.9, 1.6]        # velocity channels to be plotted in sythetic channel maps
 
-# The following settings require an installation of mcfost and pymcfost
+# The following settings require an installation of mcfost and pymcfost and YOU MUST USE GRID TYPE MCFOST
 
 mcfost:
-    make_cube: False               # generate fits file to run in mcfost (boolean)
-    run_mcfost: False              # generate velocity channels by running mcfost (boolean) -- need {generate_cube: True}
-                                   # and {grid.type: "cylindrical"} and {grid.r_log: True}
-    pymcfost_plots: False          # create beam velocity channel plots using pymcfost
+    run_mcfost: True                             # generate velocity channels by running mcfost (boolean) -- need {grid.type: "mcfost"}
+    temp_star: 9250                              # temperature of the central star in Kelvin
+    distance: 101.5                              # distance of system in parsecs
+    v_max: 2                                     # maximum magnitude velocity for cube
+    n_v: 20                                      # number of velocity channels for cube
+    pymcfost_plots: False                        # create beam velocity channels plot using pymcfost (boolean)
+    velocity_channels:                           
+        [-1.6, -0.9, -0.2, 0.2, 0.9, 1.6]        # velocity channels to be plotted by pymcfost -- must exist in cube generated
 
 # Don't change below parameters unless you know what you are doing
 
 physical:
-    adiabatic_index: 1.6666667     # adiabatic index
-    damping_malpha: 0              # artificial damping
+    adiabatic_index: 1.6666667                   # adiabatic index
+    damping_malpha: 0                            # artificial damping
 
 numerical:
-    CFL: 0.2                       # CFL safety factor for Godunov scheme
-    scale_box: 0.8                   # scale factor for linear regime box side length
-    scale_box_ang: 1.7             # scale factor for linear regime box angular extend
+    CFL: 0.2                                     # CFL safety factor for Godunov scheme
+    scale_box: 0.9                               # scale factor for linear regime box side length
+    scale_box_ang: 1.8                           # scale factor for linear regime box angular extend
