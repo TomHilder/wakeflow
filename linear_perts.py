@@ -109,4 +109,3 @@ class LinearPerts():
         plt.colorbar(myplot)
         plt.show()
 
-        # check other arrays with plots

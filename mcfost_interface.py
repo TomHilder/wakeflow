@@ -75,12 +75,11 @@ def make_mcfost_grid_data(parameters):
     p = parameters
 
     # generate grid data by running mcfost (in mcfost_output directory)
-    with HiddenPrints():
-        working_dir = os.getcwd()
-        os.chdir(f"{p.system}/{p.name}/mcfost_output/")
-        subprocess.call(["rm", "-rf", "data_disk", "data_disk_old"])
-        subprocess.call(["mcfost", f"mcfost_{p.name}.para", "-disk_struct"])
-        os.chdir(working_dir)
+    working_dir = os.getcwd()
+    os.chdir(f"{p.system}/{p.name}/mcfost_output/")
+    subprocess.call(["rm", "-rf", "data_disk", "data_disk_old"])
+    subprocess.call(["mcfost", f"mcfost_{p.name}.para", "-disk_struct"])
+    os.chdir(working_dir)
 
     print("==================================================== \n")
 

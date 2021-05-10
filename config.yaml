@@ -24,7 +24,7 @@ angles:
     PAp: 45                                      # position angle of planet in degrees
 
 grid:
-    type: "mcfost"                          # "cylindrical" or "cartesian" or "mcfost"
+    type: "mcfost"                               # "cylindrical" or "cartesian" or "mcfost"
     n_x: 200                                     # number of x grid points
     n_y: 200                                     # number of y grid points
     n_r: 250                                     # number of r grid points
