@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import ticker, cm
 
-
 class LinearPerts():
     def __init__(self, parameters):
 
@@ -29,6 +28,47 @@ class LinearPerts():
         # box size
         # cut off
 
+    def cut_box_square(self):
+
+        print("Extracting Linear Perturbations in the Vicinity of the Planet")
+
+        # box size (in units of Hill radius), with default scale_box = 1. (note for conversions that self.p.l = 1 Hill radius in cgs)
+        box_size = 2*self.p.scale_box
+
+        # linear perturbations read in grid
+        x = self.X[0,:]
+        y = self.Y[:,0]
+
+        # cut square box grid in linear regime
+        x_cut = x[np.argmin(x < -box_size) : np.argmin(x < box_size) + 1]
+        y_cut = y[np.argmin(y < -box_size) : np.argmin(y < box_size) + 1]
+
+        # find cut indicies 
+        x_cut_i1 = np.argmin(x < -box_size)
+        x_cut_i2 = np.argmin(x < box_size) + 1
+        y_cut_i1 = np.argmin(y < -box_size)
+        y_cut_i2 = np.argmin(y < box_size) + 1
+
+        # cut perturbation arrays
+        cut_v_r = self.pert_v_r[y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]
+        cut_v_phi = self.pert_v_phi[y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]
+        cut_rho = self.pert_rho[y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]
+
+        # scale to cgs units (and account for rotation direction)
+        self.pert_v_r_sq = cut_v_r * self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)
+        self.pert_v_phi_sq = cut_v_phi * self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)*self.p.a_cw
+        self.pert_rho_sq  = cut_rho * (self.p.m_planet/self.p.m_thermal)
+
+        # plotting (for debugging)
+        fig, ax = plt.subplots()
+        myplot = ax.contourf(x_cut, y_cut, cut_rho, levels=300, vmin=0.01, vmax=4)
+        plt.colorbar(myplot)
+        plt.show()
+
+        # save grid
+        self.x_sq = self.p.l * x_cut + self.p.r_planet
+        self.y_sq = self.p.l * y_cut       
+
     def cut_box_annulus_segment(self):
 
         print("Extracting Linear Perturbations in the Vicinity of the Planet")
@@ -41,8 +81,8 @@ class LinearPerts():
         y = self.Y[:,0]
 
         # cut square box in linear regime
-        x_cut = x[np.argmin(x < -box_size) : np.argmin(x < 2*box_size) + 1]
-        y_cut = y[np.argmin(y < -2*box_size) : np.argmin(y < 2*box_size) + 1]
+        x_cut = x[np.argmin(x < -box_size) : np.argmin(x < box_size) + 1]
+        y_cut = y[np.argmin(y < -box_size) : np.argmin(y < box_size) + 1]
 
         # annulus segment grid, granularity from square box
         r = np.linspace(
@@ -92,9 +132,9 @@ class LinearPerts():
         self.pert_rho_ann = interp_v_rho.ev(Y_pert_grid, X_pert_grid)
 
         # scale to cgs units (and account for rotation direction)
-        self.pert_v_r_ann *= self.p.c_s_planet*(self.p.m_planet/self.p.m_star)
-        self.pert_v_phi_ann *= self.p.c_s_planet*(self.p.m_planet/self.p.m_star)*self.p.a_cw
-        self.pert_rho_ann *= (self.p.m_planet/self.p.m_star)
+        self.pert_v_r_ann *= self.p.c_s_planet*(self.p.m_thermal/self.p.m_star)
+        self.pert_v_phi_ann *= self.p.c_s_planet*(self.p.m_thermal/self.p.m_star)*self.p.a_cw
+        self.pert_rho_ann *= (self.p.m_planet/self.p.m_thermal)
 
         # save annulus grid
         self.r_ann = r

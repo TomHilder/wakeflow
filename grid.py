@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 import pymcfost
 from mcfost_interface import read_mcfost_grid_data
 
-# important note: grid dimensions are (x,z,y) or (r,z,phi)
+# NOTE: grid dimensions are (x,z,y) or (r,z,phi)
+
+# TODO: Add mapping for linear perturbations into grid object arrays, for both square box and annulus segment
 
 class Grid:
     def __init__(self, parameters):

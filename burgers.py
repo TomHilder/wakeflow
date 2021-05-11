@@ -1,14 +1,18 @@
-def solve_burgers(eta,profile): # Solve eq. (10) Bollati et al. 2021
+import numpy as np
 
-   profile = profile * (s.indad+1) * s.betap / 2**(3/4) # Eq. (15) Bollati et al. 2021
+# TODO: Implement Numba on this function to make it a speedy boi
+
+def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde): # Solve eq. (10) Bollati et al. 2021
+
+   profile = profile * (gamma+1) * beta_p / 2**(3/4) # Eq. (15) Bollati et al. 2021
 
    deta = eta[1]-eta[0]
 
    tf_th = 300 # time required to develop N-wave for betap = 1
-   tf = tf_th/s.betap # time required to display N-wave for generic betap, Eq. (39) Rafikov 2002
+   tf = tf_th/beta_p # time required to display N-wave for generic betap, Eq. (39) Rafikov 2002
 
-   eta_min = -s.eta_tilde-np.sqrt(2*s.C*tf) - 3  # Eq. (18) Bollati et al. 2021
-   eta_max = -s.eta_tilde+np.sqrt(2*s.C*tf) + 3
+   eta_min = -eta_tilde-np.sqrt(2*C*tf) - 3  # Eq. (18) Bollati et al. 2021
+   eta_max = -eta_tilde+np.sqrt(2*C*tf) + 3
 
    # extend the profile domain due to profile broadening during evolution ....
    extr = eta[-1]
@@ -85,7 +89,7 @@ def solve_burgers(eta,profile): # Solve eq. (10) Bollati et al. 2021
    while lapsed_time < tf:
    #while counter < 10:
       counter += 1
-      dt = min(deta * s.CFL / (max(abs(solution[-1])) + 1e-8), 0.02)
+      dt = min(deta * CFL / (max(abs(solution[-1])) + 1e-8), 0.02)
       #print('max of sol = ', max(abs(solution[-1])), ', dt = ', dt)
       time.append(time[-1]+dt)
       lapsed_time += dt

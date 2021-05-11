@@ -27,10 +27,10 @@ grid:
     type: "mcfost"                               # "cylindrical" or "cartesian" or "mcfost"
     n_x: 200                                     # number of x grid points
     n_y: 200                                     # number of y grid points
-    n_r: 250                                     # number of r grid points
-    n_phi: 180                                   # number of phi grid points
+    n_r: 240                                     # number of r grid points
+    n_phi: 260                                   # number of phi grid points
     n_z: 50                                      # number of z grid points
-    r_log: True                                  # use logarithmic scale for r points (boolean) -- ignored for mcfost grid
+    r_log: False                                 # use logarithmic scale for r points (boolean) -- ignored for mcfost grid
 
 plotting:
     make_plots: True                             # create plots of velocity components and density
@@ -57,6 +57,6 @@ physical:
     damping_malpha: 0                            # artificial damping
 
 numerical:
-    CFL: 0.2                                     # CFL safety factor for Godunov scheme
-    scale_box: 0.9                               # scale factor for linear regime box side length
+    CFL: 0.05                                    # CFL safety factor for Godunov scheme
+    scale_box: 1.0                               # scale factor for linear regime box side length
     scale_box_ang: 1.8                           # scale factor for linear regime box angular extend

@@ -147,13 +147,14 @@ class Parameters(Constants):
         # get flaring exponent beta (exponent for h, NOT h/r) for mcfost
         self.beta = 1 + 0.5 - self.q
 
+        # get thermal mass
+        self.m_thermal = 0.6666667 * self.hr_planet ** 3 * (self.m_star * self.m_solar / self.m_jupiter)
+
 
     def do_sanity_checks(self):
 
         # check that planet mass does not exceed thermal mass
-        m_thermal = 0.6666667 * self.hr_planet ** 3 * (self.m_star * self.m_solar / self.m_jupiter)
-        #print('Thermal mass = ', m_thermal)
-        if self.m_planet > m_thermal:
+        if self.m_planet > self.m_thermal:
             if not self.warning("Planet mass exceeds thermal mass. This may break the solution."):
                 return False
 
