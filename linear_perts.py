@@ -59,11 +59,13 @@ class LinearPerts():
         self.pert_v_phi_sq = cut_v_phi * self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)*self.p.a_cw
         self.pert_rho_sq  = cut_rho * (self.p.m_planet/self.p.m_thermal)
 
+        """
         # plotting (for debugging)
-        fig, ax = plt.subplots()
+        _, ax = plt.subplots()
         myplot = ax.contourf(x_cut, y_cut, cut_rho, levels=300, vmin=0.01, vmax=4)
         plt.colorbar(myplot)
         plt.show()
+        """
 
         # save grid
         self.x_sq = self.p.l * x_cut + self.p.r_planet
@@ -142,10 +144,12 @@ class LinearPerts():
         self.R_ann = R
         self.PHI_ann = PHI
 
+        """
         # plotting (for debugging)
-        fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+        _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
         myplot = ax.contourf(PHI, R, self.pert_rho_ann, levels=300, vmin=0.01, vmax=4)
         ax.set_ylim(0, self.p.r_outer)
         plt.colorbar(myplot)
         plt.show()
+        """
 

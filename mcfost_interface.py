@@ -30,6 +30,8 @@ def make_mcfost_parameter_file(parameters):
     mp.mol.molecule[0].n_trans = 1      # unsure
     mp.grid.n_rad_in = 1                # unsure
 
+    mp.mol.v_turb = 0.05                # turbulence
+
     mp.zones[0].edge = 0.0              # not using smoothed inner and outer edge
     mp.zones[0].Rc = 0.0                # critical radius unused so set to 0
 
@@ -93,8 +95,8 @@ def read_mcfost_grid_data(parameters):
         mcfost_disk = Disc(f"./{p.system}/{p.name}/mcfost_output/")
 
     # getting radii and heights
-    r = mcfost_disk.r()[:, p.n_z:, :].transpose()
-    z = mcfost_disk.z()[:, p.n_z:, :].transpose()
+    r = mcfost_disk.r()[:, p.n_z:, :]
+    z = mcfost_disk.z()[:, p.n_z:, :]
 
     return r, z
 

@@ -9,11 +9,11 @@ disk:
     m_star: 1.9                                  # mass of central star in solar masses
     m_planet: 4                                  # mass of embedded planet(s) in Jupiter masses (list)
     r_outer: 500                                 # outer radius of disk in au
-    r_inner: 1                                   # inner radius of disk in au
-    r_planet: 235                                # orbital radius of embedded planet in au
+    r_inner: 50                                  # inner radius of disk in au
+    r_planet: 210                                # orbital radius of embedded planet in au
     r_ref: 235                                   # reference radius R0 for H/R
     q: 0.25                                      # q index, defined as c_s \propto R^{-q}
-    p: 0.8                                       # p index, defined as rho \propto R^{-p}
+    p: 1.0                                       # p index, defined as rho \propto R^{-p}
     hr: 0.118                                    # disc flaring H/R at R0
     dens_ref: 1                                  # rho at R0 in g/cm^3
     cw_rotation: True                            # clockwise rotating disk (boolean)
@@ -27,8 +27,8 @@ grid:
     type: "mcfost"                               # "cylindrical" or "cartesian" or "mcfost"
     n_x: 200                                     # number of x grid points
     n_y: 200                                     # number of y grid points
-    n_r: 240                                     # number of r grid points
-    n_phi: 260                                   # number of phi grid points
+    n_r: 160                                     # number of r grid points
+    n_phi: 140                                   # number of phi grid points
     n_z: 50                                      # number of z grid points
     r_log: False                                 # use logarithmic scale for r points (boolean) -- ignored for mcfost grid
 
@@ -45,7 +45,7 @@ mcfost:
     temp_star: 9250                              # temperature of the central star in Kelvin
     distance: 101.5                              # distance of system in parsecs
     v_max: 2                                     # maximum magnitude velocity for cube
-    n_v: 20                                      # number of velocity channels for cube
+    n_v: 30                                      # number of velocity channels for cube
     pymcfost_plots: False                        # create beam velocity channels plot using pymcfost (boolean)
     velocity_channels:                           
         [-1.6, -0.9, -0.2, 0.2, 0.9, 1.6]        # velocity channels to be plotted by pymcfost -- must exist in cube generated

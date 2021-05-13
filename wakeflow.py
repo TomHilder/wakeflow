@@ -4,6 +4,8 @@ from linear_perts import LinearPerts
 from non_linear_perts import NonLinearPerts
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+from matplotlib import ticker, cm
 
 # RUN SETUP
 params = run_setup()
@@ -23,6 +25,54 @@ nonlin = NonLinearPerts(params, g1)
 nonlin.extract_burgers_ICs_sq(lin)
 nonlin.get_non_linear_perts()
 
-# PLOT NON-LINEAR PERTS
-plt.imshow(nonlin.rho)
+# MAKE EMPTY GRID FOR NON-LINEAR PERTURBATIONS
+g2 = Grid(params)
+g2.make_grid()
+g2.make_empty_disk()
+
+# ADD NON-LINEAR PERTURBATIONS TO g2
+g2.add_non_linear_perturbations(nonlin)
+print(g2.info)
+
+# MERGE KEPLERIAN DISK AND NON-LINEAR PERTURBATIONS
+g1.merge_grids(g2)
+print(g1.info)
+
+# PLOT TOTAL DISK V_R
+
+#print(g1.v_phi[0,0,40:])
+plt.imshow(np.log10(g1.rho[:,0,:]))
+plt.colorbar()
 plt.show()
+
+plt.scatter(g1.R[:,40,:].flatten(), np.log10(g1.rho[:, 0, :]).flatten())
+plt.show()
+"""
+plt.show()
+plt.imshow(g1.v_r[:,9,:])
+plt.colorbar()
+plt.show()
+plt.imshow(g1.v_r[:,19,:])
+plt.colorbar()
+plt.show()
+plt.imshow(g1.v_r[:,29,:])
+plt.colorbar()
+plt.show()
+plt.imshow(g1.v_r[:,39,:])
+plt.colorbar()
+plt.show()
+plt.imshow(g1.v_r[:,49,:])
+plt.colorbar()
+plt.show()
+"""
+
+"""
+_, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+myplot = ax.contourf(g1.PHI[:,40,0], g1.R[0,40,:], np.log10(g1.rho[:,40,:].transpose()), levels=300)
+plt.colorbar(myplot)
+plt.show()
+"""
+
+
+# SAVE TO FITS FILE FOR MCFOST
+g1.write_fits_file()
