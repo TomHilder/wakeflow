@@ -338,5 +338,5 @@ class Grid:
 
         # Write a fits file for mcfost
         print("Writing a fits file for MCFOST")
-        fitsname = "analytic_disk.fits"
+        fitsname = "wakeflow_model.fits"
         hdul.writeto(f"{self.p.system}/{self.p.name}/mcfost_output/{fitsname}", overwrite=True)
