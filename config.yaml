@@ -1,7 +1,8 @@
 # parameter file for running wakeflow
 
 run_info:
-    name: "test_run"                             # give your run a name (results are saved a directory called this)
+    name: "phantom_midplane_test"                # give your run a name (results are saved a directory called this)
+                                                 # MUST NOT HAVE SPACES USE UNDERSCORES
     system: "HD 163296"                          # name of the system you are modelling
     date: "02/04/21"                             # date of your run
 
@@ -9,7 +10,7 @@ disk:
     m_star: 1.9                                  # mass of central star in solar masses
     m_planet: 4                                  # mass of embedded planet(s) in Jupiter masses (list)
     r_outer: 500                                 # outer radius of disk in au
-    r_inner: 50                                  # inner radius of disk in au
+    r_inner: 40                                  # inner radius of disk in au
     r_planet: 210                                # orbital radius of embedded planet in au
     r_ref: 235                                   # reference radius R0 for H/R
     q: 0.25                                      # q index, defined as c_s \propto R^{-q}
@@ -45,9 +46,9 @@ mcfost:
     temp_star: 9250                              # temperature of the central star in Kelvin
     distance: 101.5                              # distance of system in parsecs
     v_max: 2                                     # maximum magnitude velocity for cube
-    n_v: 30                                      # number of velocity channels for cube
+    n_v: 40                                      # number of velocity channels for cube
     pymcfost_plots: False                        # create beam velocity channels plot using pymcfost (boolean)
-    velocity_channels:                           
+    velocity_channels:
         [-1.6, -0.9, -0.2, 0.2, 0.9, 1.6]        # velocity channels to be plotted by pymcfost -- must exist in cube generated
 
 # Don't change below parameters unless you know what you are doing

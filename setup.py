@@ -155,9 +155,12 @@ class Parameters(Constants):
 
     def do_sanity_checks(self):
 
+        print(f"Thermal mass is {self.m_thermal} M_Jup")
+        print(f"Planet mass is {self.m_planet / self.m_thermal} thermal masses")
+
         # check that planet mass does not exceed thermal mass
         if self.m_planet > self.m_thermal:
-            if not self.warning("Planet mass exceeds thermal mass. This may break the solution."):
+            if not self.warning(f"Planet mass exceeds thermal mass. This may break the solution."):
                 return False
 
         # check grid type

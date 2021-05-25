@@ -93,8 +93,6 @@ class Grid:
         PHI_temp = np.repeat(self.phi[:, np.newaxis], self.p.n_r, axis=1)
         self.PHI = np.repeat(PHI_temp[:, np.newaxis, :], self.p.n_z, axis=1)
 
-        print("PHI SHAPE = ", np.shape(self.PHI))
-
         # note that we do not have a self.z because it depends on radius, as the grid is flared
 
         # update grid info
@@ -225,13 +223,29 @@ class Grid:
         nl_rho = (np.ones((self.p.n_phi, self.p.n_z, self.p.n_r)) + nonlin.rho[:, np.newaxis, :]) * self.p.rho_ref * (self.R/self.p.r_ref)**(-self.p.p)
         self.rho = nl_rho * np.exp(-0.5 * (self.Z / H)**2)
 
-        """
-        plt.imshow(self.v_r[:,:,0])#, norm=LogNorm(vmin=0.001, vmax=5))
-        plt.show()
-        """
-
         # update grid info
         self.info["Contains"] = "non-linear perturbations"
+
+    def add_phantom_midplane(self, PhantomDump):
+
+        PD = PhantomDump
+
+        # Add velocities, identical at all heights
+        ph_vr = PD.vr[:, np.newaxis, :]
+        ph_vphi = PD.vphi[:, np.newaxis, :]
+
+        self.v_r += ph_vr #/(1 + self.Z)
+        self.v_phi += ph_vphi #/(1 + self.Z)
+
+        # Define scale height array
+        H = self.p.h_ref * (self.R / self.p.r_ref)**self.p.beta
+
+        # Add density, scaling vertically as per thin disk assumption
+        ph_rho = PD.rho[:, np.newaxis, :]
+        self.rho = ph_rho * np.exp(-0.5 * (self.Z / H)**2)
+
+        # update grid info
+        self.info["Contains"] = "phantom mid-plane extrapolated to 3D"
 
     def merge_grids(self, grid_to_merge):
 

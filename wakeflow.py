@@ -47,6 +47,7 @@ plt.show()
 
 plt.scatter(g1.R[:,40,:].flatten(), np.log10(g1.rho[:, 0, :]).flatten())
 plt.show()
+
 """
 plt.show()
 plt.imshow(g1.v_r[:,9,:])
@@ -66,12 +67,11 @@ plt.colorbar()
 plt.show()
 """
 
-"""
+
 _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-myplot = ax.contourf(g1.PHI[:,40,0], g1.R[0,40,:], np.log10(g1.rho[:,40,:].transpose()), levels=300)
+myplot = ax.contourf(g1.PHI[:,0,0], g1.R[0,0,:], g1.v_r[:,0,:].transpose(), levels=300)
 plt.colorbar(myplot)
 plt.show()
-"""
 
 
 # SAVE TO FITS FILE FOR MCFOST
