@@ -13,9 +13,9 @@ class PhantomDump:
         self.g = Grid
 
         # read in midplane arrays
-        self.vr_xy = np.loadtxt(vr)
-        self.vphi_xy = np.loadtxt(vphi)
-        self.rho_xy = np.loadtxt(rho)
+        self.vr_xy = np.flipud(np.loadtxt(vr).transpose())
+        self.vphi_xy = -1*np.flipud(np.loadtxt(vphi).transpose())
+        self.rho_xy = np.flipud(np.loadtxt(rho).transpose())
 
         # get phantom grid
         length = self.vr_xy.shape[0]
@@ -24,10 +24,13 @@ class PhantomDump:
         self.X_ph, self.Y_ph = np.meshgrid(self.x_ph, self.y_ph)
 
         # test plot
+        """
         plt.figure(figsize=(8,8))
-        plt.title('checking import')
-        plt.contourf(self.x_ph, self.y_ph, self.vr_xy, levels=1000)
+        plt.contourf(self.x_ph, self.y_ph, self.vr_xy.transpose(), levels=1000)
+        plt.xlabel('[au]')
+        plt.ylabel('[au')
         plt.show()
+        """
 
     def get_polar_grid(self):
 
@@ -49,6 +52,8 @@ class PhantomDump:
         self.vphi = interp_v_phi.ev(Y, X)
         self.rho = interp_v_rho.ev(Y, X)
 
+        # testing plots
+        """
         plt.imshow(self.vr)
         plt.show()
 
@@ -57,4 +62,5 @@ class PhantomDump:
         myplot = ax.contourf(self.PHI, self.R, self.vr, levels=300)
         plt.colorbar(myplot)
         plt.show()
+        """
 

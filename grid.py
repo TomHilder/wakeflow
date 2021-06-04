@@ -54,9 +54,9 @@ class Grid:
         # make grid from specifications in parameter file
         self.x = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_x)
         self.y = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_y)
-        self.z = np.linspace(0, self.height, self.p.n_z)
+        self.z_xy = np.linspace(0, self.height, self.p.n_z)
 
-        self.X, self.Z, self.Y = np.meshgrid(self.x, self.z, self.y, indexing='ij')
+        self.X, self.Y, self.Z_xy = np.meshgrid(self.x, self.y, self.z_xy, indexing='ij')
 
         # update grid info
         self.info["Type"] = "cartesian"
@@ -74,7 +74,7 @@ class Grid:
         self.phi = np.linspace(0, 2*np.pi, self.p.n_phi)
         self.z = np.linspace(0, self.height, self.p.n_z)
 
-        self.R, self.Z, self.PHI = np.meshgrid(self.phi, self.z, self.r, indexing='ij')
+        self.PHI, self.Z, self.R = np.meshgrid(self.phi, self.z, self.r, indexing='ij')
 
         # update grid info
         self.info["Type"] = "cylindrical"
@@ -104,7 +104,7 @@ class Grid:
 
     def get_r_phi_coords(self):
 
-        # often need the equivalent (r,phi) coordinates when using cartesian grid
+        # need the equivalent (r,phi) coordinates when using cartesian grid
         self.R_xy = np.sqrt(self.X**2 + self.Y**2)
         self.PHI_xy = np.arctan(self.Y / self.X)
 
@@ -146,8 +146,6 @@ class Grid:
 
         # perform correction
         self.v_phi *= corr
-
-        print(self.v_phi)
 
         # unperturbed density profle (full)
         """self.rho = (
@@ -217,11 +215,11 @@ class Grid:
         self.v_phi += nl_vphi #/(1 + self.Z)
 
         # Define scale height array
-        H = self.p.h_ref * (self.R / self.p.r_ref)**self.p.beta
+        self.H = self.p.h_ref * (self.R / self.p.r_ref)**self.p.beta
 
         # Add density, scaling vertically as per thin disk assumption
         nl_rho = (np.ones((self.p.n_phi, self.p.n_z, self.p.n_r)) + nonlin.rho[:, np.newaxis, :]) * self.p.rho_ref * (self.R/self.p.r_ref)**(-self.p.p)
-        self.rho = nl_rho * np.exp(-0.5 * (self.Z / H)**2)
+        self.rho = nl_rho * np.exp(-0.5 * (self.Z / self.H)**2)
 
         # update grid info
         self.info["Contains"] = "non-linear perturbations"
@@ -238,11 +236,11 @@ class Grid:
         self.v_phi += ph_vphi #/(1 + self.Z)
 
         # Define scale height array
-        H = self.p.h_ref * (self.R / self.p.r_ref)**self.p.beta
+        self.H = self.p.h_ref * (self.R / self.p.r_ref)**self.p.beta
 
         # Add density, scaling vertically as per thin disk assumption
         ph_rho = PD.rho[:, np.newaxis, :]
-        self.rho = ph_rho * np.exp(-0.5 * (self.Z / H)**2)
+        self.rho = ph_rho * np.exp(-0.5 * (self.Z / self.H)**2)
 
         # update grid info
         self.info["Contains"] = "phantom mid-plane extrapolated to 3D"
@@ -267,24 +265,45 @@ class Grid:
         # update info
         self.info["Contains"] += " AND " + g.info["Contains"]
 
-    def show_disk2D(self, z_slice):
+    def merge_phantom_densities(self, grid_to_merge):
+
+        g = grid_to_merge
+
+        if type(grid_to_merge) is not Grid:
+            print("Must be given a Grid object")
+            return False
+        
+        if self.p != g.p:
+            print("Both grids must have same type parameters")
+            return False
+
+        # merge data arrays
+        self.rho = g.rho
+
+    def show_disk2D(self, z_slice, save=False, name='disk2Dplot'):
 
         # plot v_r
         plt.imshow(self.v_r[:,z_slice,:])
         plt.colorbar()
         plt.title(r"$v_r$")
+        if save:
+            plt.savefig(f'{self.p.system}/{self.p.name}/{name}_vr_z{z_slice}.pdf')
         plt.show()
 
         # plot v_phi
         plt.imshow(self.v_phi[:,z_slice,:])
         plt.colorbar()
         plt.title(r"$v_{\phi}$")
+        if save:
+            plt.savefig(f'{self.p.system}/{self.p.name}/{name}_vphi_z{z_slice}.pdf')
         plt.show()
 
         # plot rho
         plt.imshow(self.rho[:,z_slice,:])
         plt.colorbar()
         plt.title(r"$\rho$")
+        if save:
+            plt.savefig(f'{self.p.system}/{self.p.name}/{name}_rho_z{z_slice}.pdf')
         plt.show()
     
     def write_fits_file(self):
@@ -301,7 +320,7 @@ class Grid:
 
         # setup HDUs for fits file
         primary_hdu = fits.PrimaryHDU(np.abs(self.rho))
-        second_hdu = fits.ImageHDU(np.abs(self.rho))
+        second_hdu = fits.ImageHDU(np.abs(self.rho)) # * np.exp(-1 * (self.Z / self.H)**2)
         tertiary_hdu = fits.ImageHDU(velocities)
 
         # set header properties for mcfost
