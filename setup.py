@@ -132,8 +132,8 @@ class Parameters(Constants):
         self.l = (2/3) * self.hr_planet * self.r_planet
 
         # get sound speed at planet radius and reference radius
-        v_kep_planet = np.sqrt(self.G_const*self.m_planet*self.m_solar / (self.r_planet*self.au))
-        v_kep_ref = np.sqrt(self.G_const*self.m_planet*self.m_solar / (self.r_ref*self.au))
+        v_kep_planet = np.sqrt(self.G_const*self.m_star*self.m_solar / (self.r_planet*self.au))
+        v_kep_ref = np.sqrt(self.G_const*self.m_star*self.m_solar / (self.r_ref*self.au))
         self.c_s_planet = v_kep_planet*self.hr_planet
         self.c_s_0 = v_kep_ref*self.hr 
 

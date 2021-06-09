@@ -39,6 +39,11 @@ print(g2.info)
 g1.merge_grids(g2)
 print(g1.info)
 
+# CHECK MIDPLANES
+print("Displaying midplane to check solution")
+g1.show_disk2D(0)
+
+"""
 # MAKE EMPTY GRID FOR PHANTOM MIDPLANE
 gp = Grid(params)
 gp.make_grid()
@@ -54,6 +59,7 @@ print(gp.info)
 
 g1.show_disk2D(0, save=True, name='analytics')
 gp.show_disk2D(0, save=True, name='phantom')
+"""
 
 """
 g1.merge_phantom_densities(g)
@@ -92,7 +98,12 @@ plt.show()
 
 """
 _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-myplot = ax.contourf(g1.PHI[:,0,0], g1.R[0,0,:], g1.v_r[:,0,:].transpose(), levels=300)
+myplot = ax.contourf(g1.PHI[:,0,0], g1.R[0,0,:], g1.v_r[:,0,:].transpose(), levels=300, cmap='RdBu')
+plt.colorbar(myplot)
+plt.show()
+
+_, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+myplot = ax.contourf(g1.PHI[:,0,0], g1.R[0,0,:], g1.v_phi[:,0,:].transpose(), levels=300, cmap='RdBu')
 plt.colorbar(myplot)
 plt.show()
 """

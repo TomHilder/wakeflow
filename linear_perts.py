@@ -56,8 +56,14 @@ class LinearPerts():
 
         # scale to cgs units (and account for rotation direction)
         self.pert_v_r_sq = cut_v_r * self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)
-        self.pert_v_phi_sq = cut_v_phi * self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)*self.p.a_cw
+        self.pert_v_phi_sq = cut_v_phi * self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)
         self.pert_rho_sq  = cut_rho * (self.p.m_planet/self.p.m_thermal)
+
+        # account for rotation direction
+        if self.p.a_cw == -1:
+            self.pert_v_r_sq = np.flipud(self.pert_v_r_sq)
+            self.pert_v_phi_sq = -1*np.flipud(self.pert_v_phi_sq)
+            self.pert_rho_sq = np.flipud(self.pert_rho_sq)
 
         """
         # plotting (for debugging)

@@ -1,14 +1,14 @@
 # parameter file for running wakeflow
 
 run_info:
-    name: "vphi_phantom_comparison"              # give your run a name (results are saved a directory called this)
+    name: "5Mj"                                  # give your run a name (results are saved a directory called this)
                                                  # MUST NOT HAVE SPACES USE UNDERSCORES
     system: "HD 163296"                          # name of the system you are modelling
-    date: "02/04/21"                             # date of your run
+    date: "07/05/21"                             # date of your run
 
 disk:
     m_star: 1.9                                  # mass of central star in solar masses
-    m_planet: 4                                  # mass of embedded planet(s) in Jupiter masses (list)
+    m_planet: 5                                  # mass of embedded planet(s) in Jupiter masses (list)
     r_outer: 500                                 # outer radius of disk in au
     r_inner: 40                                  # inner radius of disk in au
     r_planet: 210                                # orbital radius of embedded planet in au
@@ -17,15 +17,15 @@ disk:
     p: 1.0                                       # p index, defined as rho \propto R^{-p}
     hr: 0.118                                    # disc flaring H/R at R0
     dens_ref: 1                                  # rho at R0 in g/cm^3
-    cw_rotation: True                            # clockwise rotating disk (boolean) -- anticlockwise is possibly not working currently
+    cw_rotation: False                           # clockwise rotating disk (boolean)
 
 angles:
-    inclination: 46.7                            # inclination of disk in degrees
-    PA: 133.3                                    # position angle of disk in degrees
-    PAp: 45                                      # position angle of planet in degrees (currently azimuthal angle FROM the PA)
+    inclination: -225                            # inclination of disk in degrees    (46.7)
+    PA: 45                                       # position angle of disk in degrees    (133.3)
+    PAp: 45                                      # planet_az    (currently azimuthal angle FROM the PA)
 
 grid:
-    type: "mcfost"                               # "cylindrical" or "cartesian" or "mcfost"
+    type: "mcfost"                               # "cylindrical" or "cartesian" or "mcfost" -- mcfost currently only supported grid
     n_x: 200                                     # number of x grid points
     n_y: 200                                     # number of y grid points
     n_r: 160                                     # number of r grid points
@@ -34,10 +34,10 @@ grid:
     r_log: False                                 # use logarithmic scale for r points (boolean) -- ignored for mcfost grid
 
 plotting:
-    make_plots: True                             # create plots of velocity components and density
-    show_plots: False                            # show plots after code has finished running
+    make_plots: True                             # NOT IMPLEMENTED - create plots of velocity components and density
+    show_plots: False                            # NOT IMPLEMENTED - show plots after code has finished running
     synthetic_velocity_channels:
-        [-1.6, -0.9, -0.2, 0.2, 0.9, 1.6]        # velocity channels to be plotted in sythetic channel maps
+        [-1.6, -0.9, -0.2, 0.2, 0.9, 1.6]        # NOT IMPLEMENTED - velocity channels to be plotted in sythetic channel maps
 
 # The following settings require an installation of mcfost and pymcfost and YOU MUST USE GRID TYPE MCFOST
 
@@ -45,7 +45,7 @@ mcfost:
     run_mcfost: True                             # NOT IMPLEMENTED - generate velocity channels by running mcfost (boolean) -- need {grid.type: "mcfost"}
     temp_star: 9250                              # temperature of the central star in Kelvin
     distance: 101.5                              # distance of system in parsecs
-    v_max: 3                                     # maximum magnitude velocity for cube
+    v_max: 3.2                                   # maximum magnitude velocity for cube
     n_v: 40                                      # number of velocity channels for cube
     pymcfost_plots: False                        # NOT IMPLEMENTED - create beam velocity channels plot using pymcfost (boolean)
     velocity_channels:
