@@ -54,10 +54,14 @@ class LinearPerts():
         cut_v_phi = self.pert_v_phi[y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]
         cut_rho = self.pert_rho[y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]
 
+        self.cut_rho = cut_rho
+
         # scale to cgs units (and account for rotation direction)
         self.pert_v_r_sq = cut_v_r * self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)
         self.pert_v_phi_sq = cut_v_phi * self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)
         self.pert_rho_sq  = cut_rho * (self.p.m_planet/self.p.m_thermal)
+
+        self.pert_rho_sq_unscaled = cut_rho # this does not need to account for direction
 
         # account for rotation direction
         if self.p.a_cw == -1:
@@ -65,17 +69,64 @@ class LinearPerts():
             self.pert_v_phi_sq = -1*np.flipud(self.pert_v_phi_sq)
             self.pert_rho_sq = np.flipud(self.pert_rho_sq)
 
-        """
+        # save grids
+        self.x_cut = x_cut 
+        self.y_cut = y_cut
+        self.x_sq = self.p.l * x_cut + self.p.r_planet
+        self.y_sq = self.p.l * y_cut
+
         # plotting (for debugging)
         _, ax = plt.subplots()
-        myplot = ax.contourf(x_cut, y_cut, cut_rho, levels=300, vmin=0.01, vmax=4)
+        myplot = ax.contourf(self.x_sq, self.y_sq, self.pert_rho_sq, levels=300, vmin=-4, vmax=4, cmap='RdBu')
         plt.colorbar(myplot)
         plt.show()
-        """
 
-        # save grid
-        self.x_sq = self.p.l * x_cut + self.p.r_planet
-        self.y_sq = self.p.l * y_cut       
+        _, ax = plt.subplots()
+        myplot = ax.contourf(self.x_sq, self.y_sq, self.pert_v_r_sq, levels=300, cmap='RdBu')
+        plt.colorbar(myplot)
+        plt.show()
+
+        _, ax = plt.subplots()
+        myplot = ax.contourf(self.x_sq, self.y_sq, self.pert_v_phi_sq, levels=300, cmap='RdBu')
+        plt.colorbar(myplot)
+        plt.show()
+
+    """
+    def add_to_global_grid(self, global_grid):
+
+        # grab grid object
+        g = global_grid
+
+        # interpolate over square box
+        interp_v_r = RectBivariateSpline(self.y_sq, self.x_sq, self.pert_v_r_sq)
+        interp_v_phi = RectBivariateSpline(self.y_sq, self.x_sq, self.pert_v_phi_sq)
+        interp_rho = RectBivariateSpline(self.y_sq, self.x_sq, self.pert_rho_sq)
+
+        # convert global grid to Cartesian coordinates
+        global_R, global_PHI = np.meshgrid(g.r, g.phi)
+        global_X = global_R * np.cos(global_PHI)
+        global_Y = global_R * np.sin(global_PHI)
+
+        # evaluate interpolation functions over global grid
+        global_v_r_box = interp_v_r.ev(global_Y, global_X)
+        global_v_phi_box = interp_v_phi.ev(global_Y, global_X)
+        global_rho_box = interp_rho.ev(global_Y, global_X)
+
+        # construct global grid of zeros
+        zeros = np.zeros(global_v_r_box.shape)
+
+        # update global grid of zeros to have ones on coordinates inside linear box
+
+        # multiply each interpolated global grid by zeros/ones matrix
+
+        # add interpolation results to grid object
+
+        # plot for debugging
+        _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+        myplot = ax.contourf(global_PHI, global_R, global_rho_box, levels=300)
+        plt.colorbar(myplot)
+        plt.show()
+    """
 
     def cut_box_annulus_segment(self):
 

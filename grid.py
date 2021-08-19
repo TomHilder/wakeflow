@@ -56,12 +56,12 @@ class Grid:
         self.y = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_y)
         self.z_xy = np.linspace(0, self.height, self.p.n_z)
 
-        self.X, self.Y, self.Z_xy = np.meshgrid(self.x, self.y, self.z_xy, indexing='ij')
+        self.X, self.Z_xy, self.Y  = np.meshgrid(self.x, self.z_xy, self.y, indexing='ij')
 
         # update grid info
         self.info["Type"] = "cartesian"
         self.info["Size"][0] = self.x.shape[0]
-        self.info["Size"][1] = self.z.shape[0]
+        self.info["Size"][1] = self.z_xy.shape[0]
         self.info["Size"][2] = self.y.shape[0]
 
     def make_cylindrical_grid(self):
@@ -116,10 +116,11 @@ class Grid:
         if self.info["Type"] == "cartesian":
             self.get_r_phi_coords()
             r = self.R_xy
+            z = self.Z_xy
         else:
             r = self.R
+            z = self.Z
 
-        z = self.Z
         p = self.p.p
         q = self.p.q
         hr = self.p.hr
@@ -215,11 +216,26 @@ class Grid:
         self.v_phi += nl_vphi #/(1 + self.Z)
 
         # Define scale height array
-        self.H = self.p.h_ref * (self.R / self.p.r_ref)**self.p.beta
+        if self.info["Type"] == "cartesian":
+
+            self.get_r_phi_coords()
+            r = self.R_xy
+            z = self.Z_xy
+
+            size_ones = (len(self.x), self.p.n_z, len(self.y))
+
+        else:
+
+            r = self.R 
+            z = self.Z
+
+            size_ones = (self.p.n_phi, self.p.n_z, self.p.n_r)
+
+        self.H = self.p.h_ref * (r / self.p.r_ref)**self.p.beta
 
         # Add density, scaling vertically as per thin disk assumption
-        nl_rho = (np.ones((self.p.n_phi, self.p.n_z, self.p.n_r)) + nonlin.rho[:, np.newaxis, :]) * self.p.rho_ref * (self.R/self.p.r_ref)**(-self.p.p)
-        self.rho = nl_rho * np.exp(-0.5 * (self.Z / self.H)**2)
+        nl_rho = (np.ones(size_ones) + nonlin.rho[:, np.newaxis, :]) * self.p.rho_ref * (r/self.p.r_ref)**(-self.p.p)
+        self.rho = nl_rho * np.exp(-0.5 * (z / self.H)**2)
 
         # update grid info
         self.info["Contains"] = "non-linear perturbations"
@@ -283,7 +299,10 @@ class Grid:
     def show_disk2D(self, z_slice, save=False, name='disk2Dplot'):
 
         # plot v_r
-        plt.imshow(self.v_r[:,z_slice,:])
+        if self.info["Type"] == "cartesian":
+            plt.contourf(self.X[:,0,0], self.Y[0,0,:], self.v_r[:,z_slice,:], levels=300, cmap="RdBu")
+        else:
+            plt.imshow(self.v_r[:,z_slice,:])
         plt.colorbar()
         plt.title(r"$v_r$")
         if save:
@@ -291,7 +310,10 @@ class Grid:
         plt.show()
 
         # plot v_phi
-        plt.imshow(self.v_phi[:,z_slice,:])
+        if self.info["Type"] == "cartesian":
+            plt.contourf(self.X[:,0,0], self.Y[0,0,:], self.v_phi[:,z_slice,:], levels=300)
+        else:
+            plt.imshow(self.v_phi[:,z_slice,:])
         plt.colorbar()
         plt.title(r"$v_{\phi}$")
         if save:
@@ -299,7 +321,10 @@ class Grid:
         plt.show()
 
         # plot rho
-        plt.imshow(self.rho[:,z_slice,:])
+        if self.info["Type"] == "cartesian":
+            plt.contourf(self.X[:,0,0], self.Y[0,0,:], self.rho[:,z_slice,:], levels=300)
+        else:
+            plt.imshow(self.rho[:,z_slice,:])
         plt.colorbar()
         plt.title(r"$\rho$")
         if save:

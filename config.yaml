@@ -1,14 +1,14 @@
 # parameter file for running wakeflow
 
 run_info:
-    name: "5Mj"                                  # give your run a name (results are saved a directory called this)
+    name: "testinglinear"                        # give your run a name (results are saved a directory called this)
                                                  # MUST NOT HAVE SPACES USE UNDERSCORES
     system: "HD 163296"                          # name of the system you are modelling
     date: "07/05/21"                             # date of your run
 
 disk:
     m_star: 1.9                                  # mass of central star in solar masses
-    m_planet: 5                                  # mass of embedded planet(s) in Jupiter masses (list)
+    m_planet: 4.0                                # mass of embedded planet(s) in Jupiter masses (list)
     r_outer: 500                                 # outer radius of disk in au
     r_inner: 40                                  # inner radius of disk in au
     r_planet: 210                                # orbital radius of embedded planet in au
@@ -25,9 +25,9 @@ angles:
     PAp: 45                                      # planet_az    (currently azimuthal angle FROM the PA)
 
 grid:
-    type: "mcfost"                               # "cylindrical" or "cartesian" or "mcfost" -- mcfost currently only supported grid
-    n_x: 200                                     # number of x grid points
-    n_y: 200                                     # number of y grid points
+    type: "cartesian"                            # "cylindrical" or "cartesian" or "mcfost" -- mcfost currently only supported grid
+    n_x: 1000                                     # number of x grid points
+    n_y: 1000                                     # number of y grid points
     n_r: 160                                     # number of r grid points
     n_phi: 140                                   # number of phi grid points
     n_z: 50                                      # number of z grid points
@@ -42,7 +42,7 @@ plotting:
 # The following settings require an installation of mcfost and pymcfost and YOU MUST USE GRID TYPE MCFOST
 
 mcfost:
-    run_mcfost: True                             # NOT IMPLEMENTED - generate velocity channels by running mcfost (boolean) -- need {grid.type: "mcfost"}
+    run_mcfost: False                            # NOT IMPLEMENTED - generate velocity channels by running mcfost (boolean) -- need {grid.type: "mcfost"}
     temp_star: 9250                              # temperature of the central star in Kelvin
     distance: 101.5                              # distance of system in parsecs
     v_max: 3.2                                   # maximum magnitude velocity for cube

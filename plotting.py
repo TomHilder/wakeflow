@@ -14,6 +14,15 @@ def midplane_comparison(phantom_dump, analytics_file_location):
 
     # ======= DATA IMPORT ======= #
 
+    x_min = -500
+    x_max = 500
+    y_min = x_min
+    y_max = x_max
+    n_points = 1000
+    extent = [x_min,x_max,y_min,y_max]
+
+    n_points_phantom = 600
+
     # rename for convenience
     PD = phantom_dump
 
@@ -23,8 +32,8 @@ def midplane_comparison(phantom_dump, analytics_file_location):
     A_rho = np.transpose(np.load(analytics_file_location + '/density.npy'))
 
     # get grid for analytics
-    A_x = np.linspace(-500, 500, 1000)
-    A_y = np.linspace(-500, 500, 1000)
+    A_x = np.linspace(x_min, x_max, n_points)
+    A_y = np.linspace(y_min, y_max, n_points)
     A_X, A_Y = np.meshgrid(A_x, A_y)
 
     #print(A_rho.shape)
@@ -43,8 +52,8 @@ def midplane_comparison(phantom_dump, analytics_file_location):
     interp_v_rho = RectBivariateSpline(A_y, A_x, A_rho)
 
     # new grid for analytics (same as phantom)
-    new_x = np.linspace(-500, 500, 600)
-    new_y = np.linspace(-500, 500, 600)
+    new_x = np.linspace(x_min, x_max, n_points_phantom)
+    new_y = np.linspace(y_min, y_max, n_points_phantom)
     new_X, new_Y = np.meshgrid(new_x, new_y)
 
     # evaluate interpolation on Grid object grid
@@ -69,19 +78,19 @@ def midplane_comparison(phantom_dump, analytics_file_location):
     fig, ax = plt.subplots(3, 3, figsize=(10,8), sharex=True, sharey=True, constrained_layout=True)
 
     # V_R
-    pcm_vr = ax[0,0].imshow(A_vr, cmap='RdBu', interpolation='none', extent=[-500,500,500,-500], vmin=-0.5, vmax=0.5)
-    ax[0,1].imshow(PD.vr_xy, cmap='RdBu', interpolation='none', extent=[-500,500,500,-500], vmin=-0.5, vmax=0.5)
-    ax[0,2].imshow(R_vr, cmap='RdBu', interpolation='none', extent=[-500,500,500,-500], vmin=-0.5, vmax=0.5)
+    pcm_vr = ax[0,0].imshow(A_vr, cmap='RdBu', interpolation='none', extent=extent, vmin=-0.5, vmax=0.5)
+    ax[0,1].imshow(PD.vr_xy, cmap='RdBu', interpolation='none', extent=extent, vmin=-0.5, vmax=0.5)
+    ax[0,2].imshow(R_vr, cmap='RdBu', interpolation='none', extent=extent, vmin=-0.5, vmax=0.5)
 
     #V_PHI
-    pcm_vphi = ax[1,0].imshow(-1*A_vphi, cmap='inferno', interpolation='none', extent=[-500,500,500,-500], vmin=0, vmax=8)
-    ax[1,1].imshow(-1*PD.vphi_xy, cmap='inferno', interpolation='none', extent=[-500,500,500,-500], vmin=0, vmax=8)
-    ax[1,2].imshow(R_vphi, cmap='inferno', interpolation='none', extent=[-500,500,500,-500], vmin=0, vmax=8)
+    pcm_vphi = ax[1,0].imshow(-1*A_vphi, cmap='inferno', interpolation='none', extent=extent, vmin=0, vmax=8)
+    ax[1,1].imshow(-1*PD.vphi_xy, cmap='inferno', interpolation='none', extent=extent, vmin=0, vmax=8)
+    ax[1,2].imshow(R_vphi, cmap='inferno', interpolation='none', extent=extent, vmin=0, vmax=8)
 
     # RHO
-    pcm_rho = ax[2,0].imshow(A_rho, cmap='inferno', interpolation='none', extent=[-500,500,500,-500], norm=LogNorm(vmin=1E-19, vmax=1E-14))
-    ax[2,1].imshow(PD.rho_xy, cmap='inferno', interpolation='none', extent=[-500,500,500,-500], norm=LogNorm(vmin=1E-19, vmax=1E-14))
-    ax[2,2].imshow(R_rho, cmap='inferno', interpolation='none', extent=[-500,500,500,-500], norm=LogNorm(vmin=1E-19, vmax=1E-14))
+    pcm_rho = ax[2,0].imshow(A_rho, cmap='inferno', interpolation='none', extent=extent, norm=LogNorm(vmin=1E-19, vmax=1E-14))
+    ax[2,1].imshow(PD.rho_xy, cmap='inferno', interpolation='none', extent=extent, norm=LogNorm(vmin=1E-19, vmax=1E-14))
+    ax[2,2].imshow(R_rho, cmap='inferno', interpolation='none', extent=extent, norm=LogNorm(vmin=1E-19, vmax=1E-14))
 
     # colourbars
     fig.colorbar(pcm_vr, ax=ax[0, :], location='right', label='Radial Velocity [km/s]')

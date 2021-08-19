@@ -42,12 +42,45 @@ def t_integrand(x, q, p):
    return np.abs( 1 - x**(1.5) )**(1.5) * x**w
 
 def t_integral(up, q, p):
-   return  quad(t_integrand,1,up, args=(q,p))[0]
+   return  quad(t_integrand, 1, up, args=(q,p))[0]
 
 def t(r, Rp, hr, q, p):
    module_integral = np.abs( t_integral(r/Rp, q, p) )
    coeff = 3*hr**(-5/2)/(2**(5/4))
    return coeff*module_integral
+
+def xy_to_etat(x_prime, y_prime, Rp, hr, q, p, cw):
+
+    # get r,phi
+    """
+    r = np.sqrt(x**2 + y**2)
+    phi = np.arctan2(y,x)
+    """
+
+    hp = hr * Rp
+
+    x = 2 * hp * x_prime / 3.
+    y = 2 * hp * y_prime / 3.
+
+    r = x + Rp
+    phi = y / Rp
+
+
+    # I want to do this code:
+    """
+    t_ = t(r, Rp, hr, q, p))
+    eta_ = Eta(r, phi, Rp, hr, q, p)
+    """
+
+    # but instead I gotta do this:
+    t_ = np.zeros(r.shape)
+    eta_ = np.zeros(r.shape)
+    for i in range(0, r.shape[0]):
+        for j in range(0, r.shape[1]):
+            t_[i,j] = t(r[i,j], Rp, hr, q, p)
+            eta_[i,j] = Eta(r[i,j], phi[i,j], Rp, hr, q, p)
+
+    return t_, eta_
 
 # Equation (12) Bollati et al. 2021
 
@@ -75,8 +108,10 @@ def Lambda_fv(r, Rp, csp, hr, gamma, q, p):      # Eq. (29) Bollati et al. 2021
 def get_chi(pphi, rr, time, eta, eta_inner, eta_tilde, C, solution, solution_inner, t0, tf, Rp, x_match, l, cw, hr, q, p):
     # COMPUTATION OF Chi
 
+    """
     if (rr > (Rp - x_match*l)) and (rr <(Rp + x_match*l)): # exclude points inside anulus from linear regime
         return 0.
+    """
 
     # change coordinates of the grid point (rr,pphi) to (t1,eta1)
     t1 = t(rr, Rp, hr, q, p)
@@ -84,6 +119,7 @@ def get_chi(pphi, rr, time, eta, eta_inner, eta_tilde, C, solution, solution_inn
 
     if t1 < (tf + t0):   # use numerical solution before the profile develops N-wave
         index_t = np.argmax( (t0 + time) > t1 )
+        #print(index_t)
         grid_t = [t0+time[index_t-1], t0+time[index_t]]
 
         # the density (Chi) azimuthal profile is flipped along the azimuthal direction

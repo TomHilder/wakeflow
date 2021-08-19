@@ -160,8 +160,9 @@ class Parameters(Constants):
 
         # check that planet mass does not exceed thermal mass
         if self.m_planet > self.m_thermal:
-            if not self.warning(f"Planet mass exceeds thermal mass. This may break the solution."):
-                return False
+            print("Planet mass exceeds thermal mass. This may break the solution. ")
+            #if not self.warning(f"Planet mass exceeds thermal mass. This may break the solution."):
+            #    return False
 
         # check grid type
         if self.grid_type != "cartesian" and self.grid_type != "cylindrical" and self.grid_type != "mcfost":

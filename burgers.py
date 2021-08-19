@@ -1,8 +1,9 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 # TODO: Implement Numba on this function to make it a speedy boi
 
-def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde): # Solve eq. (10) Bollati et al. 2021
+def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_solution, linear_t): # Solve eq. (10) Bollati et al. 2021
 
     profile = profile * (gamma+1) * beta_p / 2**(3/4) # Eq. (15) Bollati et al. 2021
 
@@ -93,6 +94,7 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde): # Solve eq. (
     lapsed_time = 0
     counter = 0
     while lapsed_time < tf:
+    #while lapsed_time < tf + t0:
     #while counter < 10:
         counter += 1
         dt = min(deta * CFL / (max(abs(solution[-1])) + 1e-8), 0.02)
@@ -125,6 +127,8 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde): # Solve eq. (
         solution.append(solution[-1][0:Neta] - dt / deta * (F[1:Neta+1] - F[0:Neta]))
 
     solution = np.array(solution).transpose()
+    print('LIN SOLUTION SHAPE = ', linear_solution.shape)
+    print('NONLIN SOLUTION SHAPE =', solution.shape)
     time = np.array(time)
     # plot Fig. 3 Bollati et al. 2021
     r"""
@@ -141,11 +145,25 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde): # Solve eq. (
     plt.show()
     """
 
-    """
+    # scale linear solution
+    linear_solution = linear_solution * (gamma+1) * beta_p / 2**(3/4)
+
+    # add linear solution in (t,eta) to non-linear solution array
+    total_solution = np.concatenate((linear_solution, solution), axis=1)
+    total_time = np.concatenate((linear_t, time + t0))
+
+    print('TOTAL SOL SHAPE = ', total_solution.shape, 'TOTAL T SHAPE = ', total_time.shape)
+
     print(np.shape(solution))
-    plt.contourf(time[:3000], eta, solution[:,:3000], levels=np.arange(-30,30,0.05), cmap='RdBu')
+    #plt.contourf(t0 + time[:3000], eta, solution[:,:3000], levels=np.arange(-6,6,0.05), cmap='RdBu')
+    plt.contourf(total_time, eta, total_solution, levels=np.arange(-6,6,0.05), cmap='RdBu')
     plt.colorbar()
+    plt.xlim(0,10)
     plt.show()
+
+
+    
+
     """
 
     Nt = np.shape(solution)[1]
@@ -154,7 +172,16 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde): # Solve eq. (
     for i in range(Neta):
         for j in range(Nt):
             solution_inner[i,j] = solution[int(Neta-1-i),j]
+    """
+
+    Nt = np.shape(total_solution)[1]
+
+    solution_inner = np.zeros(total_solution.shape) # solution for r < Rp (and disc rotating counterclockwise)
+    for i in range(Neta):
+        for j in range(Nt):
+            solution_inner[i,j] = total_solution[int(Neta-1-i),j]
 
     eta_inner = - eta[::-1]
 
-    return time, eta, solution, eta_inner, solution_inner
+    #return time, eta, solution, eta_inner, solution_inner
+    return total_time, eta, total_solution, eta_inner, solution_inner

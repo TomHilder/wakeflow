@@ -17,9 +17,15 @@ g1.make_grid()
 g1.make_keplerian_disk()
 print(g1.info)
 
+# MAKE EMPTY GRID FOR LINEAR PERTURBATIONS
+glin = Grid(params)
+glin.make_grid()
+glin.make_empty_disk()
+
 # EXTRACT LINEAR PERTURBATIONS NEAR PLANET
 lin = LinearPerts(params)
 lin.cut_box_square()
+#lin.add_to_global_grid(glin)
 
 # CALCULATE NON-LINEAR PERTURBATIONS
 nonlin = NonLinearPerts(params, g1)
