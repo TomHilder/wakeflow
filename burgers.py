@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 # TODO: Implement Numba on this function to make it a speedy boi
 
-def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_solution, linear_t): # Solve eq. (10) Bollati et al. 2021
+def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0): #, linear_solution, linear_t): # Solve eq. (10) Bollati et al. 2021
 
     profile = profile * (gamma+1) * beta_p / 2**(3/4) # Eq. (15) Bollati et al. 2021
 
@@ -127,8 +127,6 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_sol
         solution.append(solution[-1][0:Neta] - dt / deta * (F[1:Neta+1] - F[0:Neta]))
 
     solution = np.array(solution).transpose()
-    print('LIN SOLUTION SHAPE = ', linear_solution.shape)
-    print('NONLIN SOLUTION SHAPE =', solution.shape)
     time = np.array(time)
     # plot Fig. 3 Bollati et al. 2021
     r"""
@@ -145,43 +143,52 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_sol
     plt.show()
     """
 
-    # scale linear solution
-    linear_solution = linear_solution * (gamma+1) * beta_p / 2**(3/4)
+    if False: # combining linear and non-linear solution and plotting
 
-    # add linear solution in (t,eta) to non-linear solution array
-    total_solution = np.concatenate((linear_solution, solution), axis=1)
-    total_time = np.concatenate((linear_t, time + t0))
+        print('LIN SOLUTION SHAPE = ', linear_solution.shape)
+        print('NONLIN SOLUTION SHAPE =', solution.shape)
 
-    print('TOTAL SOL SHAPE = ', total_solution.shape, 'TOTAL T SHAPE = ', total_time.shape)
+        # scale linear solution
+        linear_solution = linear_solution * (gamma+1) * beta_p / 2**(3/4)
 
-    print(np.shape(solution))
-    #plt.contourf(t0 + time[:3000], eta, solution[:,:3000], levels=np.arange(-6,6,0.05), cmap='RdBu')
-    plt.contourf(total_time, eta, total_solution, levels=np.arange(-6,6,0.05), cmap='RdBu')
-    plt.colorbar()
-    plt.xlim(0,10)
-    plt.show()
+        # add linear solution in (t,eta) to non-linear solution array
+        total_solution = np.concatenate((linear_solution, solution), axis=1)
+        total_time = np.concatenate((linear_t, time + t0))
 
+        print('TOTAL SOL SHAPE = ', total_solution.shape, 'TOTAL T SHAPE = ', total_time.shape)
 
+        print(np.shape(solution))
+        fig, ax = plt.subplots(1)
+        cont = ax.contourf(total_time, eta, total_solution, levels=np.arange(-4,4,0.05), cmap='RdBu')
+        for c in cont.collections:
+            c.set_rasterized(True)
+        plt.colorbar(cont, label='$\chi$')
+        ax.set_xlim(0,10)
+        ax.set_xlabel('$t$')
+        ax.set_ylabel('$\eta$')
+        plt.savefig("teta_badjoin.pdf")
+        plt.show()
     
-
-    """
 
     Nt = np.shape(solution)[1]
 
     solution_inner = np.zeros(solution.shape) # solution for r < Rp (and disc rotating counterclockwise)
+    eta_inner = - eta[::-1]
     for i in range(Neta):
         for j in range(Nt):
             solution_inner[i,j] = solution[int(Neta-1-i),j]
-    """
 
-    Nt = np.shape(total_solution)[1]
+    # The following will put the linear solution into returned solution for Chi
+    if False:
+        Nt = np.shape(total_solution)[1]
 
-    solution_inner = np.zeros(total_solution.shape) # solution for r < Rp (and disc rotating counterclockwise)
-    for i in range(Neta):
-        for j in range(Nt):
-            solution_inner[i,j] = total_solution[int(Neta-1-i),j]
+        solution_inner = np.zeros(total_solution.shape) # solution for r < Rp (and disc rotating counterclockwise)
+        for i in range(Neta):
+            for j in range(Nt):
+                solution_inner[i,j] = total_solution[int(Neta-1-i),j]
 
-    eta_inner = - eta[::-1]
+        eta_inner = - eta[::-1]
+        return total_time, eta, total_solution, eta_inner, solution_inner
 
-    #return time, eta, solution, eta_inner, solution_inner
-    return total_time, eta, total_solution, eta_inner, solution_inner
+    return time, eta, solution, eta_inner, solution_inner
+    

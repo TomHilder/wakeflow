@@ -108,10 +108,10 @@ def Lambda_fv(r, Rp, csp, hr, gamma, q, p):      # Eq. (29) Bollati et al. 2021
 def get_chi(pphi, rr, time, eta, eta_inner, eta_tilde, C, solution, solution_inner, t0, tf, Rp, x_match, l, cw, hr, q, p):
     # COMPUTATION OF Chi
 
-    """
-    if (rr > (Rp - x_match*l)) and (rr <(Rp + x_match*l)): # exclude points inside anulus from linear regime
+
+    if (rr > (Rp - x_match*l)) and (rr <(Rp + x_match*l)): # exclude points inside annulus from linear regime
         return 0.
-    """
+
 
     # change coordinates of the grid point (rr,pphi) to (t1,eta1)
     t1 = t(rr, Rp, hr, q, p)

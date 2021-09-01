@@ -1,14 +1,14 @@
 # parameter file for running wakeflow
 
 run_info:
-    name: "testinglinear"                        # give your run a name (results are saved a directory called this)
+    name: "5Mj_v2"                               # give your run a name (results are saved a directory called this)
                                                  # MUST NOT HAVE SPACES USE UNDERSCORES
     system: "HD 163296"                          # name of the system you are modelling
-    date: "07/05/21"                             # date of your run
+    date: "01/09/21"                             # date of your run
 
 disk:
     m_star: 1.9                                  # mass of central star in solar masses
-    m_planet: 4.0                                # mass of embedded planet(s) in Jupiter masses (list)
+    m_planet: 5.0                                # mass of embedded planet(s) in Jupiter masses (list)
     r_outer: 500                                 # outer radius of disk in au
     r_inner: 40                                  # inner radius of disk in au
     r_planet: 210                                # orbital radius of embedded planet in au
@@ -17,7 +17,7 @@ disk:
     p: 1.0                                       # p index, defined as rho \propto R^{-p}
     hr: 0.118                                    # disc flaring H/R at R0
     dens_ref: 1                                  # rho at R0 in g/cm^3
-    cw_rotation: False                           # clockwise rotating disk (boolean)
+    cw_rotation: False                           # clockwise rotating disk (boolean)   # FALSE FOR HD 163
 
 angles:
     inclination: -225                            # inclination of disk in degrees    (46.7)
@@ -25,11 +25,11 @@ angles:
     PAp: 45                                      # planet_az    (currently azimuthal angle FROM the PA)
 
 grid:
-    type: "cartesian"                            # "cylindrical" or "cartesian" or "mcfost" -- mcfost currently only supported grid
-    n_x: 1000                                     # number of x grid points
-    n_y: 1000                                     # number of y grid points
-    n_r: 160                                     # number of r grid points
-    n_phi: 140                                   # number of phi grid points
+    type: "mcfost"                               # "cylindrical" or "cartesian" or "mcfost" -- must choose mcfost to write fits file
+    n_x: 200                                     # number of x grid points
+    n_y: 200                                     # number of y grid points
+    n_r: 400                                     # number of r grid points
+    n_phi: 160                                   # number of phi grid points
     n_z: 50                                      # number of z grid points
     r_log: False                                 # use logarithmic scale for r points (boolean) -- ignored for mcfost grid
 
@@ -59,5 +59,5 @@ physical:
 
 numerical:
     CFL: 0.05                                    # CFL safety factor for Godunov scheme
-    scale_box: 1.0                               # scale factor for linear regime box side length
-    scale_box_ang: 1.8                           # NOT IMPLEMENTED - scale factor for linear regime box angular extend
+    scale_box: 1.0                               # scale factor for linear regime box side length -- default is 1
+    scale_box_ang: 1.8                           #  scale factor for linear regime box angular extend

@@ -23,10 +23,17 @@ class LinearPerts():
         self.X = mesh[0]
         self.Y = mesh[1]
 
+        # linear perturbations read in grid
+        x = self.X[0,:]
+        y = self.Y[:,0]
+
         # define constants for linear perts
         self.x_box = 2*self.p.scale_box
-        # box size
-        # cut off
+        
+        # cut square box grid in linear regime
+        self.x_cut = x[np.argmin(x < -self.x_box) : np.argmin(x < self.x_box) + 1]
+        self.y_cut = y[np.argmin(y < -self.x_box) : np.argmin(y < self.x_box) + 1]
+        
 
     def cut_box_square(self):
 
@@ -74,59 +81,7 @@ class LinearPerts():
         self.y_cut = y_cut
         self.x_sq = self.p.l * x_cut + self.p.r_planet
         self.y_sq = self.p.l * y_cut
-
-        # plotting (for debugging)
-        _, ax = plt.subplots()
-        myplot = ax.contourf(self.x_sq, self.y_sq, self.pert_rho_sq, levels=300, vmin=-4, vmax=4, cmap='RdBu')
-        plt.colorbar(myplot)
-        plt.show()
-
-        _, ax = plt.subplots()
-        myplot = ax.contourf(self.x_sq, self.y_sq, self.pert_v_r_sq, levels=300, cmap='RdBu')
-        plt.colorbar(myplot)
-        plt.show()
-
-        _, ax = plt.subplots()
-        myplot = ax.contourf(self.x_sq, self.y_sq, self.pert_v_phi_sq, levels=300, cmap='RdBu')
-        plt.colorbar(myplot)
-        plt.show()
-
-    """
-    def add_to_global_grid(self, global_grid):
-
-        # grab grid object
-        g = global_grid
-
-        # interpolate over square box
-        interp_v_r = RectBivariateSpline(self.y_sq, self.x_sq, self.pert_v_r_sq)
-        interp_v_phi = RectBivariateSpline(self.y_sq, self.x_sq, self.pert_v_phi_sq)
-        interp_rho = RectBivariateSpline(self.y_sq, self.x_sq, self.pert_rho_sq)
-
-        # convert global grid to Cartesian coordinates
-        global_R, global_PHI = np.meshgrid(g.r, g.phi)
-        global_X = global_R * np.cos(global_PHI)
-        global_Y = global_R * np.sin(global_PHI)
-
-        # evaluate interpolation functions over global grid
-        global_v_r_box = interp_v_r.ev(global_Y, global_X)
-        global_v_phi_box = interp_v_phi.ev(global_Y, global_X)
-        global_rho_box = interp_rho.ev(global_Y, global_X)
-
-        # construct global grid of zeros
-        zeros = np.zeros(global_v_r_box.shape)
-
-        # update global grid of zeros to have ones on coordinates inside linear box
-
-        # multiply each interpolated global grid by zeros/ones matrix
-
-        # add interpolation results to grid object
-
-        # plot for debugging
-        _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-        myplot = ax.contourf(global_PHI, global_R, global_rho_box, levels=300)
-        plt.colorbar(myplot)
-        plt.show()
-    """
+        
 
     def cut_box_annulus_segment(self):
 
@@ -154,11 +109,13 @@ class LinearPerts():
             self.p.scale_box_ang*np.arcsin(box_size*self.p.l / self.p.r_planet), 
             len(y_cut)
         )
+
         R, PHI = np.meshgrid(r, phi)
 
         # for the points on our annulus segment, use transformations to find the x,y values on the original perturbations grid
-        X_pert_grid = (R * np.cos(PHI) - self.p.r_planet) / self.p.l
-        Y_pert_grid = (R * np.sin(PHI)) / self.p.l
+        X_pert_grid = (R - self.p.r_planet) / self.p.l
+        Y_pert_grid = (self.p.r_planet * PHI) / self.p.l
+
 
         # cut big perturbations grid to just outside annulus
         self.r_min = self.p.r_planet - box_size*self.p.l
@@ -180,6 +137,12 @@ class LinearPerts():
         cut_v_phi = self.pert_v_phi[y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]
         cut_rho = self.pert_rho[y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]
 
+        # account for rotation direction
+        if self.p.a_cw == -1:
+            cut_v_r = np.flipud(cut_v_r)
+            cut_v_phi = -1*np.flipud(cut_v_phi)
+            cut_rho = np.flipud(cut_rho)
+
         # interpolation over cut (cartesian) grid
         interp_v_r = RectBivariateSpline(y_int_cut, x_int_cut, cut_v_r)
         interp_v_phi = RectBivariateSpline(y_int_cut, x_int_cut, cut_v_phi)
@@ -190,10 +153,14 @@ class LinearPerts():
         self.pert_v_phi_ann = interp_v_phi.ev(Y_pert_grid, X_pert_grid)
         self.pert_rho_ann = interp_v_rho.ev(Y_pert_grid, X_pert_grid)
 
-        # scale to cgs units (and account for rotation direction)
+        # scale to cgs units
         self.pert_v_r_ann *= self.p.c_s_planet*(self.p.m_thermal/self.p.m_star)
-        self.pert_v_phi_ann *= self.p.c_s_planet*(self.p.m_thermal/self.p.m_star)*self.p.a_cw
+        self.pert_v_phi_ann *= self.p.c_s_planet*(self.p.m_thermal/self.p.m_star)
         self.pert_rho_ann *= (self.p.m_planet/self.p.m_thermal)
+
+        # scale velocities to km/s
+        self.pert_v_r_ann *= 1e-5
+        self.pert_v_phi_ann *= 1e-5
 
         # save annulus grid
         self.r_ann = r
@@ -204,7 +171,7 @@ class LinearPerts():
         """
         # plotting (for debugging)
         _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-        myplot = ax.contourf(PHI, R, self.pert_rho_ann, levels=300, vmin=0.01, vmax=4)
+        myplot = ax.contourf(PHI, R, self.pert_v_r_ann, levels=300, vmin=-2E4, vmax=2E4, cmap='RdBu')
         ax.set_ylim(0, self.p.r_outer)
         plt.colorbar(myplot)
         plt.show()
