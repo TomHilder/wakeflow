@@ -154,8 +154,8 @@ class LinearPerts():
         self.pert_rho_ann = interp_v_rho.ev(Y_pert_grid, X_pert_grid)
 
         # scale to cgs units
-        self.pert_v_r_ann *= self.p.c_s_planet*(self.p.m_thermal/self.p.m_star)
-        self.pert_v_phi_ann *= self.p.c_s_planet*(self.p.m_thermal/self.p.m_star)
+        self.pert_v_r_ann *= self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)
+        self.pert_v_phi_ann *= self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)
         self.pert_rho_ann *= (self.p.m_planet/self.p.m_thermal)
 
         # scale velocities to km/s

@@ -381,7 +381,7 @@ class Grid:
             plt.colorbar()
         else:
             _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-            myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.rho[:,z_slice,:], levels=300, cmap='RdBu')
+            myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.rho[:,z_slice,:], levels=300)
             ax.set_ylim(0, self.p.r_outer)
             plt.colorbar(myplot)
         plt.title(r"$\rho$")

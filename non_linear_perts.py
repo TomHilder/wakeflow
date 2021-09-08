@@ -61,7 +61,7 @@ class NonLinearPerts():
         # perform transformation
         for i in range(len(y_rest)):
             eta_IC[i] = Eta(r_IC[i], phi_IC[i], self.p.r_planet, self.p.hr, self.p.q, -1)
-            t_IC[i] = t(r_IC[i], self.p.r_planet, self.p.hr, self.p.q, self.p.p)
+            t_IC[i] = t(r_IC[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
 
         # restrict eta range using eta_max
         self.eta = eta_IC[(eta_IC > -eta_max) & (eta_IC < eta_max)]

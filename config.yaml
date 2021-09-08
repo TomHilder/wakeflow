@@ -28,7 +28,7 @@ grid:
     type: "mcfost"                               # "cylindrical" or "cartesian" or "mcfost" -- must choose mcfost to write fits file
     n_x: 200                                     # number of x grid points
     n_y: 200                                     # number of y grid points
-    n_r: 400                                     # number of r grid points
+    n_r: 200                                     # number of r grid points
     n_phi: 160                                   # number of phi grid points
     n_z: 50                                      # number of z grid points
     r_log: False                                 # use logarithmic scale for r points (boolean) -- ignored for mcfost grid
