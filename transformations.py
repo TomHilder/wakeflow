@@ -122,8 +122,6 @@ def get_chi(pphi, rr, time, eta, eta_inner, eta_tilde, C, solution, solution_inn
         #print(index_t)
         grid_t = [t0+time[index_t-1], t0+time[index_t]]
 
-        print(grid_t)
-
         # the density (Chi) azimuthal profile is flipped along the azimuthal direction
         # both passing from r > Rp to r < Rp and from cw = -1 to cw = +1:
 

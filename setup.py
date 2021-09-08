@@ -1,7 +1,16 @@
 import yaml, sys, os
 import shutil as sh
 import numpy as np
-from mcfost_interface import make_mcfost_parameter_file, make_mcfost_grid_data, read_mcfost_grid_data
+from mcfost_interface import make_mcfost_parameter_file, make_mcfost_grid_data, read_mcfost_grid_data, HiddenPrints
+
+def warning(warning_msg):
+
+        statement = f"Warning: {warning_msg} Continue? [y/n]: "
+        cont = input(statement)
+        if cont != "y":
+            return False
+        else:
+            return True
 
 def run_setup():
 
@@ -24,9 +33,26 @@ def run_setup():
     system_path = f"{params.system}/"
     os.makedirs(system_path, exist_ok=True)
 
-    # create results directory
+    # create results directory path
     results_path = f"{params.system}/{params.name}/"
-    os.makedirs(results_path, exist_ok=True)
+
+    # check if results directory already exists, ask to overwrite if yes
+    results_exist = os.path.isdir(results_path)
+    if results_exist is True:
+        if not warning("Results already exist for run name, they will be overwritten."):
+            sys.exit(1)
+        else:
+            sh.rmtree(results_path)
+            os.makedirs(results_path)
+
+    # create individual directories for each planet mass result
+    if params.m_planet_array is not None:
+        for mass in params.m_planet_array:
+            individual_result_path = f"{params.system}/{params.name}/{mass}Mj"
+            os.makedirs(individual_result_path, exist_ok=True)
+    else:
+        individual_result_path = f"{params.system}/{params.name}/{params.m_planet}Mj"
+        os.makedirs(individual_result_path, exist_ok=True)
 
     # copy configuration file used to results directory
     sh.copy(config_file, results_path)
@@ -35,7 +61,7 @@ def run_setup():
     if params.run_mcfost or params.grid_type == "mcfost":
 
         # make directory for mcfost outputs
-        mcfost_path = f"{params.system}/{params.name}/mcfost_output/"
+        mcfost_path = f"{params.system}/{params.name}/mcfost/"
         os.makedirs(mcfost_path, exist_ok=True)
 
         # generate mcfost parameter file
@@ -62,7 +88,7 @@ class Constants:
 class Parameters(Constants):
     def __init__(self, config_file):
 
-        print(f"Reading parameters from {config_file} ")
+        print(f"Reading parameters from {config_file} \n ")
 
         # inherit constants
         super().__init__()
@@ -73,11 +99,17 @@ class Parameters(Constants):
         # run_info parameters
         self.name = str(config["run_info"]["name"])
         self.system = str(config["run_info"]["system"])
-        self.date = str(config["run_info"]["date"])
 
         # disk parameters
         self.m_star = float(config["disk"]["m_star"])
-        self.m_planet = float(config["disk"]["m_planet"])
+
+        try:
+            self.m_planet = float(config["disk"]["m_planet"])
+            self.m_planet_array = None
+        except:
+            self.m_planet = None
+            self.m_planet_array = list(config["disk"]["m_planet"])
+
         self.r_outer = float(config["disk"]["r_outer"])
         self.r_inner = float(config["disk"]["r_inner"])
         self.r_planet = float(config["disk"]["r_planet"])
@@ -155,14 +187,27 @@ class Parameters(Constants):
 
     def do_sanity_checks(self):
 
-        print(f"Thermal mass is {self.m_thermal} M_Jup")
-        print(f"Planet mass is {self.m_planet / self.m_thermal} thermal masses")
+        if self.m_planet != None:
+            print(f"Thermal mass is {self.m_thermal} M_Jup")
+            print(f"Planet mass is {self.m_planet / self.m_thermal} thermal masses")
 
-        # check that planet mass does not exceed thermal mass
-        if self.m_planet > self.m_thermal:
-            print("Planet mass exceeds thermal mass. This may break the solution. ")
-            #if not self.warning(f"Planet mass exceeds thermal mass. This may break the solution."):
-            #    return False
+            # check that planet mass does not exceed thermal mass
+            if self.m_planet > self.m_thermal:
+                print("Planet mass exceeds thermal mass. This may break the solution. ")
+                
+        else:
+            print(f"Thermal mass is {self.m_thermal} M_Jup")
+            print(f"Planet masses are: ", end='')
+            print(np.array(self.m_planet_array)/self.m_thermal, end='')
+            print(" thermal masses")
+
+            # check that planet mass does not exceed thermal mass
+            exceed = False
+            for mass in self.m_planet_array:
+                if mass > self.m_thermal:
+                    exceed = True
+            if exceed ==  True:
+                print("At least one planet mass exceeds thermal mass. This may break the solution. ")
 
         # check grid type
         if self.grid_type != "cartesian" and self.grid_type != "cylindrical" and self.grid_type != "mcfost":
@@ -177,21 +222,13 @@ class Parameters(Constants):
 
         # check linear box scale factor
         if self.scale_box != 1:
-            if not self.warning("Changing linear box scale factor can cause strange results."):
+            if not warning("Changing linear box scale factor can cause strange results."):
                 return False
 
         # check CFL
         if self.CFL > 0.5:
-            if not self.warning("CFL chosen > 0.5, this will likely break the numerical PDE solver."):
+            if not warning("CFL chosen > 0.5, this will likely break the numerical PDE solver."):
                 return False
 
-        print("Parameters Ok. Continuing... ")
+        print("Parameters Ok. Continuing. \n")
         return True
-      
-    def warning(self, warning_msg):
-        statement = f"Warning: {warning_msg} Continue? [y/n]: "
-        cont = input(statement)
-        if cont != "y":
-            return False
-        else:
-            return True

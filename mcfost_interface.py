@@ -6,8 +6,6 @@ from pymcfost.parameters import Params
 from pymcfost.disc_structure import Disc
 
 def make_mcfost_parameter_file(parameters):
-
-    print("Generating parameter file for MCFOST")
     
     # grab run parameters
     p = parameters
@@ -71,24 +69,23 @@ def make_mcfost_parameter_file(parameters):
     mp.mol.molecule[0].nv = p.n_v       # number of velocity channels
 
     # write mcfost parameter file
-    mp.writeto(f"{p.system}/{p.name}/mcfost_output/mcfost_{p.name}.para")
-
+    mp.writeto(f"{p.system}/{p.name}/mcfost/mcfost_{p.name}.para")
 
 def make_mcfost_grid_data(parameters):
 
-    print("\n ====================================================")
+    print("Generating MCFOST grid data...")
 
     # grab run parameters
     p = parameters
 
-    # generate grid data by running mcfost (in mcfost_output directory)
+    # generate grid data by running mcfost (in mcfost directory)
     working_dir = os.getcwd()
-    os.chdir(f"{p.system}/{p.name}/mcfost_output/")
+    os.chdir(f"{p.system}/{p.name}/mcfost/")
     subprocess.call(["rm", "-rf", "data_disk", "data_disk_old"])
-    subprocess.call(["mcfost", f"mcfost_{p.name}.para", "-disk_struct"])
+    subprocess.call(["mcfost", f"mcfost_{p.name}.para", "-disk_struct"], stdout=subprocess.DEVNULL)
     os.chdir(working_dir)
 
-    print("==================================================== \n")
+    print("Done")
 
 def read_mcfost_grid_data(parameters):
 
@@ -97,7 +94,7 @@ def read_mcfost_grid_data(parameters):
     
     # reading disk data
     with HiddenPrints():
-        mcfost_disk = Disc(f"./{p.system}/{p.name}/mcfost_output/")
+        mcfost_disk = Disc(f"./{p.system}/{p.name}/mcfost/")
 
     # getting radii and heights
     r = mcfost_disk.r()[:, p.n_z:, :]

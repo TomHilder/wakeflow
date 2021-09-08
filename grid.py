@@ -5,6 +5,7 @@ import pymcfost
 from mcfost_interface import read_mcfost_grid_data
 from matplotlib.colors import LogNorm
 import astropy.io.fits as fits
+import shutil as sh
 
 # NOTE: grid dimensions are (x,z,y) or (phi,z,r)
 
@@ -345,7 +346,7 @@ class Grid:
         # merge data arrays
         self.rho = g.rho
 
-    def show_disk2D(self, z_slice, save=False, name='disk2Dplot'):
+    def show_disk2D(self, z_slice, save=False, name='disk2Dplot'):   # NEED TO UPDATE SAVED DIRECTORIES FOR NEW STRUCTURE
 
         # plot v_r
         if self.info["Type"] == "cartesian":
@@ -443,4 +444,10 @@ class Grid:
             # Write a fits file for mcfost
             print("Writing a fits file for MCFOST")
             fitsname = "wakeflow_model.fits"
-            hdul.writeto(f"{self.p.system}/{self.p.name}/mcfost_output/{fitsname}", overwrite=True)
+            hdul.writeto(f"{self.p.system}/{self.p.name}/{self.p.m_planet}Mj/{fitsname}", overwrite=True)
+
+            # Copy mcfost parameter file here too
+            sh.copy(
+                f"{self.p.system}/{self.p.name}/mcfost/mcfost_{self.p.name}.para",
+                f"{self.p.system}/{self.p.name}/{self.p.m_planet}Mj/mcfost.para"
+            )
