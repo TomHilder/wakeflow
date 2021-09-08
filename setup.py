@@ -137,7 +137,7 @@ class Parameters(Constants):
         # plot parameters
         self.make_plots = bool(config["plotting"]["make_plots"])
         self.show_plots = bool(config["plotting"]["show_plots"])
-        self.synthetic_velocity_channels = list(config["plotting"]["synthetic_velocity_channels"])
+        #self.synthetic_velocity_channels = list(config["plotting"]["synthetic_velocity_channels"])
 
         # mcfost parameters
         self.run_mcfost = bool(config["mcfost"]["run_mcfost"])
