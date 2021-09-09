@@ -431,6 +431,8 @@ class Grid:
                 plt.savefig(f'{savedir}/rho_z{z_slice}.pdf')
             if show:
                 plt.show()
+        
+        plt.close("all")
     
     def write_fits_file(self):
 
@@ -493,3 +495,24 @@ class Grid:
                 f"{self.p.system}/{self.p.name}/mcfost/mcfost_{self.p.name}.para",
                 f"{self.p.system}/{self.p.name}/{self.p.m_planet}Mj/mcfost.para"
             )
+    
+    def save_results(self, label):
+
+        savedir = f"{self.p.system}/{self.p.name}/{self.p.m_planet}Mj"
+
+        # save grid:
+        if self.p.grid_type == "cartesian":
+            np.save(f"{savedir}/X.npy", self.X)
+            np.save(f"{savedir}/Z.npy", self.Z_xy)
+            np.save(f"{savedir}/Y.npy", self.Y)
+        else:
+            np.save(f"{savedir}/{label}_PHI.npy", self.PHI)
+            np.save(f"{savedir}/{label}_Z.npy", self.Z)
+            np.save(f"{savedir}/{label}_R.npy", self.R)
+
+        # save results:
+        np.save(f"{savedir}/{label}_v_r.npy", self.v_r)
+        np.save(f"{savedir}/{label}_v_phi.npy", self.v_phi)
+        np.save(f"{savedir}/{label}_rho.npy", self.rho)
+
+        

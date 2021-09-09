@@ -4,7 +4,7 @@ from scipy.interpolate import griddata
 from copy import copy
 import matplotlib.pyplot as plt
 from burgers import solve_burgers
-from transformations import phi_wake, Eta, mod2pi, t, t_integral, t_integrand, g, Lambda_fu, Lambda_fv, get_chi, get_dens_vel, xy_to_etat
+from transformations import phi_wake, Eta, mod2pi, t, t_integral, t_integrand, g, Lambda_fu, Lambda_fv, get_chi, get_dens_vel, xy_to_etat, plot_r_t
 
 # TODO: Still using Francesco's code without modifications besides variable names and arguments, try to optimise/clean up further
 
@@ -37,17 +37,10 @@ class NonLinearPerts():
         # extract profile of constant x along edge of box for initial condition
         profile = lp.pert_rho[:,index] / np.sqrt(np.abs(lp.x_box))
 
-        #plt.plot(y, profile)
-        #plt.show()
-
         # restrict y range --- I'm not sure why this is necessary but it is. Larger values will cause issues
         y_max = 30
         profile_rest = profile[(y > -y_max) & (y < y_max)]
         y_rest = y[(y > -y_max) & (y < y_max)]
-
-        plt.plot(y, profile)
-        plt.plot(y_rest, profile_rest)
-        plt.show()
 
         # ## find eta points for IC profile using full transformation
         # find local cart. coords in real units
@@ -108,7 +101,13 @@ class NonLinearPerts():
         # you will need to run cut_box_square on the linear perts object before doing this.
         # it is okay to run it as well as the annulus cut, they don't overwrite each other
 
-        if True:
+        if self.p.show_teta_debug_plots:
+
+            # run square box cut
+            lp.cut_box_square()
+
+            # plot r, t
+            plot_r_t(self.p)
 
             # Local Cartesian grid which the linear solution was calculated on, meshgrid version
             X, Y = np.meshgrid(lp.x_cut,lp.y_cut)
@@ -208,7 +207,7 @@ class NonLinearPerts():
 
         print('  * Solving Burgers equation ...')
         time, eta, solution, eta_inner, solution_inner  = solve_burgers(
-            self.eta, self.profile, self.p.gamma, beta_p, self.C, self.p.CFL, self.eta_tilde, self.t0, self.linear_solution, self.linear_t
+            self.eta, self.profile, self.p.gamma, beta_p, self.C, self.p.CFL, self.eta_tilde, self.t0, self.linear_solution, self.linear_t, self.p.show_teta_debug_plots
         )
 
         print('  * Computing nonlinear perturbations ...')

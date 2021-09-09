@@ -185,4 +185,6 @@ def plot_r_t(params):
         times.append(t(rad, params.r_planet, params.hr_planet, params.q, params.p))
 
     plt.plot(r, times)
+    plt.xlabel("r")
+    plt.ylabel('t')
     plt.show()

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 # TODO: Implement Numba on this function to make it a speedy boi
 
-def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_solution, linear_t): # Solve eq. (10) Bollati et al. 2021
+def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_solution, linear_t, show_teta): # Solve eq. (10) Bollati et al. 2021
 
     profile = profile * (gamma+1) * beta_p / 2**(3/4) # Eq. (15) Bollati et al. 2021
 
@@ -21,13 +21,15 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_sol
         eta = np.append(eta,eta[-1]+deta)
         extr = eta[-1]
         profile = np.append(profile,0)
-        linear_solution = np.append(profile, 0, axis=0)
+        if show_teta:
+            linear_solution = np.append(profile, 0, axis=0)
     extr = eta[0]
     while extr>eta_min:
         eta = np.insert(eta,0,eta[0]-deta)
         extr = eta[0]
         profile = np.insert(profile,0,0)
-        linear_solution = np.insert(linear_solution, 0, 0, axis=0)
+        if show_teta:
+            linear_solution = np.insert(linear_solution, 0, 0, axis=0)
 
     Neta = len(eta) # number of centers
 
@@ -39,8 +41,6 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_sol
     L  = b-a   # spatial grid length
     T  = tf    # final time
     """
-
-    # set time array
 
     x = np.zeros(Neta+1) # cells edges
     for i in range(0,Neta+1):
@@ -145,7 +145,7 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_sol
     plt.show()
     """
 
-    if True: # combining linear and non-linear solution and plotting
+    if show_teta: # combining linear and non-linear solution and plotting
 
         # scale linear solution
         linear_solution = linear_solution * (gamma+1) * beta_p / 2**(3/4)

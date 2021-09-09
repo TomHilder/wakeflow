@@ -137,7 +137,12 @@ class Parameters(Constants):
         # plot parameters
         self.make_midplane_plots = bool(config["plotting"]["make_midplane_plots"])
         self.show_midplane_plots = bool(config["plotting"]["show_midplane_plots"])
-        #self.synthetic_velocity_channels = list(config["plotting"]["synthetic_velocity_channels"])
+        self.show_teta_debug_plots = bool(config["plotting"]["show_teta_debug_plots"])
+
+        # results parameters
+        self.save_perturbations = bool(config["results"]["save_perturbations"])
+        self.save_total = bool(config["results"]["save_total"])
+        self.write_FITS = bool(config["results"]["write_FITS"])
 
         # mcfost parameters
         self.run_mcfost = bool(config["mcfost"]["run_mcfost"])
@@ -214,10 +219,13 @@ class Parameters(Constants):
             print("Error: Please choose a valid grid type (cartesian or cylindrical or mcfost)")
             return False
         
-        # check settings OK if mcfost is to be run  -- NEEDS TO BE UPDATED
+        # check settings OK if mcfost is to be run
         if self.run_mcfost:
             if self.grid_type != "mcfost":
                 print("Error: You must use mcfost grid to run mcfost")
+                return False
+            elif self.write_FITS != True:
+                print("Error: You must use write FITS file to run mcfost")
                 return False
 
         # check linear box scale factor
