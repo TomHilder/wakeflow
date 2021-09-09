@@ -52,17 +52,12 @@ def make_mcfost_parameter_file(parameters):
 
     mp.stars[0].Teff = p.temp           # star temperature
 
-    #mp.map.PA = p.PA - 90               # PA angle
-    mp.map.PA = p.PA
+    mp.map.PA = p.PA                    # PA angle
 
-    #mp.map.RT_imin = -1*p.inclination   # inclination
-    #mp.map.RT_imax = -1*p.inclination
-    mp.map.RT_imin = p.inclination   # inclination
+    mp.map.RT_imin = p.inclination      # inclination
     mp.map.RT_imax = p.inclination
 
-    #mp.map.RT_az_min = -1*p.PAp         # azimuth used to rotate to correct planet position
-    #mp.map.RT_az_max = -1*p.PAp
-    mp.map.RT_az_min = p.PAp         # azimuth used to rotate to correct planet position
+    mp.map.RT_az_min = p.PAp            # azimuth used to rotate to correct planet position
     mp.map.RT_az_max = p.PAp
 
     mp.mol.molecule[0].v_max = p.v_max  # max velocity

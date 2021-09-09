@@ -346,49 +346,91 @@ class Grid:
         # merge data arrays
         self.rho = g.rho
 
-    def show_disk2D(self, z_slice, save=False, name='disk2Dplot'):   # NEED TO UPDATE SAVED DIRECTORIES FOR NEW STRUCTURE
+    def show_disk2D(self, z_slice, show=False, save=False):   # NEED TO UPDATE SAVED DIRECTORIES FOR NEW STRUCTURE
 
-        # plot v_r
+        # parameters
+        savedir = f"{self.p.system}/{self.p.name}/{self.p.m_planet}Mj"
+        contour_lvls = 300
+
+        # find maximum contours
+        vr_max = np.max(self.v_r[:,z_slice,:])
+        vphi_max = np.max(self.v_phi[:,z_slice,:])
+        rho_max = np.max(self.rho[:,z_slice,:])
+
+        # Cartesian grid plots
         if self.info["Type"] == "cartesian":
-            plt.contourf(self.X[:,0,0], self.Y[0,0,:], self.v_r[:,z_slice,:], levels=300, cmap="RdBu")
+
+            # v_r
+            plt.close("all")
+            plt.contourf(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.v_r[:,z_slice,:]), levels=contour_lvls, vmin=-vr_max, vmax=vr_max, cmap="RdBu")
             plt.colorbar()
+            plt.title(r"$v_r$")
+            if save:
+                plt.savefig(f'{savedir}/vr_z{z_slice}.pdf')
+            if show:
+                plt.show()
+
+            # v_phi
+            plt.close("all")
+            plt.contourf(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.v_phi[:,z_slice,:]), levels=contour_lvls, vmin=-vphi_max, vmax=vphi_max, cmap='RdBu')
+            plt.colorbar()
+            plt.title(r"$v_{\phi}$")
+            if save:
+                plt.savefig(f'{savedir}/vphi_z{z_slice}.pdf')
+            if show:
+                plt.show()
+
+            # rho
+            plt.close("all")
+            plt.contourf(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.rho[:,z_slice,:]), levels=contour_lvls, vmin=-rho_max, vmax=rho_max, cmap='RdBu')
+            plt.colorbar()
+            plt.title(r"$\rho$")
+            if save:
+                plt.savefig(f'{savedir}/rho_z{z_slice}.pdf')
+            if show:
+                plt.show()
+
+        # Polar grid plots
         else:
+
+            # v_r
+            plt.close("all")
             _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-            myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:], levels=300, cmap='RdBu')
+            myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:], levels=contour_lvls, vmin=-vr_max, vmax=vr_max, cmap='RdBu')
             ax.set_ylim(0, self.p.r_outer)
             plt.colorbar(myplot)
-        plt.title(r"$v_r$")
-        if save:
-            plt.savefig(f'{self.p.system}/{self.p.name}/{name}_vr_z{z_slice}.pdf')
-        plt.show()
+            plt.title(r"$v_r$")
+            plt.title(r"$v_r$")
+            if save:
+                plt.savefig(f'{savedir}/vr_z{z_slice}.pdf')
+            if show:
+                plt.show()
 
-        # plot v_phi
-        if self.info["Type"] == "cartesian":
-            plt.contourf(self.X[:,0,0], self.Y[0,0,:], self.v_phi[:,z_slice,:], levels=300)
-            plt.colorbar()
-        else:
+            # v_phi
+            plt.close("all")
             _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-            myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_phi[:,z_slice,:], levels=300, cmap='RdBu')
+            myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_phi[:,z_slice,:], levels=contour_lvls, vmin=-vphi_max, vmax=vphi_max, cmap='RdBu')
             ax.set_ylim(0, self.p.r_outer)
             plt.colorbar(myplot)
-        plt.title(r"$v_{\phi}$")
-        if save:
-            plt.savefig(f'{self.p.system}/{self.p.name}/{name}_vphi_z{z_slice}.pdf')
-        plt.show()
+            plt.title(r"$v_{\phi}$")
+            plt.title(r"$v_{\phi}$")
+            if save:
+                plt.savefig(f'{savedir}/vphi_z{z_slice}.pdf')
+            if show:
+                plt.show()
 
-        # plot rho
-        if self.info["Type"] == "cartesian":
-            plt.contourf(self.X[:,0,0], self.Y[0,0,:], self.rho[:,z_slice,:], levels=300)
-            plt.colorbar()
-        else:
+            # rho
+            plt.close("all")
             _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-            myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.rho[:,z_slice,:], levels=300)
+            myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.rho[:,z_slice,:], levels=contour_lvls, vmin=-rho_max, vmax=rho_max, cmap='RdBu')
             ax.set_ylim(0, self.p.r_outer)
             plt.colorbar(myplot)
-        plt.title(r"$\rho$")
-        if save:
-            plt.savefig(f'{self.p.system}/{self.p.name}/{name}_rho_z{z_slice}.pdf')
-        plt.show()
+            plt.title(r"$\rho$")
+            plt.title(r"$\rho$")
+            if save:
+                plt.savefig(f'{savedir}/rho_z{z_slice}.pdf')
+            if show:
+                plt.show()
     
     def write_fits_file(self):
 

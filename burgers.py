@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 # TODO: Implement Numba on this function to make it a speedy boi
 
-def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0): #, linear_solution, linear_t): # Solve eq. (10) Bollati et al. 2021
+def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_solution, linear_t): # Solve eq. (10) Bollati et al. 2021
 
     profile = profile * (gamma+1) * beta_p / 2**(3/4) # Eq. (15) Bollati et al. 2021
 
@@ -21,11 +21,13 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0): #, linear
         eta = np.append(eta,eta[-1]+deta)
         extr = eta[-1]
         profile = np.append(profile,0)
+        linear_solution = np.append(profile, 0, axis=0)
     extr = eta[0]
     while extr>eta_min:
         eta = np.insert(eta,0,eta[0]-deta)
         extr = eta[0]
         profile = np.insert(profile,0,0)
+        linear_solution = np.insert(linear_solution, 0, 0, axis=0)
 
     Neta = len(eta) # number of centers
 
@@ -143,10 +145,7 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0): #, linear
     plt.show()
     """
 
-    if False: # combining linear and non-linear solution and plotting
-
-        print('LIN SOLUTION SHAPE = ', linear_solution.shape)
-        print('NONLIN SOLUTION SHAPE =', solution.shape)
+    if True: # combining linear and non-linear solution and plotting
 
         # scale linear solution
         linear_solution = linear_solution * (gamma+1) * beta_p / 2**(3/4)
@@ -155,9 +154,6 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0): #, linear
         total_solution = np.concatenate((linear_solution, solution), axis=1)
         total_time = np.concatenate((linear_t, time + t0))
 
-        print('TOTAL SOL SHAPE = ', total_solution.shape, 'TOTAL T SHAPE = ', total_time.shape)
-
-        print(np.shape(solution))
         fig, ax = plt.subplots(1)
         cont = ax.contourf(total_time, eta, total_solution, levels=np.arange(-4,4,0.05), cmap='RdBu')
         for c in cont.collections:
@@ -166,7 +162,7 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0): #, linear
         ax.set_xlim(0,10)
         ax.set_xlabel('$t$')
         ax.set_ylabel('$\eta$')
-        plt.savefig("teta_badjoin.pdf")
+        #plt.savefig("teta_badjoin.pdf")
         plt.show()
     
 

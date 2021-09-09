@@ -1,7 +1,7 @@
 # DEFAULT parameter file for running wakeflow, HD 163296 parameters as example, set to run mcfost
 
 run_info:
-    name: "0deg"                                 # give your run a name (results are saved a directory called this, don't use spaces)
+    name: "plottesting"                          # give your run a name (results are saved a directory called this, don't use spaces)
     system: "HD_163296"                          # name of the system you are modelling
 
 disk:
@@ -23,7 +23,7 @@ angles:
     PAp: 45                                      # planet_az    (currently azimuthal angle FROM the PA)
 
 grid:
-    type: "mcfost"                               # "cylindrical" or "cartesian" or "mcfost" -- must choose mcfost to write fits file
+    type: "cartesian"                            # "cylindrical" or "cartesian" or "mcfost" -- must choose mcfost to write fits file
     n_x: 200                                     # number of x grid points
     n_y: 200                                     # number of y grid points
     n_r: 200                                     # number of r grid points
@@ -32,8 +32,8 @@ grid:
     r_log: False                                 # use logarithmic scale for r points (boolean) -- ignored for mcfost grid
 
 plotting:
-    make_plots: True                             # NOT IMPLEMENTED - create plots of velocity components and density
-    show_plots: False                            # NOT IMPLEMENTED - show plots after code has finished running
+    make_midplane_plots: True                    # NOT IMPLEMENTED - create midplane plots of velocity components and density
+    show_midplane_plots: False                   # NOT IMPLEMENTED - show plots after code has finished running
 
 # The following settings require an installation of mcfost and pymcfost and YOU MUST USE GRID TYPE MCFOST
 

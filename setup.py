@@ -135,8 +135,8 @@ class Parameters(Constants):
         self.r_log = bool(config["grid"]["r_log"])
 
         # plot parameters
-        self.make_plots = bool(config["plotting"]["make_plots"])
-        self.show_plots = bool(config["plotting"]["show_plots"])
+        self.make_midplane_plots = bool(config["plotting"]["make_midplane_plots"])
+        self.show_midplane_plots = bool(config["plotting"]["show_midplane_plots"])
         #self.synthetic_velocity_channels = list(config["plotting"]["synthetic_velocity_channels"])
 
         # mcfost parameters

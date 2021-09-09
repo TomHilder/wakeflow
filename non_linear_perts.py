@@ -45,6 +45,10 @@ class NonLinearPerts():
         profile_rest = profile[(y > -y_max) & (y < y_max)]
         y_rest = y[(y > -y_max) & (y < y_max)]
 
+        plt.plot(y, profile)
+        plt.plot(y_rest, profile_rest)
+        plt.show()
+
         # ## find eta points for IC profile using full transformation
         # find local cart. coords in real units
         x_IC = self.p.l * np.repeat(lp.x_box, len(y_rest))
@@ -60,20 +64,15 @@ class NonLinearPerts():
 
         # perform transformation
         for i in range(len(y_rest)):
-            eta_IC[i] = Eta(r_IC[i], phi_IC[i], self.p.r_planet, self.p.hr, self.p.q, -1)
+            eta_IC[i] = Eta(r_IC[i], phi_IC[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
             t_IC[i] = t(r_IC[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
 
         # restrict eta range using eta_max
         self.eta = eta_IC[(eta_IC > -eta_max) & (eta_IC < eta_max)]
         self.profile = profile_rest[(eta_IC > -eta_max) & (eta_IC < eta_max)]
 
-        #plt.plot(self.eta, self.profile)
-        #plt.show()
-
         # set t0
         self.t0 = t_IC[0]
-
-        # ##
 
         # old, approximate IC extraction procedure
         if False:
@@ -82,7 +81,6 @@ class NonLinearPerts():
             self.profile = profile[(y - y_match > -eta_max) & (y - y_match < eta_max)]
             self.eta = y_cut - y_match*np.ones(len(y_cut))
             self.t0 = t(self.p.r_planet + self.p.l * lp.x_box, self.p.r_planet, self.p.hr, self.p.q, self.p.p)
-
 
         # set eta_tilde:
         for i in range(len(self.eta)):
@@ -110,7 +108,7 @@ class NonLinearPerts():
         # you will need to run cut_box_square on the linear perts object before doing this.
         # it is okay to run it as well as the annulus cut, they don't overwrite each other
 
-        if False:
+        if True:
 
             # Local Cartesian grid which the linear solution was calculated on, meshgrid version
             X, Y = np.meshgrid(lp.x_cut,lp.y_cut)
@@ -122,18 +120,16 @@ class NonLinearPerts():
             X_rest = X[:,x_len:index]
             Y_rest = Y[:,x_len:index]
 
-            print("Y range is ", np.max(Y_rest), np.min(Y_rest))
-
             # Find Chi for linear solution, only taking positive values of x
             # The "index" value also makes it so we do not go outside the linear box
             linear_profile = lp.cut_rho[:,x_len:index] / np.sqrt(np.abs(X_rest))
 
             # Find etas for the box using IC method
             linear_eta = Y_rest + np.sign(X_rest) * 0.5 * X_rest**2
-            print("Eta Range is :", np.max(linear_eta), np.min(linear_eta))
 
             # Find etas using proper transformations
-            hp = self.p.hr * self.p.r_planet
+            #hp = self.p.hr * self.p.r_planet
+            hp = self.p.hr_planet * self.p.r_planet
             x_glob = 2 * hp * X_rest / 3.
             y_glob = 2 * hp * Y_rest / 3.
             r_glob = x_glob + self.p.r_planet
@@ -143,8 +139,8 @@ class NonLinearPerts():
             for i in range(eta_lin.shape[0]):
                 #print(str(i))
                 for j in range(eta_lin.shape[1]):
-                    eta_lin[i,j] = Eta(r_glob[i,j], phi_glob[i,j], self.p.r_planet, self.p.hr, self.p.q, -self.p.a_cw)
-                    t_lin[i,j] = t(r_glob[i,j], self.p.r_planet, self.p.hr, self.p.q, self.p.p)
+                    eta_lin[i,j] = Eta(r_glob[i,j], phi_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, -self.p.a_cw)
+                    t_lin[i,j] = t(r_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
 
             # Plot Chi vs eta when using eta transformation used for IC cut out
             """
@@ -184,8 +180,10 @@ class NonLinearPerts():
                 method='linear'
             )
 
-            plt.plot(eta_lin_reg, lin_solution[:,-1])
-            plt.plot(self.eta, self.profile)
+            #plt.plot(linear_eta[:,-1], linear_profile[:,-1])       # approx
+            plt.plot(eta_lin[:,-1], linear_profile[:,-1])           # integral trans
+            plt.plot(eta_lin_reg, lin_solution[:,-1])               # interpolated integral trans
+            #plt.plot(self.eta, self.profile, c='k')                # IC
             plt.show()
 
             # plotting (for debugging)
@@ -210,7 +208,7 @@ class NonLinearPerts():
 
         print('  * Solving Burgers equation ...')
         time, eta, solution, eta_inner, solution_inner  = solve_burgers(
-            self.eta, self.profile, self.p.gamma, beta_p, self.C, self.p.CFL, self.eta_tilde, self.t0 #self.linear_solution, self.linear_t
+            self.eta, self.profile, self.p.gamma, beta_p, self.C, self.p.CFL, self.eta_tilde, self.t0, self.linear_solution, self.linear_t
         )
 
         print('  * Computing nonlinear perturbations ...')

@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.integrate import quad
 from scipy.interpolate import RectBivariateSpline
 
@@ -176,3 +177,12 @@ def get_dens_vel(rr, Chi, gamma ,Rp, cw, csp, hr, q, p):
     vnl = np.sign(rr-Rp) * Lfv * Chi * (-cw) # Eq. (24) Bollati et al. 2021 (the sign of v is reversed if we change cw)
 
     return dnl, unl, vnl
+
+def plot_r_t(params):
+    r = np.linspace(params.r_planet, params.r_outer, 1000)
+    times = []
+    for rad in r:
+        times.append(t(rad, params.r_planet, params.hr_planet, params.q, params.p))
+
+    plt.plot(r, times)
+    plt.show()

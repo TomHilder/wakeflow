@@ -56,6 +56,7 @@ def run_wakeflow(params):
 
     # extract linear perturbations from file
     lin_perts = LinearPerts(params)
+    lin_perts.cut_box_square()
     lin_perts.cut_box_annulus_segment()
 
     # add the linear perturbations onto grid
@@ -83,8 +84,9 @@ def run_wakeflow(params):
     grid_background.merge_grids(grid_nonlin_perts)
 
     # merge grids to plot perturbations
-    #grid_lin_perts.merge_grids(grid_nonlin_perts)
-    #grid_lin_perts.show_disk2D(0)
+    if params.make_midplane_plots:
+        grid_lin_perts.merge_grids(grid_nonlin_perts)
+        grid_lin_perts.show_disk2D(0, show=params.show_midplane_plots, save=True)
 
     # write fits file
     grid_background.write_fits_file()
