@@ -138,23 +138,15 @@ class Grid:
         # pressure and gravity height dependent correction
         corr = np.sqrt(
             -1* (p + q) * hr**2 * (r / r_ref)**(1 - 2*q) + (1 - q) + q*r / np.sqrt(r**2 + z**2)
-        )    
-
-        # pressure correction for midplane
-        """corr  = np.sqrt( 1 - (2 * q + p) * hr**2 * (r / r_ref)**(1 - 2*q) )"""
+        )
 
         # perform correction
         self.v_phi *= corr
 
-        # unperturbed density profle (full)
-        """self.rho = (
-            rho_ref * (r / r_ref)**-p * np.exp(
-                ((self.p.G_const*self.p.m_star*self.p.m_solar) / (hr**2 * (r / r_ref)**(1 - 2*q) * self.v_kep**2)) \
-                    * (1 / np.sqrt((r*self.p.au)**2 + (z*self.p.au)**2) + 1 / (r*self.p.au))
-            )
-        )"""
+        # sound speed profile
         c_s = c_s_0 * (r/r_ref)**-q
 
+        # unperturbed density profile (full)
         self.rho = (
             rho_ref * (r/r_ref)**-p * np.exp(
                 (G*m_star*m_sol / c_s**2) * (1/np.sqrt((r*au)**2 + (z*au)**2) - 1/(r*au))
