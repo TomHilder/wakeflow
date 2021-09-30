@@ -40,6 +40,7 @@ class LinearPerts():
 
         # box size (in units of Hill radius), with default scale_box = 1. (note for conversions that self.p.l = 1 Hill radius in cgs)
         box_size = 2*self.p.scale_box
+        artificial_y_scale = 6
 
         # linear perturbations read in grid
         x = self.X[0,:]
@@ -47,13 +48,13 @@ class LinearPerts():
 
         # cut square box grid in linear regime
         x_cut = x[np.argmin(x < -box_size) : np.argmin(x < box_size) + 1]
-        y_cut = y[np.argmin(y < -box_size) : np.argmin(y < box_size) + 1]
+        y_cut = y[np.argmin(y < -artificial_y_scale*box_size) : np.argmin(y < artificial_y_scale*box_size) + 1]
 
         # find cut indicies 
         x_cut_i1 = np.argmin(x < -box_size)
         x_cut_i2 = np.argmin(x < box_size) + 1
-        y_cut_i1 = np.argmin(y < -box_size)
-        y_cut_i2 = np.argmin(y < box_size) + 1
+        y_cut_i1 = np.argmin(y < -artificial_y_scale*box_size)
+        y_cut_i2 = np.argmin(y < artificial_y_scale*box_size) + 1
 
         # cut perturbation arrays
         cut_v_r = self.pert_v_r[y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]

@@ -4,9 +4,9 @@ from scipy.interpolate import griddata
 from copy import copy
 import matplotlib.pyplot as plt
 from burgers import solve_burgers
-from transformations import phi_wake, Eta, mod2pi, t, t_integral, t_integrand, g, Lambda_fu, Lambda_fv, get_chi, get_dens_vel, xy_to_etat, plot_r_t
+from transformations import phi_wake, Eta, mod2pi, t, t_integral, t_integrand, g, Lambda_fu, Lambda_fv, get_chi, get_dens_vel, plot_r_t
 
-# TODO: Still using Francesco's code without modifications besides variable names and arguments, try to optimise/clean up further
+# TODO: Optimise/clean up further
 
 class NonLinearPerts():
     def __init__(self, parameters, Grid):
@@ -112,12 +112,16 @@ class NonLinearPerts():
             # Local Cartesian grid which the linear solution was calculated on, meshgrid version
             X, Y = np.meshgrid(lp.x_cut,lp.y_cut)
 
+            print("Y MIN MAX", np.min(Y),np.max(Y))
+
             # grab positive x side of linear solution
             x_len = len(lp.x_cut) // 2
 
             # restrict box to area considered
             X_rest = X[:,x_len:index]
             Y_rest = Y[:,x_len:index]
+
+            print("Y MIN MAX", np.min(Y_rest),np.max(Y_rest))
 
             # Find Chi for linear solution, only taking positive values of x
             # The "index" value also makes it so we do not go outside the linear box
@@ -155,7 +159,6 @@ class NonLinearPerts():
             plt.xlim(-10,10)
             plt.xlabel('$\eta$')
             plt.ylabel('$\chi$')
-            plt.savefig('ICs.pdf')
             plt.show()
 
             plt.scatter(t_lin, eta_lin)

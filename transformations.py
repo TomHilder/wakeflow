@@ -50,13 +50,8 @@ def t(r, Rp, hr, q, p):
    coeff = 3*hr**(-5/2)/(2**(5/4))
    return coeff*module_integral
 
+"""
 def xy_to_etat(x_prime, y_prime, Rp, hr, q, p, cw):
-
-    # get r,phi
-    """
-    r = np.sqrt(x**2 + y**2)
-    phi = np.arctan2(y,x)
-    """
 
     hp = hr * Rp
 
@@ -68,10 +63,8 @@ def xy_to_etat(x_prime, y_prime, Rp, hr, q, p, cw):
 
 
     # I want to do this code:
-    """
-    t_ = t(r, Rp, hr, q, p))
-    eta_ = Eta(r, phi, Rp, hr, q, p)
-    """
+    #t_ = t(r, Rp, hr, q, p))
+    #eta_ = Eta(r, phi, Rp, hr, q, p)
 
     # but instead I gotta do this:
     t_ = np.zeros(r.shape)
@@ -82,6 +75,7 @@ def xy_to_etat(x_prime, y_prime, Rp, hr, q, p, cw):
             eta_[i,j] = Eta(r[i,j], phi[i,j], Rp, hr, q, p)
 
     return t_, eta_
+"""
 
 # Equation (12) Bollati et al. 2021
 

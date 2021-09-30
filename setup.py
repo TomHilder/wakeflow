@@ -152,8 +152,6 @@ class Parameters(Constants):
         self.distance = float(config["mcfost"]["distance"])
         self.v_max = float(config["mcfost"]["v_max"])
         self.n_v = int(config["mcfost"]["n_v"])
-        self.pymcfost_plots = bool(config["mcfost"]["pymcfost_plots"])
-        self.velocity_channels = list(config["mcfost"]["velocity_channels"])
 
         # pymcfost parameters
         self.pymcfost_plots = bool(config["pymcfost"]["pymcfost_plots"])

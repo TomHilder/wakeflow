@@ -355,8 +355,11 @@ class Grid:
             # v_r
             plt.close("all")
             plt.contourf(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.v_r[:,z_slice,:]), levels=contour_lvls, vmin=-vr_max, vmax=vr_max, cmap="RdBu")
-            plt.colorbar()
-            plt.title(r"$v_r$")
+            plt.colorbar(label=r"radial velocity [km/s]")
+            #plt.title(r"$v_r$")
+            plt.title(r"HD 163296 with $1 \, \mathrm{M_J}$ planet")
+            plt.xlabel("x [au]")
+            plt.ylabel("y [au]")
             if save:
                 plt.savefig(f'{savedir}/vr_z{z_slice}.pdf')
             if show:
@@ -390,9 +393,7 @@ class Grid:
             _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
             myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:], levels=contour_lvls, vmin=-vr_max, vmax=vr_max, cmap='RdBu')
             ax.set_ylim(0, self.p.r_outer)
-            plt.colorbar(myplot)
-            plt.title(r"$v_r$")
-            plt.title(r"$v_r$")
+            plt.colorbar(myplot, label=r"radial velocity [km/s]")
             if save:
                 plt.savefig(f'{savedir}/vr_z{z_slice}.pdf')
             if show:
