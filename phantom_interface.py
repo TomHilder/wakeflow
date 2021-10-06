@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os, sys, subprocess
 
 class PhantomDump:
-    def __init__(self, parameters, Grid, vr='phantom_pixelmaps/hd163/vr.pix', vphi='phantom_pixelmaps/hd163/vphi.pix', rho='phantom_pixelmaps/hd163/rho.pix',):
+    def __init__(self, parameters=None, Grid=None, vr='phantom_pixelmaps/hd163/vr.pix', vphi='phantom_pixelmaps/hd163/vphi.pix', rho='phantom_pixelmaps/hd163/rho.pix',):
 
         # grab parameters object
         self.p = parameters
@@ -16,6 +16,10 @@ class PhantomDump:
         self.vr_xy = np.flipud(np.loadtxt(vr).transpose())
         self.vphi_xy = -1*np.flipud(np.loadtxt(vphi).transpose())
         self.rho_xy = np.flipud(np.loadtxt(rho).transpose())
+        
+        self.vr_xy = np.loadtxt(vr).transpose()
+        self.vphi_xy = np.loadtxt(vphi).transpose()
+        self.rho_xy = np.loadtxt(rho).transpose()
 
         # get phantom grid
         length = self.vr_xy.shape[0]
