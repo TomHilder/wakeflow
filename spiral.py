@@ -111,8 +111,8 @@ def main():
     PHI = np.arctan2(Y, X)
 
     # perform transformations
-    v_x = -v_phi * np.sin(PHI) + v_r * np.cos(PHI)
-    v_y = v_phi * np.cos(PHI) + v_r * np.sin(PHI)
+    v_x = -0*v_phi * np.sin(PHI) + v_r * np.cos(PHI)
+    v_y = 0*v_phi * np.cos(PHI) + v_r * np.sin(PHI)
     v_z = np.zeros(v_x.shape)
     
     # define velocity field
