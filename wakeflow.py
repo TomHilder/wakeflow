@@ -79,19 +79,23 @@ def run_wakeflow(params):
     grid_nonlin_perts.add_non_linear_perturbations(nonlin_perts, grid_background.rho)
 
     # merge grids for result
-    grid_background.merge_grids(grid_lin_perts)
+    if params.include_linear:
+        grid_background.merge_grids(grid_lin_perts)
     grid_background.merge_grids(grid_nonlin_perts)
 
     # merge grids to save or plot perturbations
     if params.make_midplane_plots or params.save_perturbations:
-        grid_lin_perts.merge_grids(grid_nonlin_perts)
+        
+        if params.include_linear:
+            grid_nonlin_perts.merge_grids(grid_lin_perts)
+            
         if params.make_midplane_plots:
-            grid_lin_perts.show_disk2D(0, show=params.show_midplane_plots, save=True)
+            grid_nonlin_perts.show_disk2D(0, show=params.show_midplane_plots, save=True)
 
     # save perturbations
     if params.save_perturbations:
         print("Saving perturbations to file")
-        grid_lin_perts.save_results("delta") 
+        grid_nonlin_perts.save_results("delta") 
     
     # save perts + background
     if params.save_total:

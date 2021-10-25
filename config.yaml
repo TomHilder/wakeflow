@@ -37,6 +37,7 @@ plotting:
     show_teta_debug_plots: True                  # show t, eta space plots (including putting the linear solution into t,eta)
 
 results:
+    include_linear: True                         # include the results from the linear regime?
     save_perturbations: False                    # save perturbations to npy file
     save_total: False                            # save background + perturbations to npy file
     write_FITS: True                             # write a FITS file to run in mcfost -- requires {grid.type: "mcfost"}
