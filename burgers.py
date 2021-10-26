@@ -12,6 +12,8 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_sol
     tf_th = 300 # time required to develop N-wave for betap = 1
     tf = tf_th/beta_p # time required to display N-wave for generic betap, Eq. (39) Rafikov 2002
 
+    tf *= 2 # test doubling value
+
     eta_min = -eta_tilde-np.sqrt(2*C*tf) - 3  # Eq. (18) Bollati et al. 2021
     eta_max = -eta_tilde+np.sqrt(2*C*tf) + 3
 
