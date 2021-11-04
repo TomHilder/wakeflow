@@ -19,7 +19,7 @@ def main():
     ### YOU GOTTA CHANGE THE STUFF IN HERE
 
     # wakeflow parameter file
-    wakeflow_params = "HD_163296_secondary_kinks/smol_planet/config_hd163_v2.yaml"
+    wakeflow_params = "HD_169142/run1/config_hd169.yaml"
 
     # use perturbations or total velocity? "delta" or "total"
     v_type = "delta"
@@ -28,9 +28,9 @@ def main():
 
     # angles in degrees to project model
 
-    inclination = -225
-    PA = 45
-    planet_az = 45
+    inclination = 13
+    PA = 5
+    planet_az = 90
 
     ### ========================================= ###
 
