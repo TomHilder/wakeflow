@@ -19,20 +19,24 @@ def main():
     ### YOU GOTTA CHANGE THE STUFF IN HERE
 
     # wakeflow parameter file
-    wakeflow_params = "HD_169142/run1/config_hd169.yaml"
+    #wakeflow_params = "HD_163296_kinks2/kinks2_fig1_taper_cart/config_hd163_v2.yaml"
+    #wakeflow_params = "HD_163296_secondary_kinks/contourplots_joshparams/config_hd163_v2.yaml"
+    wakeflow_params = "HD_169142/run0_7Mj/config_hd169.yaml"
 
     # use perturbations or total velocity? "delta" or "total"
-    v_type = "delta"
+    v_type = "total"
 
     ### Plotting parameters
 
     # angles in degrees to project model
 
-    inclination = 13
+    inclination = 13#-225
     PA = 5
     planet_az = 90
 
     ### ========================================= ###
+
+    planet_az_deg = planet_az
 
     ### Read in wakeflow model
 
@@ -74,9 +78,9 @@ def main():
 
     # read in arrays, and grab midplane -- resultant shape is (X, Y)
     z_index = 0
-    X = np.load(f"{model_dir}/X.npy")[:, z_index, :]
-    Y = np.load(f"{model_dir}/Y.npy")[:, z_index, :]
-    v_r = np.load(f"{model_dir}/{v_type}_v_r.npy")[:, z_index, :]
+    X     = np.load(f"{model_dir}/X.npy")[:, z_index, :]
+    Y     = np.load(f"{model_dir}/Y.npy")[:, z_index, :]
+    v_r   = np.load(f"{model_dir}/{v_type}_v_r.npy")[:, z_index, :]
     v_phi = np.load(f"{model_dir}/{v_type}_v_phi.npy")[:, z_index, :]
     
     if False:
@@ -86,7 +90,7 @@ def main():
         v_r = PD.vr_xy
         v_phi = PD.vphi_xy
 
-    if True:
+    if False:
         plt.contourf(X, Y, 1e3*v_r, levels=np.linspace(-200,200,199), cmap="RdBu")
         plt.title("v_r")
         plt.colorbar()
@@ -111,14 +115,14 @@ def main():
     PHI = np.arctan2(Y, X)
 
     # perform transformations
-    v_x = -0*v_phi * np.sin(PHI) + v_r * np.cos(PHI)
-    v_y = 0*v_phi * np.cos(PHI) + v_r * np.sin(PHI)
+    v_x = -1*v_phi * np.sin(PHI) + v_r * np.cos(PHI)
+    v_y = 1*v_phi * np.cos(PHI) + v_r * np.sin(PHI)
     v_z = np.zeros(v_x.shape)
     
     # define velocity field
     v_field = np.array([v_x, v_y, v_z])
     
-    if True:
+    if False:
         plt.contourf(X, Y, 1e3*v_field[0,:,:], levels=np.linspace(-200,200,199), cmap="RdBu")
         plt.title("v_x")
         plt.colorbar()
@@ -163,16 +167,19 @@ def main():
             v_field[:,i,j]      = np.dot(rot_pa_z, v_field[:,i,j])
             
     
-    lim = 200
-    
     ### plot z-axis velocities
     
-    plt.contourf(X, Y, 1e3*v_field[2,:,:], levels=np.linspace(-lim,lim,199), cmap="RdBu")
-    #plt.contour(X, Y, 1e3*v_field[2,:,:], levels=np.linspace(-lim,lim,39), colors=['k'])
-    plt.title("v_z")
-    plt.colorbar()
-    plt.show()
+    lim = 0.2*np.max(v_field[2,:,:])
     
+    plt.contourf(X, Y, v_field[2,:,:], levels=np.linspace(-lim,lim,29), cmap="RdBu", extend='both')
+    #plt.contour(X, Y, v_field[2,:,:], levels=[0.8, 1.2, 1.4, 1.6], colors=['k'])
+    #plt.contour(X, Y, 1e3*v_field[2,:,:], levels=np.linspace(-lim,lim,39), colors=['k'])
+    plt.title(f"Line of sight: planet_az={planet_az_deg}")
+    plt.colorbar(label = r'$\Delta v$ [km/s]')
+    plt.axis('scaled')
+    plt.savefig(f'HD_169142/vLOS_pl_az_{int(planet_az_deg)}.pdf')
+    plt.show()
+    """
     plt.contourf(X, Y, 1e3*v_field[0,:,:], levels=np.linspace(-lim,lim,199), cmap="RdBu")
     #plt.contourf(X, Y, 1e3*v_field[2,:,:], levels=np.linspace(-5000,5000,199), cmap="RdBu")
     plt.title("v_x")
@@ -184,6 +191,7 @@ def main():
     plt.title("v_y")
     plt.colorbar()
     plt.show()
+    """
     
 
 def Rot(ang, ax='x'):
