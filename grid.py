@@ -123,6 +123,7 @@ class Grid:
         q = self.p.q
         hr = self.p.hr
         r_ref = self.p.r_ref
+        r_c = self.p.r_c
         rho_ref = self.p.rho_ref
         c_s_0 = self.p.c_s_0
         G = self.p.G_const
@@ -146,12 +147,19 @@ class Grid:
         # sound speed profile
         c_s = c_s_0 * (r/r_ref)**-q
 
-        # unperturbed density profile (full)
-        self.rho = (
-            rho_ref * (r/r_ref)**-p * np.exp(
-                (G*m_star*m_sol / c_s**2) * (1/np.sqrt((r*au)**2 + (z*au)**2) - 1/(r*au))
+        # unperturbed density profile (full) (no taper)
+        if r_c == 0: 
+            self.rho = (
+                rho_ref * (r/r_ref)**-p * np.exp(
+                    (G*m_star*m_sol / c_s**2) * (1/np.sqrt((r*au)**2 + (z*au)**2) - 1/(r*au))
+                )
             )
-        )
+        else: # with taper
+            self.rho = (
+                rho_ref * (r/r_ref)**-p * np.exp(-(r/r_c)**(2 - p)) * np.exp(
+                    (G*m_star*m_sol / c_s**2) * (1/np.sqrt((r*au)**2 + (z*au)**2) - 1/(r*au))
+                )
+            )
 
         # unperturbed density profile (thin disk approx.)
         #self.rho = rho_ref * (r / r_ref)**-p * np.exp( - 0.5 * (z / r_ref)**2 * hr**-2 * (r / r_ref)**(2 * q - 3))
@@ -227,10 +235,10 @@ class Grid:
 
         # Add velocities, identical at all heights for now
         self.v_r += global_lin_v_r[:, np.newaxis, :]
-        self.v_phi += global_lin_v_phi[:, np.newaxis, :]
+        self.v_phi += -1*global_lin_v_phi[:, np.newaxis, :]
 
         # Add density, scaling by background density
-        self.rho = global_lin_rho[:, np.newaxis, :] * rho_background
+        self.rho += global_lin_rho[:, np.newaxis, :] * rho_background
 
         # plot for debugging
         """
@@ -253,7 +261,7 @@ class Grid:
         nl_vphi = nonlin.vphi[:, np.newaxis, :]
 
         self.v_r += nl_vr
-        self.v_phi += nl_vphi
+        self.v_phi += -1*nl_vphi
 
         # Define scale height array
         if self.info["Type"] == "cartesian":
@@ -277,7 +285,7 @@ class Grid:
         #nl_rho = (np.ones(size_ones) + nonlin.rho[:, np.newaxis, :]) * self.p.rho_ref * (r/self.p.r_ref)**(-self.p.p)
         #self.rho = nl_rho * np.exp(-0.5 * (z / self.H)**2)
 
-        self.rho = nonlin.rho[:, np.newaxis, :] * rho_background
+        self.rho += nonlin.rho[:, np.newaxis, :] * rho_background
 
         # update grid info
         self.info["Contains"] = "non-linear perturbations"
