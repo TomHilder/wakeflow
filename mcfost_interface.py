@@ -20,6 +20,7 @@ def make_mcfost_parameter_file(parameters):
 
     mp.map.nx = 1001                    # output resolution
     mp.map.ny = 1001
+    mp.map.size = 1200
 
     mp.simu.image_symmetry = False      # we don't have any symmetries
     mp.simu.central_symmetry = False
@@ -31,7 +32,6 @@ def make_mcfost_parameter_file(parameters):
     mp.mol.v_turb = 0.05                # turbulence
 
     mp.zones[0].edge = 0.0              # not using smoothed inner and outer edge
-    mp.zones[0].Rc = 0.0                # critical radius unused so set to 0
 
     mp.map.RT_n_az = 1                  # we are only using one azimuth
     mp.map.RT_ntheta = 1                # we are only using one inclination
@@ -46,6 +46,7 @@ def make_mcfost_parameter_file(parameters):
 
     mp.zones[0].h0 = p.h_ref            # scale height at reference radius
     mp.zones[0].Rref = p.r_ref          # reference radius
+    mp.zones[0].Rc = p.r_c              # critical radius unused so set to 0
     mp.zones[0].flaring_exp = p.beta    # flaring index: h \propto r^beta
 
     mp.map.distance = p.distance        # distance
