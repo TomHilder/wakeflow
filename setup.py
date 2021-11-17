@@ -116,6 +116,7 @@ class Parameters(Constants):
         self.r_inner = float(config["disk"]["r_inner"])
         self.r_planet = float(config["disk"]["r_planet"])
         self.r_ref = float(config["disk"]["r_ref"])
+        self.r_c = float(config["disk"]["r_c"])
         self.q = float(config["disk"]["q"])
         self.p = float(config["disk"]["p"])
         self.hr = float(config["disk"]["hr"])
