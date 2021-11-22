@@ -27,9 +27,9 @@ def midplane_comparison(phantom_dump, analytics_file_location):
     PD = phantom_dump
 
     # import analytics cartesian results
-    A_vr = np.transpose(np.load(analytics_file_location + '/vr.npy'))
-    A_vphi = np.transpose(np.load(analytics_file_location + '/vphi.npy'))
-    A_rho = np.transpose(np.load(analytics_file_location + '/density.npy'))
+    A_vr = np.load(analytics_file_location + '/delta_v_r.npy')[:,0,:]
+    A_vphi = np.load(analytics_file_location + '/delta_v_phi.npy')[:,0,:]
+    A_rho = np.load(analytics_file_location + '/total_rho.npy')[:,0,:]
 
     # get grid for analytics
     A_x = np.linspace(x_min, x_max, n_points)
@@ -128,4 +128,4 @@ g.make_empty_disk()
 # MAKE PHANTOM DUMP OBJECT
 PD = PhantomDump(params, g)
 
-midplane_comparison(PD, 'phantom_pixelmaps/HD163 analytic cartesian closer')
+midplane_comparison(PD, 'HD_163296_kinks2/kinks2_fig1_taper_FIXED_cart/5.0Mj')
