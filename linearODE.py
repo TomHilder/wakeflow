@@ -3,7 +3,7 @@ import scipy as sp
 import matplotlib.pyplot as plt
 import scipy.integrate as inte
 
-from odeintw import odeintw
+#from odeintw import odeintw
 from matplotlib.colors import LogNorm
 
 # DE system to be solved:
@@ -55,7 +55,7 @@ def solve_DE_system(k_y):
     v0 = [0+0j, 0+0j]
     M = -1 * np.sign(k_y) * (M_p / m_th) * (2 * np.pi *1j / 3)
 
-    v = odeintw(vfunc, v0, t, args=(k_y, M), Dfun=vjac)
+    v = None #odeintw(vfunc, v0, t, args=(k_y, M), Dfun=vjac)
     
     return v[:, 0]
 
