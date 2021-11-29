@@ -4,37 +4,25 @@ import matplotlib.pyplot as plt
 import os, sys, subprocess
 
 class PhantomDump:
-    def __init__(self, parameters=None, Grid=None, vr='phantom_pixelmaps/hd163/vr.pix', vphi='phantom_pixelmaps/hd163/vphi.pix', rho='phantom_pixelmaps/hd163/rho.pix',):
+    def __init__(self, parameters=None, Grid=None, vr='phantom/hd163/vr.pix', vphi='phantom/hd163/vphi.pix', rho='phantom/hd163/rho.pix'):
 
         # grab parameters object
         self.p = parameters
+        radius = self.p.r_outer
 
         # should be handed an empty grid with the correct dimensions and grid setup used in the run
         self.g = Grid
 
         # read in midplane arrays
-        self.vr_xy = np.flipud(np.loadtxt(vr).transpose())
-        self.vphi_xy = -1*np.flipud(np.loadtxt(vphi).transpose())
-        self.rho_xy = np.flipud(np.loadtxt(rho).transpose())
-        
         self.vr_xy = np.loadtxt(vr).transpose()
         self.vphi_xy = np.loadtxt(vphi).transpose()
         self.rho_xy = np.loadtxt(rho).transpose()
 
         # get phantom grid
         length = self.vr_xy.shape[0]
-        self.x_ph = np.linspace(-500, 500, length)
-        self.y_ph = np.linspace(-500, 500, length)
+        self.x_ph = np.linspace(-radius, radius, length)
+        self.y_ph = np.linspace(-radius, radius, length)
         self.X_ph, self.Y_ph = np.meshgrid(self.x_ph, self.y_ph)
-
-        # test plot
-        """
-        plt.figure(figsize=(8,8))
-        plt.contourf(self.x_ph, self.y_ph, self.vr_xy.transpose(), levels=1000)
-        plt.xlabel('[au]')
-        plt.ylabel('[au')
-        plt.show()
-        """
 
     def get_polar_grid(self):
 
