@@ -20,7 +20,7 @@ def main():
     # run wakeflow for each planet mass
     for mass_p in planet_masses:
         params.m_planet = mass_p
-        print(f"\n ===== Creating {mass_p} Mj model: =====")
+        #print(f"\n ===== Creating {mass_p} Mj model: =====")
         run_wakeflow(params)
 
     # run mcfost for each model
@@ -49,48 +49,50 @@ def run_wakeflow(params):
     # fill grid with Keplerian, power law disk
     grid_background.make_keplerian_disk()
 
-    # make empty grid for linear perturbations
-    grid_lin_perts = Grid(params)
-    grid_lin_perts.make_grid()
-    grid_lin_perts.make_empty_disk()
+    if params.use_planet:
 
-    # extract linear perturbations from file
-    lin_perts = LinearPerts(params)
-    lin_perts.cut_box_annulus_segment()
+        # make empty grid for linear perturbations
+        grid_lin_perts = Grid(params)
+        grid_lin_perts.make_grid()
+        grid_lin_perts.make_empty_disk()
 
-    # add the linear perturbations onto grid
-    grid_lin_perts.add_linear_perturbations(lin_perts, grid_background.rho)
+        # extract linear perturbations from file
+        lin_perts = LinearPerts(params) #, ph_pixelmap_loc="phantom/hd163", ph_planet_loc=222.9543)
+        lin_perts.cut_box_annulus_segment()
 
-    # make empty grid for non-linear perturbations
-    grid_nonlin_perts = Grid(params)
-    grid_nonlin_perts.make_grid()
-    grid_nonlin_perts.make_empty_disk()
+        # add the linear perturbations onto grid
+        grid_lin_perts.add_linear_perturbations(lin_perts, grid_background.rho)
 
-    # initialise non-linear perturbations
-    nonlin_perts = NonLinearPerts(params, grid_nonlin_perts)
+        # make empty grid for non-linear perturbations
+        grid_nonlin_perts = Grid(params)
+        grid_nonlin_perts.make_grid()
+        grid_nonlin_perts.make_empty_disk()
 
-    # extract initial condition from the linear perturbations
-    nonlin_perts.extract_ICs(lin_perts)
+        # initialise non-linear perturbations
+        nonlin_perts = NonLinearPerts(params, grid_nonlin_perts)
 
-    # solve for non-linear perturbations
-    nonlin_perts.get_non_linear_perts()
+        # extract initial condition from the linear perturbations
+        nonlin_perts.extract_ICs(lin_perts)
 
-    # add non-linear perturbations to grid
-    grid_nonlin_perts.add_non_linear_perturbations(nonlin_perts, grid_background.rho)
+        # solve for non-linear perturbations
+        nonlin_perts.get_non_linear_perts()
 
-    # merge grids for result
-    if params.include_linear:
-        grid_background.merge_grids(grid_lin_perts)
-    grid_background.merge_grids(grid_nonlin_perts)
+        # add non-linear perturbations to grid
+        grid_nonlin_perts.add_non_linear_perturbations(nonlin_perts, grid_background.rho)
 
-    # merge grids to save or plot perturbations
-    if params.make_midplane_plots or params.save_perturbations:
-        
+        # merge grids for result
         if params.include_linear:
-            grid_nonlin_perts.merge_grids(grid_lin_perts)
+            grid_background.merge_grids(grid_lin_perts)
+        grid_background.merge_grids(grid_nonlin_perts)
+
+        # merge grids to save or plot perturbations
+        if params.make_midplane_plots or params.save_perturbations:
             
-        if params.make_midplane_plots:
-            grid_nonlin_perts.show_disk2D(0, show=params.show_midplane_plots, save=True)
+            if params.include_linear:
+                grid_nonlin_perts.merge_grids(grid_lin_perts)
+                
+            if params.make_midplane_plots:
+                grid_nonlin_perts.show_disk2D(0, show=params.show_midplane_plots, save=True)
 
     # save perturbations
     if params.save_perturbations:

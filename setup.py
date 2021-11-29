@@ -143,6 +143,7 @@ class Parameters(Constants):
         self.show_teta_debug_plots = bool(config["plotting"]["show_teta_debug_plots"])
 
         # results parameters
+        self.use_planet = bool(config["results"]["include_planet"])
         self.include_linear = bool(config["results"]["include_linear"])
         self.save_perturbations = bool(config["results"]["save_perturbations"])
         self.save_total = bool(config["results"]["save_total"])
