@@ -4,36 +4,87 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import ticker, cm
 
+from phantom_interface import PhantomDump
+
 class LinearPerts():
-    def __init__(self, parameters):
+    def __init__(self, parameters, ph_pixelmap_loc=None, ph_planet_loc=None):
 
-        print("Reading in Linear Perturbations")
+        if ph_pixelmap_loc is None:
 
-        # grab parameters object
-        self.p = parameters
+            print("Reading in Linear Perturbations")
 
-        # read perturbations from files
-        perts = np.load("linear_perturbations.npy")
-        mesh = np.load("linear_perturbations_mesh.npy")
+            # grab parameters object
+            self.p = parameters
 
-        # get perturbation arrays
-        self.pert_v_r = perts[0]
-        self.pert_v_phi = perts[1]
-        self.pert_rho = perts[2]
-        self.X = mesh[0]
-        self.Y = mesh[1]
+            # read perturbations from files
+            perts = np.load("linear_perturbations.npy")
+            mesh = np.load("linear_perturbations_mesh.npy")
 
-        # linear perturbations read in grid
-        x = self.X[0,:]
-        y = self.Y[:,0]
+            # get perturbation arrays
+            self.pert_v_r = perts[0]
+            self.pert_v_phi = perts[1]
+            self.pert_rho = perts[2]
+            self.X = mesh[0]
+            self.Y = mesh[1]
 
-        # define constants for linear perts
-        self.x_box = 2*self.p.scale_box
-        
-        # cut square box grid in linear regime
-        self.x_cut = x[np.argmin(x < -self.x_box) : np.argmin(x < self.x_box) + 1]
-        self.y_cut = y[np.argmin(y < -self.x_box) : np.argmin(y < self.x_box) + 1]
-        
+            # linear perturbations read in grid
+            x = self.X[0,:]
+            y = self.Y[:,0]
+
+            # define constants for linear perts
+            self.x_box = 2*self.p.scale_box
+            
+            # cut square box grid in linear regime
+            self.x_cut = x[np.argmin(x < -self.x_box) : np.argmin(x < self.x_box) + 1]
+            self.y_cut = y[np.argmin(y < -self.x_box) : np.argmin(y < self.x_box) + 1]
+
+            # test plot
+            plt.figure()
+            plt.contourf(x, y, self.pert_v_phi, levels=100, cmap='RdBu')
+            plt.xlim(self.x_cut[0],self.x_cut[-1])
+            plt.ylim(self.y_cut[0],self.y_cut[-1])
+            plt.show()
+
+        else:
+
+            print("Reading in Perturbations from Phantom pixelmap")
+
+            # grab parameters object
+            self.p = parameters
+
+            # create PhantomDump object
+            ph_dump = PhantomDump(
+                parameters = self.p, 
+                vr   = f"{ph_pixelmap_loc}/vr.pix", 
+                vphi = f"{ph_pixelmap_loc}/vphi.pix", 
+                rho  = f"{ph_pixelmap_loc}/rho.pix"
+            )
+
+            # get perturbation arrays, in local units
+            self.pert_v_r   = ph_dump.vr_xy   / (self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal))
+            self.pert_v_phi = ph_dump.vphi_xy / (self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal))
+            self.pert_rho   = ph_dump.rho_xy  / (self.p.m_planet/self.p.m_thermal)
+            self.X = (ph_dump.X_ph - ph_planet_loc) / self.p.l
+            self.Y = ph_dump.Y_ph / self.p.l
+
+            # linear perturbations read in grid
+            x = (ph_dump.x_ph - ph_planet_loc) / self.p.l
+            y = ph_dump.y_ph / self.p.l
+
+            # define constants for linear perts
+            self.x_box = 2*self.p.scale_box
+
+            # cut square box grid in linear regime
+            self.x_cut = x[np.argmin(x < -self.x_box) : np.argmin(x < self.x_box) + 1]
+            self.y_cut = y[np.argmin(y < -self.x_box) : np.argmin(y < self.x_box) + 1]
+
+            # test plot
+            plt.figure()
+            plt.contourf(x, y, self.pert_v_phi, levels=100, cmap='RdBu')
+            plt.xlim(self.x_cut[0],self.x_cut[-1])
+            plt.ylim(self.y_cut[0],self.y_cut[-1])
+            plt.show()
+
 
     def cut_box_square(self):
         """This is only used in the case where you want to plot the linear solution in t,eta space"""
@@ -176,4 +227,3 @@ class LinearPerts():
         plt.colorbar(myplot)
         plt.show()
         """
-
