@@ -57,7 +57,9 @@ def run_wakeflow(params):
         grid_lin_perts.make_empty_disk()
 
         # extract linear perturbations from file
-        lin_perts = LinearPerts(params) #, ph_pixelmap_loc="phantom/hd163", ph_planet_loc=222.9543)
+        lin_perts = LinearPerts(params)
+        #lin_perts = LinearPerts(params, ph_pixelmap_loc="phantom/hd163_high_res", ph_planet_loc=222.9543)
+        #lin_perts = LinearPerts(params, ph_pixelmap_loc="phantom/imlup_10mil", ph_planet_loc=139.207)
         lin_perts.cut_box_annulus_segment()
 
         # add the linear perturbations onto grid
@@ -72,7 +74,7 @@ def run_wakeflow(params):
         nonlin_perts = NonLinearPerts(params, grid_nonlin_perts)
 
         # extract initial condition from the linear perturbations
-        nonlin_perts.extract_ICs(lin_perts)
+        nonlin_perts.extract_ICs(lin_perts) #, lin_perts_analytic)
 
         # solve for non-linear perturbations
         nonlin_perts.get_non_linear_perts()

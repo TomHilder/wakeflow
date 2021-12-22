@@ -17,7 +17,7 @@ class NonLinearPerts():
         # should be handed an empty grid with the correct dimensions and grid setup used in the run
         self.g = Grid
 
-    def extract_ICs(self, LinearPerts):
+    def extract_ICs(self, LinearPerts, LinearPerts2=None):
 
         print('  * Extracting Burgers initial condition from linear density perturbation ...')
         
@@ -94,6 +94,7 @@ class NonLinearPerts():
         print('     t0 = ', self.t0)
 
         beta_p = self.p.m_planet / self.p.m_thermal
+        gamma  = self.p.gamma
 
         # ======================================
         # === put linear solution into t,eta ===
@@ -123,9 +124,28 @@ class NonLinearPerts():
 
             print("Y MIN MAX", np.min(Y_rest),np.max(Y_rest))
 
-            # Find Chi for linear solution, only taking positive values of x
+            # Find chi for linear solution, only taking positive values of x
             # The "index" value also makes it so we do not go outside the linear box
-            linear_profile = lp.cut_rho[:,x_len:index] / np.sqrt(np.abs(X_rest))
+            linear_profile = lp.cut_rho[:,x_len:index] / np.sqrt(np.abs(X_rest)) ###
+            chi0_rho = linear_profile[:,-1]  * (gamma+1) * beta_p / 2**(3/4) 
+
+            # extract chi from velocity perturbations
+            v_unit = (self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal))
+            Rp     = self.p.r_planet
+            cw     = -self.p.a_cw
+            hr     = self.p.hr_planet
+            q      = self.p.q
+            gamma  = self.p.gamma
+            csp    = self.p.c_s_planet
+            p      = self.p.p
+            l      = self.p.l
+            linear_profile_v_r   = v_unit * (lp.cut_v_r[:,x_len:index]   / np.sqrt(np.abs(X_rest))) ###
+            linear_profile_v_phi = v_unit * (lp.cut_v_phi[:,x_len:index] / np.sqrt(np.abs(X_rest))) ###
+            R0  = np.sqrt((Rp + l*X_rest[:,-1])**2 + (l*Y_rest[:,-1])**2)
+            Lfu = Lambda_fu(R0, Rp, csp, hr, gamma, q, p)
+            Lfv = Lambda_fv(R0, Rp, csp, hr, gamma, q, p)
+            chi0_v_r = linear_profile_v_r[:,-1] / (np.sign(R0 - Rp) * Lfu)
+            chi0_v_phi = linear_profile_v_phi[:,-1] / (np.sign(R0 - Rp) * Lfv * (-cw))
 
             # Find etas for the box using IC method
             linear_eta = Y_rest + np.sign(X_rest) * 0.5 * X_rest**2
@@ -152,6 +172,76 @@ class NonLinearPerts():
                 plt.plot(eta_lin[:,i], linear_profile[:,i])
                 plt.show()
             """
+            plt.plot(eta_lin[:,-1], chi0_rho, label="chi rho")
+            plt.plot(eta_lin[:,-1], chi0_v_r, label="chi vr")
+            plt.plot(eta_lin[:,-1], chi0_v_phi, label="chi vphi")
+            plt.legend(loc="lower left")
+            plt.xlim(-10,10)
+            plt.xlabel('$\eta$')
+            plt.ylabel('$\chi$')
+            plt.show()
+
+            if True: # save results to file for plotting
+
+                name = "sim_further"
+                eta_save = eta_lin[:,-1]
+                chi_save = np.array([chi0_rho, chi0_v_r, chi0_v_phi])
+                np.save(f"{name}_eta.npy", eta_save)
+                np.save(f"{name}_chi.npy", chi_save)
+
+            if LinearPerts2 is not None: # for plotting analytics vs Phantom ICs
+
+                # grab linear perturbations object
+                lpa = LinearPerts2
+
+                # grid
+                x = lpa.X[0,:]
+                y = lpa.Y[:,0]
+
+                # set maximum eta - semi-width of the support of the azimuthal profile of the linear density perturbation
+                eta_max = 25 
+
+                # find the index in the x grid corresponding to the edge of the box
+                index = np.argmin(np.abs(x - lpa.x_box))
+
+                # extract profile of constant x along edge of box for initial condition
+                profile = lpa.pert_rho[:,index] / np.sqrt(np.abs(lpa.x_box))
+
+                # restrict y range --- I'm not sure why this is necessary but it is. Larger values will cause issues
+                y_max = 30
+                profile_rest = profile[(y > -y_max) & (y < y_max)]
+                y_rest = y[(y > -y_max) & (y < y_max)]
+
+                # ## find eta points for IC profile using full transformation
+                # find local cart. coords in real units
+                x_IC = self.p.l * np.repeat(lpa.x_box, len(y_rest))
+                y_IC = self.p.l * y_rest
+
+                # find corresponding global polar coords
+                r_IC = x_IC + self.p.r_planet
+                phi_IC = y_IC / self.p.r_planet
+
+                # initialise arrays for corresponding t,eta points
+                eta_IC = np.zeros(len(y_rest))
+                t_IC = np.zeros(len(y_rest))
+
+                # perform transformation
+                for i in range(len(y_rest)):
+                    eta_IC[i] = Eta(r_IC[i], phi_IC[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
+                    t_IC[i] = t(r_IC[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
+
+                # restrict eta range using eta_max
+                self.eta2 = eta_IC[(eta_IC > -eta_max) & (eta_IC < eta_max)]
+                self.profile2 = profile_rest[(eta_IC > -eta_max) & (eta_IC < eta_max)]
+
+                plt.plot(self.eta, self.profile, ls='--', label="simulation")
+                plt.plot(self.eta2, self.profile2, ls='--', label="analytics")
+                plt.legend(loc="lower left")
+                plt.xlim(-10,10)
+                plt.xlabel('$\eta$')
+                plt.ylabel('$\chi$')
+                plt.show()
+
             plt.plot(linear_eta[:,-1], linear_profile[:,-1], label="Approximate $\eta$ transformation")
             plt.plot(eta_lin[:,-1], linear_profile[:,-1], label="Full $\eta$ transformation")
             plt.plot(self.eta, self.profile, ls='--', label="Actual IC used")
@@ -190,7 +280,7 @@ class NonLinearPerts():
 
             # plotting (for debugging)
             _, ax = plt.subplots()
-            myplot = ax.contourf(t_lin_reg, eta_lin_reg, np.nan_to_num(lin_solution), levels=np.arange(-4,4,0.1), cmap='RdBu')
+            myplot = ax.contourf(t_lin_reg, eta_lin_reg, np.nan_to_num(lin_solution), levels=np.arange(-4,4,0.1), cmap='RdBu', extend='both')
             plt.colorbar(myplot)
             plt.show()
 

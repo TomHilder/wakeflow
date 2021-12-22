@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.interpolate import RectBivariateSpline
+from scipy.interpolate import RectBivariateSpline, interp1d
 import matplotlib.pyplot as plt
 import os, sys, subprocess
 
@@ -8,21 +8,82 @@ class PhantomDump:
 
         # grab parameters object
         self.p = parameters
-        radius = self.p.r_outer
+        self.radius = self.p.r_outer
 
         # should be handed an empty grid with the correct dimensions and grid setup used in the run
         self.g = Grid
 
         # read in midplane arrays
-        self.vr_xy = np.loadtxt(vr).transpose()
-        self.vphi_xy = np.loadtxt(vphi).transpose()
-        self.rho_xy = np.loadtxt(rho).transpose()
+        self.vr_xy = np.loadtxt(vr)
+        self.vphi_xy = np.loadtxt(vphi)
+        self.rho_xy = np.loadtxt(rho)
 
         # get phantom grid
         length = self.vr_xy.shape[0]
-        self.x_ph = np.linspace(-radius, radius, length)
-        self.y_ph = np.linspace(-radius, radius, length)
+        self.x_ph = np.linspace(-self.radius, self.radius, length)
+        self.y_ph = np.linspace(-self.radius, self.radius, length)
         self.X_ph, self.Y_ph = np.meshgrid(self.x_ph, self.y_ph)
+
+        # test plot
+        plt.contourf(self.X_ph, self.Y_ph, self.rho_xy, levels=200)
+        plt.colorbar()
+        plt.axis("scaled")
+        plt.show()
+
+        plt.contourf(self.X_ph, self.Y_ph, self.vphi_xy, levels=200)
+        plt.colorbar()
+        plt.axis("scaled")
+        plt.show()
+
+        plt.contourf(self.X_ph, self.Y_ph, self.vr_xy, levels=200)
+        plt.colorbar()
+        plt.axis("scaled")
+        plt.show()
+
+    def extract_dens_perts(self, width=1):
+
+        R = np.sqrt(self.X_ph**2 + self.Y_ph**2)
+        PHI = np.arctan2(self.Y_ph, self.X_ph)
+
+        # calculate the mean with a lambda
+        w = width / 2
+        f = lambda r : self.rho_xy[(R >= r-w) & (R < r+w) & (PHI < 7*np.pi/4) & (PHI > np.pi/4)].mean()
+        r  = np.linspace(R.min(), R.max(), num=int(self.radius))
+        mean = np.vectorize(f)(r)
+        mean_interp_func = interp1d(r, mean, kind='linear')
+
+        # test plot
+        if True:
+            fig,ax=plt.subplots()
+            ax.plot(r,mean)
+            ax.set_yscale('log')
+            plt.show()
+
+        # subtract azimuthal average
+        print("Subtracting azimuthal average of density profile")
+        averaged = mean_interp_func(R)
+        self.rho_xy_pert = (self.rho_xy - averaged) / averaged
+        print("dens MIN MAX = ", self.rho_xy_pert.min(), self.rho_xy_pert.max())
+
+        # calculate the mean with a lambda
+        w = width / 2
+        f = lambda r : self.vphi_xy[(R >= r-w) & (R < r+w) & (PHI < 7*np.pi/4) & (PHI > np.pi/4)].mean()
+        r  = np.linspace(R.min(), R.max(), num=int(self.radius))
+        mean = np.vectorize(f)(r)
+        mean_interp_func = interp1d(r, mean, kind='linear')
+
+        # test plot
+        if True:
+            fig,ax=plt.subplots()
+            ax.plot(r,mean)
+            ax.set_yscale('log')
+            plt.show()
+
+        # subtract azimuthal average
+        print("Subtracting azimuthal average of density profile")
+        averaged = mean_interp_func(R)
+        self.vphi_xy_pert = (self.vphi_xy - averaged) / averaged
+        print("vphi MIN MAX = ", self.vphi_xy_pert.min(), self.vphi_xy_pert.max())
 
     def get_polar_grid(self):
 
