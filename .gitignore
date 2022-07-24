@@ -1,2 +1,8 @@
 **/__pycache__
 *.npy
+*.pdf
+config_*
+.DS_Store
+/*
+
+!/mcfost
