@@ -78,7 +78,7 @@ def make_mcfost_grid_data(parameters):
     working_dir = os.getcwd()
     os.chdir(f"{p.system}/{p.name}/mcfost/")
     subprocess.call(["rm", "-rf", "data_disk", "data_disk_old"])
-    subprocess.call(["mcfost", f"mcfost_{p.name}.para", "-disk_struct"], stdout=subprocess.DEVNULL)
+    subprocess.call(["mcfost", f"mcfost_{p.name}.para", "-disk_struct"]) #, stdout=subprocess.DEVNULL)
     os.chdir(working_dir)
 
     print("Done")
@@ -89,8 +89,8 @@ def read_mcfost_grid_data(parameters):
     p = parameters
     
     # reading disk data
-    with HiddenPrints():
-        mcfost_disk = Disc(f"./{p.system}/{p.name}/mcfost/")
+    #with HiddenPrints():
+    mcfost_disk = Disc(f"./{p.system}/{p.name}/mcfost/")
 
     # getting radii and heights
     r = mcfost_disk.r()[:, p.n_z:, :]

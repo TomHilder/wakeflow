@@ -69,7 +69,8 @@ class Grid:
             self.r = np.geomspace(self.p.r_inner, self.p.r_outer, self.p.n_r)
         else:
             self.r = np.linspace(self.p.r_inner, self.p.r_outer, self.p.n_r)    
-        self.phi = np.linspace(0, 2*np.pi, self.p.n_phi)
+        #self.phi = np.linspace(0, 2*np.pi, self.p.n_phi)
+        self.phi = np.linspace(-np.pi, np.pi, self.p.n_phi)
         self.z = np.linspace(0, self.height, self.p.n_z)
 
         self.PHI, self.Z, self.R = np.meshgrid(self.phi, self.z, self.r, indexing='ij')
@@ -396,12 +397,21 @@ class Grid:
         # Polar grid plots
         else:
 
+            ulen  = self.p.au
+            umass = self.p.m_solar
+            utime = np.sqrt(ulen**3 / (self.p.G_const * umass)) 
+            uvel  = ulen / utime / 1E5
+
             # v_r
             plt.close("all")
-            _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-            myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:], levels=contour_lvls, vmin=-vr_max, vmax=vr_max, cmap='RdBu')
-            ax.set_ylim(0, self.p.r_outer)
-            plt.colorbar(myplot, label=r"radial velocity [km/s]")
+            #_, ax = plt.subplots() #subplot_kw=dict(projection='polar'))
+            #myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-vr_max, vmax=vr_max, cmap='RdBu')
+            #myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-0.05, vmax=0.05, cmap='RdBu_r')
+            plt.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-0.05, vmax=0.05, cmap='RdBu_r')
+            #plt.colorbar()
+            #ax.set_ylim(0, self.p.r_outer)
+            plt.ylim(self.p.r_inner, self.p.r_outer)
+            #plt.colorbar(myplot, label=r"radial velocity [km/s]")
             if save:
                 plt.savefig(f'{savedir}/vr_z{z_slice}.pdf')
             if show:
@@ -409,10 +419,14 @@ class Grid:
 
             # v_phi
             plt.close("all")
-            _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-            myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_phi[:,z_slice,:], levels=contour_lvls, vmin=-vphi_max, vmax=vphi_max, cmap='RdBu')
-            ax.set_ylim(0, self.p.r_outer)
-            plt.colorbar(myplot)
+            #_, ax = plt.subplots() #subplot_kw=dict(projection='polar'))
+            #myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_phi[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-vphi_max, vmax=vphi_max, cmap='RdBu')
+            #myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_phi[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-0.05, vmax=0.05, cmap='RdBu_r')
+            plt.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_phi[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-0.05, vmax=0.05, cmap='RdBu')
+            #ax.set_ylim(0, self.p.r_outer)
+            plt.ylim(self.p.r_inner, self.p.r_outer)
+            #plt.colorbar()
+            #plt.colorbar(myplot)
             plt.title(r"$v_{\phi}$")
             plt.title(r"$v_{\phi}$")
             if save:
@@ -422,10 +436,14 @@ class Grid:
 
             # rho
             plt.close("all")
-            _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-            myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.rho[:,z_slice,:], levels=contour_lvls, vmin=-rho_max, vmax=rho_max, cmap='RdBu')
-            ax.set_ylim(0, self.p.r_outer)
-            plt.colorbar(myplot)
+            _, ax = plt.subplots() #subplot_kw=dict(projection='polar'))
+            #myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.rho[:,z_slice,:], levels=contour_lvls, vmin=-rho_max, vmax=rho_max, cmap='RdBu')
+            #myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.rho[:,z_slice,:], levels=contour_lvls, vmin=-0.5, vmax=0.5, cmap='RdBu_r')
+            plt.contourf(self.PHI[:,0,:], self.R[:,0,:], self.rho[:,z_slice,:], levels=contour_lvls, vmin=-0.5, vmax=0.5, cmap='RdBu_r')
+            #ax.set_ylim(0, self.p.r_outer)
+            plt.ylim(self.p.r_inner, self.p.r_outer)
+            #plt.colorbar()
+            #plt.colorbar(myplot)
             plt.title(r"$\rho$")
             plt.title(r"$\rho$")
             if save:
