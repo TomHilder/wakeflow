@@ -75,6 +75,7 @@ def run_wakeflow(params):
 
         # extract initial condition from the linear perturbations
         nonlin_perts.extract_ICs(lin_perts) #, lin_perts_analytic)
+        #nonlin_perts.extract_ICs_ann(lin_perts)
 
         # solve for non-linear perturbations
         nonlin_perts.get_non_linear_perts()
