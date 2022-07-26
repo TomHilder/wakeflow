@@ -1,22 +1,22 @@
 # DEFAULT parameter file for running wakeflow, HD 163296 parameters as example, set to run mcfost
 
 run_info:
-    name: "test_v_join"                          # give your run a name (results are saved a directory called this, don't use spaces)
-    system: "HD_163296"                          # name of the system you are modelling
+    name: "inner_wake"                           # give your run a name (results are saved a directory called this, don't use spaces)
+    system: "inner_wake"                         # name of the system you are modelling
 
 disk:
     m_star: 1.9                                  # mass of central star in solar masses
-    m_planet: [0.5, 1.0, 2.0, 4.0]               # mass of embedded planet(s) in Jupiter masses (list or float)
+    m_planet: [1.34]                              # mass of embedded planet(s) in Jupiter masses (list or float)
     r_outer: 500                                 # outer radius of disk in au
-    r_inner: 40                                  # inner radius of disk in au
-    r_planet: 210                                # orbital radius of embedded planet in au
-    r_ref: 235                                   # reference radius R0 for H/R
+    r_inner: 100                                 # inner radius of disk in au (does not apply for Cartesian grid)
+    r_planet: 270                                # orbital radius of embedded planet in au
+    r_ref: 270                                   # reference radius R0 for H/R
     r_c: 0                                       # critical radius for exponentially tapered density profile. set to 0 for power law
     q: 0.25                                      # q index, defined as c_s \propto R^{-q}
     p: 1.0                                       # p index, defined as rho \propto R^{-p} or \propto R^{-p}*\exp{-R/r_c}^{2-p}
-    hr: 0.15                                     # disc flaring H/R at R0
+    hr: 0.10                                     # disc flaring H/R at R0
     dens_ref: 1                                  # rho at R0 in g/cm^3, unimportant for mcfost as it rescales
-    cw_rotation: False                           # clockwise rotating disk (boolean)   # FALSE FOR HD 163
+    cw_rotation: True                            # CURRENTLY DOES NOTHING, you will get anticlockwise and be pleased about it :-) (bool)
 
 angles:
     inclination: -225                            # inclination of disk in degrees    (46.7)
@@ -25,8 +25,8 @@ angles:
 
 grid:
     type: "cartesian"                            # "cylindrical" or "cartesian" or "mcfost" -- must choose mcfost to write fits file
-    n_x: 200                                     # number of x grid points
-    n_y: 200                                     # number of y grid points
+    n_x: 400                                     # number of x grid points
+    n_y: 400                                     # number of y grid points
     n_r: 200                                     # number of r grid points
     n_phi: 160                                   # number of phi grid points
     n_z: 50                                      # number of z grid points
@@ -34,14 +34,14 @@ grid:
 
 plotting:
     make_midplane_plots: True                    # create midplane plots of velocity components and density
-    show_midplane_plots: False                   # show plots as code runs
-    show_teta_debug_plots: True                  # show t, eta space plots (including putting the linear solution into t,eta)
+    show_midplane_plots: True                    # show plots as code runs
+    show_teta_debug_plots: False                 # show t, eta space plots (including putting the linear solution into t,eta)
 
 results:
     include_planet: True                         # include perturbations from a planet? (lets you run an unperturbed disk) (bool)
     include_linear: True                         # include the results from the linear regime?
-    save_perturbations: False                    # save perturbations to npy file
-    save_total: False                            # save background + perturbations to npy file
+    save_perturbations: True                     # save perturbations to npy file
+    save_total: True                             # save background + perturbations to npy file
     write_FITS: False                            # write a FITS file to run in mcfost -- requires {grid.type: "mcfost"}
 
 # The following settings require an installation of mcfost and pymcfost
@@ -69,6 +69,6 @@ physical:
     damping_malpha: 0                            # artificial damping
 
 numerical:
-    CFL: 0.05                                    # CFL safety factor for Godunov scheme
+    CFL: 0.5                                     # CFL safety factor for Godunov scheme
     scale_box: 1.0                               # scale factor for linear regime box side length -- default is 1
-    scale_box_ang: 1.8                           # scale factor for linear regime box angular extend
+    scale_box_ang: 1.0                           # scale factor for linear regime box angular extend

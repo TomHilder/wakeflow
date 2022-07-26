@@ -1,10 +1,10 @@
 import math
-import numpy as np
-from scipy.interpolate import griddata
-from copy import copy
-import matplotlib.pyplot as plt
-from burgers import solve_burgers
-from transformations import phi_wake, Eta, mod2pi, t, t_integral, t_integrand, g, Lambda_fu, Lambda_fv, get_chi, get_dens_vel, plot_r_t
+import numpy                as np
+import matplotlib.pyplot    as plt
+from scipy.interpolate      import griddata
+from copy                   import copy
+from burgers                import solve_burgers
+from transformations        import phi_wake, Eta, mod2pi, t, t_integral, t_integrand, g, Lambda_fu, Lambda_fv, get_chi, get_dens_vel, plot_r_t
 
 # TODO: Optimise/clean up further
 
@@ -19,7 +19,7 @@ class NonLinearPerts():
 
     def extract_ICs(self, LinearPerts, LinearPerts2=None):
 
-        print('  * Extracting Burgers initial condition from linear density perturbation ...')
+        print('  * Extracting Burgers initial conditions from linear density perturbation ...')
         
         # grab linear perturbations object
         lp = LinearPerts
@@ -31,41 +31,65 @@ class NonLinearPerts():
         # set maximum eta - semi-width of the support of the azimuthal profile of the linear density perturbation
         eta_max = 25 
 
+        # inner and outer wake x position
+        x_box_outer =  lp.x_box
+        x_box_inner = -lp.x_box
+
         # find the index in the x grid corresponding to the edge of the box
-        index = np.argmin(np.abs(x - lp.x_box))
+        index_outer = np.argmin(np.abs(x - x_box_outer))
+        index_inner = np.argmin(np.abs(x - x_box_inner))
 
         # extract profile of constant x along edge of box for initial condition
-        profile = lp.pert_rho[:,index] / np.sqrt(np.abs(lp.x_box))
+        profile_outer = lp.pert_rho[:,index_outer] / np.sqrt(np.abs(x_box_outer))
+        profile_inner = lp.pert_rho[:,index_inner] / np.sqrt(np.abs(x_box_inner))
 
         # restrict y range --- I'm not sure why this is necessary but it is. Larger values will cause issues
         y_max = 30
-        profile_rest = profile[(y > -y_max) & (y < y_max)]
         y_rest = y[(y > -y_max) & (y < y_max)]
+
+        # restrict inner and outer IC
+        profile_rest_outer = profile_outer[(y > -y_max) & (y < y_max)]
+        profile_rest_inner = profile_inner[(y > -y_max) & (y < y_max)]
 
         # ## find eta points for IC profile using full transformation
         # find local cart. coords in real units
-        x_IC = self.p.l * np.repeat(lp.x_box, len(y_rest))
-        y_IC = self.p.l * y_rest
+        x_IC_outer = self.p.l * np.repeat(x_box_outer, len(y_rest))
+        y_IC_outer = self.p.l * y_rest
+        x_IC_inner = self.p.l * np.repeat(x_box_inner, len(y_rest))
+        y_IC_inner = self.p.l * y_rest
 
         # find corresponding global polar coords
-        r_IC = x_IC + self.p.r_planet
-        phi_IC = y_IC / self.p.r_planet
+        r_IC_outer   = x_IC_outer + self.p.r_planet
+        r_IC_inner   = x_IC_inner + self.p.r_planet
+        phi_IC_outer = y_IC_outer / self.p.r_planet
+        phi_IC_inner = y_IC_inner / self.p.r_planet
 
         # initialise arrays for corresponding t,eta points
-        eta_IC = np.zeros(len(y_rest))
-        t_IC = np.zeros(len(y_rest))
+        eta_IC_outer = np.zeros(len(y_rest))
+        eta_IC_inner = np.zeros(len(y_rest))
+        t_IC_outer   = np.zeros(len(y_rest))
+        t_IC_inner   = np.zeros(len(y_rest))
 
         # perform transformation
         for i in range(len(y_rest)):
-            eta_IC[i] = Eta(r_IC[i], phi_IC[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
-            t_IC[i] = t(r_IC[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
+
+            # eta for outer and inner
+            eta_IC_outer[i] = Eta(r_IC_outer[i], phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
+            eta_IC_inner[i] = Eta(r_IC_inner[i], phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
+
+            # t for outer and inner
+            t_IC_outer[i] = t(r_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
+            t_IC_inner[i] = t(r_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
 
         # restrict eta range using eta_max
-        self.eta = eta_IC[(eta_IC > -eta_max) & (eta_IC < eta_max)]
-        self.profile = profile_rest[(eta_IC > -eta_max) & (eta_IC < eta_max)]
+        self.eta_outer = eta_IC_outer[(eta_IC_outer > -eta_max) & (eta_IC_outer < eta_max)]
+        self.eta_inner = eta_IC_inner[(eta_IC_inner > -eta_max) & (eta_IC_inner < eta_max)]
+        self.profile_outer = profile_rest_outer[(eta_IC_outer > -eta_max) & (eta_IC_outer < eta_max)]
+        self.profile_inner = profile_rest_inner[(eta_IC_inner > -eta_max) & (eta_IC_inner < eta_max)]
 
         # set t0
-        self.t0 = t_IC[0]
+        self.t0_outer = t_IC_outer[0]
+        self.t0_inner = t_IC_inner[0]
 
         # old, approximate IC extraction procedure
         if False:
@@ -75,32 +99,51 @@ class NonLinearPerts():
             self.eta = y_cut - y_match*np.ones(len(y_cut))
             self.t0 = t(self.p.r_planet + self.p.l * lp.x_box, self.p.r_planet, self.p.hr, self.p.q, self.p.p)
 
-        # set eta_tilde:
-        for i in range(len(self.eta)):
-            if self.profile[i] == 0 and self.eta[i] > -10 and self.eta[i] < 0:
-                zero = self.eta[i]
-            elif i!= (len(self.eta) - 1) and self.profile[i] * self.profile[i + 1] < 0 and self.eta[i] > -10 and self.eta[i] < 0:
-                zero = 0.5 * (self.eta[i] + self.eta[i + 1])
-        self.eta_tilde = -zero
+        # set eta_tilde for outer wake:
+        for i in range(len(self.eta_outer)):
+            if self.profile_outer[i] == 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 0:
+                zero_outer = self.eta_outer[i]
+            elif i!= (len(self.eta_outer) - 1) and self.profile_outer[i] * self.profile_outer[i + 1] < 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 0:
+                zero_outer = 0.5 * (self.eta_outer[i] + self.eta_outer[i + 1])
+        self.eta_tilde_outer = -zero_outer
 
-        # set C:
-        deta = self.eta[1] - self.eta[0]
-        profile0 = self.profile[self.eta < -self.eta_tilde]
-        C0 = -np.trapz(profile0, dx = deta)
-        self.C = (self.p.gamma + 1) * (self.p.m_planet / self.p.m_thermal) * C0 / 2**(3/4)
+        # set eta_tilde for inner wake:
+        for i in range(len(self.eta_inner)):
+            if self.profile_inner[i] == 0 and self.eta_inner[i] > -10 and self.eta_inner[i] < 0:
+                zero_inner = self.eta_inner[i]
+            elif i!= (len(self.eta_inner) - 1) and self.profile_inner[i] * self.profile_inner[i + 1] < 0 and self.eta_inner[i] > -10 and self.eta_inner[i] < 0:
+                zero_inner = 0.5 * (self.eta_inner[i] + self.eta_inner[i + 1])
+        self.eta_tilde_inner = -zero_inner
 
-        print('     eta_tilde = ', self.eta_tilde)
-        print('     C0 = ', C0)
-        print('     t0 = ', self.t0)
+        # set C for outer wake:
+        deta_outer = self.eta_outer[1] - self.eta_outer[0]
+        profile0_outer = self.profile_outer[self.eta_outer < -self.eta_tilde_outer]
+        C0_outer = -np.trapz(profile0_outer, dx = deta_outer)
+        self.C_outer = (self.p.gamma + 1) * (self.p.m_planet / self.p.m_thermal) * C0_outer / 2**(3/4)
 
-        beta_p = self.p.m_planet / self.p.m_thermal
-        gamma  = self.p.gamma
+        # set C for inner wake:
+        deta_inner = self.eta_inner[1] - self.eta_inner[0]
+        profile0_inner = self.profile_inner[self.eta_inner < -self.eta_tilde_inner]
+        C0_inner = -np.trapz(profile0_inner, dx = deta_inner)
+        self.C_inner = (self.p.gamma + 1) * (self.p.m_planet / self.p.m_thermal) * C0_inner / 2**(3/4)
+
+        print('     OUTER WAKE:')
+        print('     eta_tilde = ', self.eta_tilde_outer)
+        print('     C0 = ', C0_outer)
+        print('     t0 = ', self.t0_outer)
+        print('     INNER WAKE:')
+        print('     eta_tilde = ', self.eta_tilde_inner)
+        print('     C0 = ', C0_inner)
+        print('     t0 = ', self.t0_inner)
 
         # ======================================
         # === put linear solution into t,eta ===
 
         # you will need to run cut_box_square on the linear perts object before doing this.
         # it is okay to run it as well as the annulus cut, they don't overwrite each other
+
+        beta_p = self.p.m_planet / self.p.m_thermal
+        gamma  = self.p.gamma
 
         if self.p.show_teta_debug_plots:
 
@@ -298,37 +341,74 @@ class NonLinearPerts():
 
         beta_p = self.p.m_planet / self.p.m_thermal
 
-        print('  * Solving Burgers equation ...')
-        time, eta, solution, eta_inner, solution_inner  = solve_burgers(
-            self.eta, self.profile, self.p.gamma, beta_p, self.C, self.p.CFL, self.eta_tilde, self.t0, self.linear_solution, self.linear_t, self.p.show_teta_debug_plots
+        print('  * Solving Burgers equation for outer wake...')
+
+        time_outer, eta_outer, solution_outer = solve_burgers(
+            self.eta_outer, 
+            self.profile_outer, 
+            self.p.gamma, 
+            beta_p, 
+            self.C_outer, 
+            self.p.CFL, 
+            self.eta_tilde_outer, 
+            self.t0_outer, 
+            self.linear_solution, 
+            self.linear_t, 
+            self.p.show_teta_debug_plots
+        )
+
+        print('  * Solving Burgers equation for inner wake...')
+
+        time_inner, eta_inner, solution_inner = solve_burgers(
+            self.eta_inner, 
+            -self.profile_inner,     # this minus sign is intended
+            self.p.gamma, 
+            beta_p, 
+            self.C_inner, 
+            self.p.CFL, 
+            self.eta_tilde_inner, 
+            self.t0_inner, 
+            self.linear_solution, 
+            self.linear_t, 
+            self.p.show_teta_debug_plots
         )
 
         print('  * Computing nonlinear perturbations ...')
 
-        tf = time[-1]
+        # final time of solutions before N-wave behaviour
+        tf_outer = time_outer[-1]
+        tf_inner = time_inner[-1]
 
-        eta_tilde = self.eta_tilde
-        C = self.C 
-        t0 = self.t0
-        Rp = self.p.r_planet
+        # needed constants from solutions, inner and outer
+        eta_tilde_outer = self.eta_tilde_outer
+        eta_tilde_inner = self.eta_tilde_inner
+        C_outer         = self.C_outer
+        C_inner         = self.C_inner
+        t0_outer        = self.t0_outer
+        t0_inner        = self.t0_inner
+
+        # parameters of run
+        Rp      = self.p.r_planet
         x_match = 2*self.p.scale_box 
-        l = self.p.l
-        cw = -self.p.a_cw
-        hr = self.p.hr_planet
-        q = self.p.q
+        l       = self.p.l
+        cw      = -self.p.a_cw
+        hr      = self.p.hr_planet
+        q       = self.p.q
+        csp     = self.p.c_s_planet
+        p       = self.p.p
 
+        # physical parameters
         gamma = self.p.gamma
-        csp = self.p.c_s_planet
-        p = self.p.p
 
+        # if using a Cartesian grid
         if self.g.info["Type"] == "cartesian":
 
             x = self.g.x 
             y = self.g.y
 
-            dnl = np.zeros((len(x),len(y)))
-            unl = np.zeros((len(x),len(y)))
-            vnl = np.zeros((len(x),len(y)))
+            dnl = np.zeros((len(x), len(y)))
+            unl = np.zeros((len(x), len(y)))
+            vnl = np.zeros((len(x), len(y)))
 
             for i in range(len(x)):
                 for j in range(len(y)):
@@ -337,14 +417,51 @@ class NonLinearPerts():
                     rr = np.sqrt(xx**2 + yy**2)
                     pphi = np.arctan2(yy,xx)
 
-                    Chi = get_chi(pphi, rr, time, eta, eta_inner, eta_tilde, C, solution, solution_inner, t0, tf, Rp, x_match, l, cw, hr, q, p)
-                    dnl[i,j], unl[i,j], vnl[i,j] = get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p) # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
+                    Chi = get_chi(
+                        pphi, 
+                        rr, 
+                        time_outer,
+                        time_inner, 
+                        eta_outer, 
+                        eta_inner, 
+                        eta_tilde_outer,
+                        eta_tilde_inner, 
+                        C_outer,
+                        C_inner, 
+                        solution_outer, 
+                        solution_inner, 
+                        t0_outer,
+                        t0_inner, 
+                        tf_outer,
+                        tf_inner, 
+                        Rp, 
+                        x_match, 
+                        l, 
+                        cw, 
+                        hr, 
+                        q, 
+                        p
+                    )
 
+                    # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
+                    dnl[i,j], unl[i,j], vnl[i,j] = get_dens_vel(
+                        rr, 
+                        Chi, 
+                        gamma, 
+                        Rp, 
+                        cw, 
+                        csp, 
+                        hr, 
+                        q, 
+                        p
+                    ) 
+
+        # if using a cylindrical grid
         else:
 
-            dnl = np.zeros((self.p.n_phi,self.p.n_r))
-            unl = np.zeros((self.p.n_phi,self.p.n_r))
-            vnl = np.zeros((self.p.n_phi,self.p.n_r))
+            dnl = np.zeros((self.p.n_phi, self.p.n_r))
+            unl = np.zeros((self.p.n_phi, self.p.n_r))
+            vnl = np.zeros((self.p.n_phi, self.p.n_r))
 
             r = self.g.r
             phi = self.g.phi
@@ -354,8 +471,46 @@ class NonLinearPerts():
                 for j in range(self.p.n_phi):
                     pphi = phi[j]
 
-                    Chi = get_chi(pphi, rr, time, eta, eta_inner, eta_tilde, C, solution, solution_inner, t0, tf, Rp, x_match, l, cw, hr, q, p)
-                    dnl[j,i], unl[j,i], vnl[j,i] = get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p) # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
+                    #Chi = get_chi(pphi, rr, time, eta, eta_inner, eta_tilde, C, solution, solution_inner, t0, tf, Rp, x_match, l, cw, hr, q, p)
+                    Chi = get_chi(
+                        pphi, 
+                        rr, 
+                        time_outer,
+                        time_inner, 
+                        eta_outer, 
+                        eta_inner, 
+                        eta_tilde_outer,
+                        eta_tilde_inner, 
+                        C_outer,
+                        C_inner, 
+                        solution_outer, 
+                        solution_inner, 
+                        t0_outer,
+                        t0_inner, 
+                        tf_outer,
+                        tf_inner, 
+                        Rp, 
+                        x_match, 
+                        l, 
+                        cw, 
+                        hr, 
+                        q, 
+                        p
+                    )
+
+                    #dnl[j,i], unl[j,i], vnl[j,i] = get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p) 
+                    # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
+                    dnl[i,j], unl[i,j], vnl[i,j] = get_dens_vel(
+                        rr, 
+                        Chi, 
+                        gamma, 
+                        Rp, 
+                        cw, 
+                        csp, 
+                        hr, 
+                        q, 
+                        p
+                    ) 
 
         self.rho = dnl
         self.vr = 1e-5*unl

@@ -12,7 +12,7 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_sol
     tf_th = 300 # time required to develop N-wave for betap = 1
     tf = tf_th/beta_p # time required to display N-wave for generic betap, Eq. (39) Rafikov 2002
 
-    tf *= 2 # test doubling value
+    #tf *= 2 # test doubling value
 
     eta_min = -eta_tilde-np.sqrt(2*C*tf) - 3  # Eq. (18) Bollati et al. 2021
     eta_max = -eta_tilde+np.sqrt(2*C*tf) + 3
@@ -98,11 +98,8 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_sol
     lapsed_time = 0
     counter = 0
     while lapsed_time < tf:
-    #while lapsed_time < tf + t0:
-    #while counter < 10:
         counter += 1
         dt = min(deta * CFL / (max(abs(solution[-1])) + 1e-8), 0.02)
-        #print('max of sol = ', max(abs(solution[-1])), ', dt = ', dt)
         time.append(time[-1]+dt)
         lapsed_time += dt
 
@@ -168,13 +165,13 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_sol
         plt.show()
     
 
-    Nt = np.shape(solution)[1]
+    #Nt = np.shape(solution)[1]
 
-    solution_inner = np.zeros(solution.shape) # solution for r < Rp (and disc rotating counterclockwise)
-    eta_inner = - eta[::-1]
-    for i in range(Neta):
-        for j in range(Nt):
-            solution_inner[i,j] = solution[int(Neta-1-i),j]
+    #solution_inner = np.zeros(solution.shape) # solution for r < Rp (and disc rotating counterclockwise)
+    #eta_inner = - eta[::-1]
+    #for i in range(Neta):
+    #    for j in range(Nt):
+    #        solution_inner[i,j] = solution[int(Neta-1-i),j]
 
     # The following will put the linear solution into returned solution for Chi
     if False:
@@ -188,5 +185,5 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_sol
         eta_inner = - eta[::-1]
         return total_time, eta, total_solution, eta_inner, solution_inner
 
-    return time, eta, solution, eta_inner, solution_inner
+    return time, eta, solution #, eta_inner, solution_inner
     
