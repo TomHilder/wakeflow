@@ -121,7 +121,10 @@ class Parameters(Constants):
         self.p = float(config["disk"]["p"])
         self.hr = float(config["disk"]["hr"])
         self.rho_ref = float(config["disk"]["dens_ref"])
-        self.cw_rotation = bool(config["disk"]["cw_rotation"])
+
+        # override given rotation, only calculated anticlockwise
+        self.cw_rotation = False
+        self.user_cw_rotation = bool(config["disk"]["cw_rotation"])
 
         # angles parameters
         self.inclination = float(config["angles"]["inclination"])

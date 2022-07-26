@@ -100,18 +100,109 @@ def Lambda_fv(r, Rp, csp, hr, gamma, q, p):      # Eq. (29) Bollati et al. 2021
     term2 = (r/Rp)**(0.5*(p-q-3))
     return coeff * term1 * term2
 
-def get_chi(pphi, rr, time, eta, eta_inner, eta_tilde, C, solution, solution_inner, t0, tf, Rp, x_match, l, cw, hr, q, p):
+def get_chi(
+    pphi, 
+    rr, 
+    time_outer,
+    time_inner, 
+    eta_outer, 
+    eta_inner, 
+    eta_tilde_outer, 
+    eta_tilde_inner,
+    C_outer, 
+    C_inner,
+    solution_outer, 
+    solution_inner, 
+    t0_outer, 
+    t0_inner,
+    tf_outer,
+    tf_inner, 
+    Rp, 
+    x_match, 
+    l, 
+    cw, 
+    hr, 
+    q, 
+    p
+):
     # COMPUTATION OF Chi
-
 
     if (rr > (Rp - x_match*l)) and (rr <(Rp + x_match*l)): # exclude points inside annulus from linear regime
         return 0.
-
 
     # change coordinates of the grid point (rr,pphi) to (t1,eta1)
     t1 = t(rr, Rp, hr, q, p)
     eta1 = Eta(rr, pphi, Rp, hr, q, cw)
 
+    # If the point is in the outer disk, use the outer wake solution
+    if (rr - Rp) > 0:
+
+        # use numerical solution before the profile develops N-wave
+        if t1 < (tf_outer + t0_outer):   
+            index_t = np.argmax((t0_outer + time_outer) > t1)
+            grid_t = [t0_outer + time_outer[index_t-1], t0_outer+time_outer[index_t]]
+
+            if eta1 > eta_outer[-1] or eta1 < eta_outer[0]:
+                Chi = 0
+            else:
+                index_eta = np.argmax(eta_outer > eta1)
+                grid_eta  = np.array([eta_outer[index_eta-1], eta_outer[index_eta]])
+                grid_solution = np.array([
+                    [solution_outer[index_eta-1,index_t-1], solution_outer[index_eta-1,index_t]],
+                    [solution_outer[index_eta,index_t-1],   solution_outer[index_eta,index_t]]
+                    ])
+
+                inter = RectBivariateSpline(grid_eta, grid_t, grid_solution, kx=1, ky=1)
+                Chi   = inter(eta1, t1)
+
+        # for large t use the analytical N-wave shape (Eq. 17 Bollati et al. 2021)
+        else: 
+
+            extr_left  = +cw * np.sign(rr - Rp) * eta_tilde_outer - np.sqrt(2 * C_outer * (t1 - t0_outer))
+            extr_right = +cw * np.sign(rr - Rp) * eta_tilde_outer + np.sqrt(2 * C_outer * (t1 - t0_outer))
+
+            if eta1 > extr_left and eta1 < extr_right:
+                Chi = (-cw * np.sign(rr - Rp) * eta1 + eta_tilde_outer) / (t1 - t0_outer)  #eq.(29) nonlinear.pdf
+            else:
+                Chi = 0
+
+    # If the point is in the inner disk, use the inner wake solution
+    else:
+
+        # use numerical solution before the profile develops N-wave
+        if t1 < (tf_inner + t0_inner):   
+            index_t = np.argmax((t0_inner + time_inner) > t1)
+            grid_t = [t0_inner + time_inner[index_t-1], t0_inner+time_inner[index_t]]
+
+            if eta1 > eta_inner[-1] or eta1 < eta_inner[0]:
+                Chi = 0
+            else:
+                index_eta = np.argmax(eta_inner > eta1)
+                grid_eta  = np.array([eta_inner[index_eta-1], eta_inner[index_eta]])
+                grid_solution = np.array([
+                    [solution_inner[index_eta-1,index_t-1], solution_inner[index_eta-1,index_t]],
+                    [solution_inner[index_eta,index_t-1],   solution_inner[index_eta,index_t]]
+                    ])
+
+                inter = RectBivariateSpline(grid_eta, grid_t, grid_solution, kx=1, ky=1)
+                Chi   = -inter(eta1, t1)
+
+        # for large t use the analytical N-wave shape (Eq. 17 Bollati et al. 2021)
+        else: 
+
+            extr_left  = +cw * np.sign(rr - Rp) * eta_tilde_inner - np.sqrt(2 * C_inner * (t1 - t0_inner))
+            extr_right = +cw * np.sign(rr - Rp) * eta_tilde_inner + np.sqrt(2 * C_inner * (t1 - t0_inner))
+
+            if eta1 > extr_left and eta1 < extr_right:
+                Chi = (-cw * np.sign(rr - Rp) * eta1 + eta_tilde_inner) / (t1 - t0_inner)  #eq.(29) nonlinear.pdf
+            else:
+                Chi = 0
+    
+    return Chi
+
+    # ==========================
+
+    """
     if t1 < (tf + t0):   # use numerical solution before the profile develops N-wave
         index_t = np.argmax( (t0 + time) > t1 )
         #print(index_t)
@@ -158,8 +249,7 @@ def get_chi(pphi, rr, time, eta, eta_inner, eta_tilde, C, solution, solution_inn
             Chi = (-cw * np.sign(rr-Rp) * eta1 + eta_tilde) / (t1-t0)  #eq.(29) nonlinear.pdf
         else:
             Chi = 0
-
-    return Chi
+    """
 
 def get_dens_vel(rr, Chi, gamma ,Rp, cw, csp, hr, q, p):
     g1 = g(rr, Rp, hr, q, p)

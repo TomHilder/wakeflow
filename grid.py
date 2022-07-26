@@ -386,7 +386,7 @@ class Grid:
 
             # rho
             plt.close("all")
-            plt.contourf(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.rho[:,z_slice,:]), levels=contour_lvls, vmin=-rho_max, vmax=rho_max, cmap='RdBu')
+            plt.contourf(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.rho[:,z_slice,:]), levels=contour_lvls, vmin=-0.3*rho_max, vmax=0.3*rho_max, cmap='RdBu')
             plt.colorbar()
             plt.title(r"$\rho$")
             if save:
