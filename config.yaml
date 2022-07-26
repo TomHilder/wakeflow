@@ -6,7 +6,7 @@ run_info:
 
 disk:
     m_star: 1.9                                  # mass of central star in solar masses
-    m_planet: [1.0]                              # mass of embedded planet(s) in Jupiter masses (list or float)
+    m_planet: [0.8]                              # mass of embedded planet(s) in Jupiter masses (list or float)
     r_outer: 500                                 # outer radius of disk in au
     r_inner: 100                                 # inner radius of disk in au (does not apply for Cartesian grid)
     r_planet: 270                                # orbital radius of embedded planet in au
@@ -71,4 +71,4 @@ physical:
 numerical:
     CFL: 0.5                                     # CFL safety factor for Godunov scheme
     scale_box: 1.0                               # scale factor for linear regime box side length    -- default is 1
-    scale_box_ang: 1.7                           # scale factor for linear regime box angular extent -- default is 1
+    scale_box_ang: 2.5                           # scale factor for linear regime box angular extent -- default is 1
