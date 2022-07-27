@@ -64,6 +64,12 @@ class NonLinearPerts():
         phi_IC_outer = y_IC_outer / self.p.r_planet
         phi_IC_inner = y_IC_inner / self.p.r_planet
 
+        if False:
+            plt.plot(phi_IC_outer, profile_rest_outer, label="outer")
+            plt.plot(phi_IC_inner, profile_rest_inner, label="inner")
+            plt.legend(loc="best")
+            plt.show()
+
         # initialise arrays for corresponding t,eta points
         eta_IC_outer = np.zeros(len(y_rest))
         eta_IC_inner = np.zeros(len(y_rest))
@@ -127,14 +133,14 @@ class NonLinearPerts():
         C0_inner = -np.trapz(profile0_inner, dx = deta_inner)
         self.C_inner = (self.p.gamma + 1) * (self.p.m_planet / self.p.m_thermal) * C0_inner / 2**(3/4)
 
-        print('     OUTER WAKE:')
-        print('     eta_tilde = ', self.eta_tilde_outer)
-        print('     C0 = ', C0_outer)
-        print('     t0 = ', self.t0_outer)
-        print('     INNER WAKE:')
-        print('     eta_tilde = ', self.eta_tilde_inner)
-        print('     C0 = ', C0_inner)
-        print('     t0 = ', self.t0_inner)
+        print('     Outer Wake:')
+        print('         eta_tilde = ', self.eta_tilde_outer)
+        print('         C0 = ', C0_outer)
+        print('         t0 = ', self.t0_outer)
+        print('     Inner Wake:')
+        print('         eta_tilde = ', self.eta_tilde_inner)
+        print('         C0 = ', C0_inner)
+        print('         t0 = ', self.t0_inner)
 
         # ======================================
         # === put linear solution into t,eta ===
@@ -336,6 +342,92 @@ class NonLinearPerts():
             self.linear_solution = 0
             self.linear_t = 0
 
+    def extract_ICs_ann(self, LinearPerts):
+        
+        print('  * Extracting Burgers initial conditions from linear density perturbation ...')
+        
+        # grab linear perturbations object
+        lp = LinearPerts
+
+        # mass unit
+        beta_p = self.p.m_planet / self.p.m_thermal
+
+        # grab radius and phi values for edge of box
+        phi_IC_outer = lp.PHI_ann[:,-1]
+        phi_IC_inner = lp.PHI_ann[:,0]
+        r_IC_outer   = lp.r_ann[-1]
+        r_IC_inner   = lp.r_ann[ 0]
+
+        # edge of box in local coords
+        x_box_outer = (r_IC_outer - self.p.r_planet) / self.p.l
+        x_box_inner = (r_IC_inner - self.p.r_planet) / self.p.l
+
+        self.profile_outer = (lp.pert_rho_ann[:,-1] / beta_p) / np.sqrt(np.abs(x_box_outer))
+        self.profile_inner = (lp.pert_rho_ann[:, 0] / beta_p) / np.sqrt(np.abs(x_box_inner))
+
+        if False:
+         plt.plot(phi_IC_outer, self.profile_outer, label="outer")
+         plt.plot(phi_IC_inner, self.profile_inner, label="inner")
+         plt.legend(loc="best")
+         plt.show()
+
+        # find t points
+        t_IC_outer = t(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
+        t_IC_inner = t(r_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
+
+        # initialise arrays for corresponding eta points
+        self.eta_outer = np.zeros(len(phi_IC_outer))
+        self.eta_inner = np.zeros(len(phi_IC_outer))
+
+        # perform transformation
+        for i in range(len(phi_IC_outer)):
+            self.eta_outer[i] = Eta(r_IC_outer, phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
+            self.eta_inner[i] = Eta(r_IC_inner, phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
+
+        # set t0
+        self.t0_outer = t_IC_outer
+        self.t0_inner = t_IC_inner
+
+        # set eta_tilde for outer wake:
+        for i in range(len(self.eta_outer)):
+            if self.profile_outer[i] == 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 0:
+                zero_outer = self.eta_outer[i]
+            elif i!= (len(self.eta_outer) - 1) and self.profile_outer[i] * self.profile_outer[i + 1] < 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 0:
+                zero_outer = 0.5 * (self.eta_outer[i] + self.eta_outer[i + 1])
+        self.eta_tilde_outer = -zero_outer
+
+        # set eta_tilde for inner wake:
+        for i in range(len(self.eta_inner)):
+            if self.profile_inner[i] == 0 and self.eta_inner[i] > -10 and self.eta_inner[i] < 0:
+                zero_inner = self.eta_inner[i]
+            elif i!= (len(self.eta_inner) - 1) and self.profile_inner[i] * self.profile_inner[i + 1] < 0 and self.eta_inner[i] > -10 and self.eta_inner[i] < 0:
+                zero_inner = 0.5 * (self.eta_inner[i] + self.eta_inner[i + 1])
+        self.eta_tilde_inner = -zero_inner
+
+        # set C for outer wake:
+        deta_outer = self.eta_outer[1] - self.eta_outer[0]
+        profile0_outer = self.profile_outer[self.eta_outer < -self.eta_tilde_outer]
+        C0_outer = -np.trapz(profile0_outer, dx = deta_outer)
+        self.C_outer = (self.p.gamma + 1) * (self.p.m_planet / self.p.m_thermal) * C0_outer / 2**(3/4)
+
+        # set C for inner wake:
+        deta_inner = self.eta_inner[1] - self.eta_inner[0]
+        profile0_inner = self.profile_inner[self.eta_inner < -self.eta_tilde_inner]
+        C0_inner = -np.trapz(profile0_inner, dx = deta_inner)
+        self.C_inner = (self.p.gamma + 1) * (self.p.m_planet / self.p.m_thermal) * C0_inner / 2**(3/4)
+
+        print('     Outer Wake:')
+        print('         eta_tilde = ', self.eta_tilde_outer)
+        print('         C0 = ', C0_outer)
+        print('         t0 = ', self.t0_outer)
+        print('     Inner Wake:')
+        print('         eta_tilde = ', self.eta_tilde_inner)
+        print('         C0 = ', C0_inner)
+        print('         t0 = ', self.t0_inner)
+
+        # hard to explain, but they're not needed so set to zero
+        self.linear_solution = 0
+        self.linear_t = 0
 
     def get_non_linear_perts(self):
 
@@ -354,7 +446,8 @@ class NonLinearPerts():
             self.t0_outer, 
             self.linear_solution, 
             self.linear_t, 
-            self.p.show_teta_debug_plots
+            self.p.show_teta_debug_plots,
+            self.p.tf_fac
         )
 
         print('  * Solving Burgers equation for inner wake...')
@@ -370,7 +463,8 @@ class NonLinearPerts():
             self.t0_inner, 
             self.linear_solution, 
             self.linear_t, 
-            self.p.show_teta_debug_plots
+            self.p.show_teta_debug_plots,
+            self.p.tf_fac
         )
 
         print('  * Computing nonlinear perturbations ...')

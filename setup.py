@@ -1,7 +1,7 @@
 import yaml, sys, os
-import shutil as sh
-import numpy as np
-from mcfost_interface import make_mcfost_parameter_file, make_mcfost_grid_data, read_mcfost_grid_data, HiddenPrints
+import shutil           as sh
+import numpy            as np
+from mcfost_interface   import make_mcfost_parameter_file, make_mcfost_grid_data, read_mcfost_grid_data, HiddenPrints
 
 # TODO: Sanity checks for pymcfost parameters
 
@@ -175,6 +175,9 @@ class Parameters(Constants):
         self.CFL = float(config["numerical"]["CFL"])
         self.scale_box = float(config["numerical"]["scale_box"])
         self.scale_box_ang = float(config["numerical"]["scale_box_ang"])
+        self.box_warp = bool(config["numerical"]["box_warp"])
+        self.use_box_IC = bool(config["numerical"]["use_box_IC"])
+        self.tf_fac = float(config["numerical"]["tf_fac"])
 
         # get flaring at r_planet
         self.hr_planet = self.hr * (self.r_planet / self.r_ref) ** (0.5 - self.q)

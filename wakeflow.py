@@ -13,7 +13,7 @@ def main():
 
     # grab list of planet masses
     if params.m_planet is not None:
-        planet_masses = params.m_planet
+        planet_masses = [params.m_planet]
     else:
         planet_masses = params.m_planet_array
 
@@ -58,8 +58,6 @@ def run_wakeflow(params):
 
         # extract linear perturbations from file
         lin_perts = LinearPerts(params)
-        #lin_perts = LinearPerts(params, ph_pixelmap_loc="phantom/hd163_high_res", ph_planet_loc=222.9543)
-        #lin_perts = LinearPerts(params, ph_pixelmap_loc="phantom/imlup_10mil", ph_planet_loc=139.207)
         lin_perts.cut_box_annulus_segment()
 
         # add the linear perturbations onto grid
@@ -74,7 +72,9 @@ def run_wakeflow(params):
         nonlin_perts = NonLinearPerts(params, grid_nonlin_perts)
 
         # extract initial condition from the linear perturbations
-        nonlin_perts.extract_ICs(lin_perts) #, lin_perts_analytic)
+        nonlin_perts.extract_ICs(lin_perts)
+        if params.use_box_IC:
+            nonlin_perts.extract_ICs_ann(lin_perts)
 
         # solve for non-linear perturbations
         nonlin_perts.get_non_linear_perts()
