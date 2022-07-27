@@ -4,12 +4,13 @@ import matplotlib.pyplot    as plt
 from scipy.interpolate      import RectBivariateSpline
 from mpl_toolkits.mplot3d   import Axes3D
 from matplotlib             import ticker, cm
-from phantom_interface      import PhantomDump
+#from phantom_interface      import PhantomDump
 
 class LinearPerts():
-    def __init__(self, parameters, ph_pixelmap_loc=None, ph_planet_loc=None):
+    def __init__(self, parameters): #, ph_pixelmap_loc=None, ph_planet_loc=None):
 
-        if ph_pixelmap_loc is None:
+        #if ph_pixelmap_loc is None:
+        if True:
 
             print("Reading in Linear Perturbations")
 
@@ -24,6 +25,8 @@ class LinearPerts():
             self.pert_v_r   = perts[0]
             self.pert_v_phi = perts[1]
             self.pert_rho   = perts[2]
+
+            # grid
             self.X = mesh[0]
             self.Y = mesh[1]
 
@@ -47,83 +50,83 @@ class LinearPerts():
                 plt.colorbar()
                 plt.show()
 
-        else:
-
-            print("Reading in Perturbations from Phantom pixelmap")
-
-            # grab parameters object
-            self.p = parameters
-
-            # create PhantomDump object
-            ph_dump = PhantomDump(
-                parameters = self.p, 
-                vr   = f"{ph_pixelmap_loc}/vr.pix", 
-                vphi = f"{ph_pixelmap_loc}/vphi.pix", 
-                rho  = f"{ph_pixelmap_loc}/rho.pix"
-            )
-
-            # subtract azimuthal average
-            ph_dump.extract_dens_perts()
-
-            # get perturbation arrays, in local units
-            self.pert_v_r   = ph_dump.vr_xy        / (self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)) * 1e5 # account for units in km/s not cgs
-            self.pert_v_phi = ph_dump.vphi_xy_pert / (self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)) * 1e5
-            self.pert_rho   = ph_dump.rho_xy_pert  /                    (self.p.m_planet/self.p.m_thermal)
-
-            print('planet is at R = ', ph_planet_loc, ' au')
-
-            print('vr min max = '  , self.pert_v_r.min(),   self.pert_v_r.max())
-            print('vphi min max = ', self.pert_v_phi.min(), self.pert_v_phi.max())
-
-            # save grid in local units
-            self.X = (ph_dump.X_ph - ph_planet_loc) / self.p.l
-            self.Y = ph_dump.Y_ph / self.p.l
-
-            # linear perturbations read in grid
-            x = (ph_dump.x_ph - ph_planet_loc) / self.p.l
-            y = ph_dump.y_ph / self.p.l
-
-            # define constants for linear perts
-            self.x_box = 2*self.p.scale_box
-
-            # cut square box grid in linear regime
-            self.x_cut = x[np.argmin(x < -self.x_box) : np.argmin(x < self.x_box) + 1]
-            self.y_cut = y[np.argmin(y < -3*self.x_box) : np.argmin(y < 3*self.x_box) + 1] ###
-
-            # grid size in box
-            print("BOX GRID SIZE IS:")
-            print(len(self.x_cut),len(self.y_cut))
-
-            print("median value is: ", np.median(self.pert_rho))
-            print("upper and lower bounds are: ", self.pert_rho.min(), self.pert_rho.max())
-
-            # test plot
-            plt.figure()
-            #plt.contourf(x, y, self.pert_v_r, cmap='RdBu', levels=200)
-            #plt.contourf(x, y, self.pert_rho, vmin=-2, vmax=10, levels=2000, cmap='RdBu', extend='both')
-            plt.imshow(self.pert_rho, vmin=-3, vmax=3, cmap='RdBu', extent=[x.min(), x.max(), y.min(), y.max()])
-            plt.xlim(self.x_cut[0],self.x_cut[-1])
-            plt.ylim(self.y_cut[0],self.y_cut[-1])
-            plt.colorbar(extend='both')
-            plt.show()
-
-            plt.figure()
-            #plt.contourf(x, y, self.pert_v_r, cmap='RdBu', levels=200)
-            #plt.contourf(x, y, self.pert_rho, vmin=-2, vmax=10, levels=2000, cmap='RdBu', extend='both')
-            plt.imshow(self.pert_v_r, vmin=-3, vmax=3, cmap='RdBu', extent=[x.min(), x.max(), y.min(), y.max()])
-            plt.xlim(self.x_cut[0],self.x_cut[-1])
-            plt.ylim(self.y_cut[0],self.y_cut[-1])
-            plt.colorbar(extend='both')
-            plt.show()
-
-            plt.figure()
-            #plt.contourf(x, y, self.pert_v_r, cmap='RdBu', levels=200)
-            #plt.contourf(x, y, self.pert_rho, vmin=-2, vmax=10, levels=2000, cmap='RdBu', extend='both')
-            plt.imshow(self.pert_v_phi, vmin=-3, vmax=3, cmap='RdBu', extent=[x.min(), x.max(), y.min(), y.max()])
-            plt.xlim(self.x_cut[0],self.x_cut[-1])
-            plt.ylim(self.y_cut[0],self.y_cut[-1])
-            plt.colorbar(extend='both')
-            plt.show()
+#        else:
+#
+#            print("Reading in Perturbations from Phantom pixelmap")
+#
+#            # grab parameters object
+#            self.p = parameters
+#
+#            # create PhantomDump object
+#            ph_dump = PhantomDump(
+#                parameters = self.p, 
+#                vr   = f"{ph_pixelmap_loc}/vr.pix", 
+#                vphi = f"{ph_pixelmap_loc}/vphi.pix", 
+#                rho  = f"{ph_pixelmap_loc}/rho.pix"
+#            )
+#
+#            # subtract azimuthal average
+#            ph_dump.extract_dens_perts()
+#
+#            # get perturbation arrays, in local units
+#            self.pert_v_r   = ph_dump.vr_xy        / (self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)) * 1e5 # account for units in km/s not cgs
+#            self.pert_v_phi = ph_dump.vphi_xy_pert / (self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)) * 1e5
+#            self.pert_rho   = ph_dump.rho_xy_pert  /                    (self.p.m_planet/self.p.m_thermal)
+#
+#            print('planet is at R = ', ph_planet_loc, ' au')
+#
+#            print('vr min max = '  , self.pert_v_r.min(),   self.pert_v_r.max())
+#            print('vphi min max = ', self.pert_v_phi.min(), self.pert_v_phi.max())
+#
+#            # save grid in local units
+#            self.X = (ph_dump.X_ph - ph_planet_loc) / self.p.l
+#            self.Y = ph_dump.Y_ph / self.p.l
+#
+#            # linear perturbations read in grid
+#            x = (ph_dump.x_ph - ph_planet_loc) / self.p.l
+#            y = ph_dump.y_ph / self.p.l
+#
+#            # define constants for linear perts
+#            self.x_box = 2*self.p.scale_box
+#
+#            # cut square box grid in linear regime
+#            self.x_cut = x[np.argmin(x < -self.x_box) : np.argmin(x < self.x_box) + 1]
+#            self.y_cut = y[np.argmin(y < -3*self.x_box) : np.argmin(y < 3*self.x_box) + 1] ###
+#
+#            # grid size in box
+#            print("BOX GRID SIZE IS:")
+#            print(len(self.x_cut),len(self.y_cut))
+#
+#            print("median value is: ", np.median(self.pert_rho))
+#            print("upper and lower bounds are: ", self.pert_rho.min(), self.pert_rho.max())
+#
+#            # test plot
+#            plt.figure()
+#            #plt.contourf(x, y, self.pert_v_r, cmap='RdBu', levels=200)
+#            #plt.contourf(x, y, self.pert_rho, vmin=-2, vmax=10, levels=2000, cmap='RdBu', extend='both')
+#            plt.imshow(self.pert_rho, vmin=-3, vmax=3, cmap='RdBu', extent=[x.min(), x.max(), y.min(), y.max()])
+#            plt.xlim(self.x_cut[0],self.x_cut[-1])
+#            plt.ylim(self.y_cut[0],self.y_cut[-1])
+#            plt.colorbar(extend='both')
+#            plt.show()
+#
+#            plt.figure()
+#            #plt.contourf(x, y, self.pert_v_r, cmap='RdBu', levels=200)
+#            #plt.contourf(x, y, self.pert_rho, vmin=-2, vmax=10, levels=2000, cmap='RdBu', extend='both')
+#            plt.imshow(self.pert_v_r, vmin=-3, vmax=3, cmap='RdBu', extent=[x.min(), x.max(), y.min(), y.max()])
+#            plt.xlim(self.x_cut[0],self.x_cut[-1])
+#            plt.ylim(self.y_cut[0],self.y_cut[-1])
+#            plt.colorbar(extend='both')
+#            plt.show()
+#
+#            plt.figure()
+#            #plt.contourf(x, y, self.pert_v_r, cmap='RdBu', levels=200)
+#            #plt.contourf(x, y, self.pert_rho, vmin=-2, vmax=10, levels=2000, cmap='RdBu', extend='both')
+#            plt.imshow(self.pert_v_phi, vmin=-3, vmax=3, cmap='RdBu', extent=[x.min(), x.max(), y.min(), y.max()])
+#            plt.xlim(self.x_cut[0],self.x_cut[-1])
+#            plt.ylim(self.y_cut[0],self.y_cut[-1])
+#            plt.colorbar(extend='both')
+#            plt.show()
 
 
     def cut_box_square(self):
@@ -250,7 +253,7 @@ class LinearPerts():
         cut_v_phi = self.pert_v_phi [y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]
         cut_rho   = self.pert_rho   [y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]
 
-        if True:
+        if False:
             plt.contourf(x_int_cut, y_int_cut, cut_rho, cmap="RdBu", vmin=-1, vmax=1, levels=100)
             plt.show()
 
@@ -271,7 +274,7 @@ class LinearPerts():
         self.pert_v_phi_ann = interp_v_phi.ev(Y_pert_grid, X_pert_grid)
         self.pert_rho_ann   = interp_v_rho.ev(Y_pert_grid, X_pert_grid)
 
-        if True:
+        if False:
             plt.imshow(self.pert_rho_ann, cmap="RdBu", vmin=-1, vmax=1)
             plt.show()
 
@@ -290,7 +293,7 @@ class LinearPerts():
         self.R_ann   = R
         self.PHI_ann = PHI
 
-        if True:
+        if False:
             # plotting (for debugging)
             _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
             myplot = ax.contourf(PHI, R, self.pert_rho_ann/(self.p.m_planet/self.p.m_thermal), levels=300, vmin=-1, vmax=1, cmap='RdBu')

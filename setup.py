@@ -3,8 +3,6 @@ import shutil           as sh
 import numpy            as np
 from mcfost_interface   import make_mcfost_parameter_file, make_mcfost_grid_data, read_mcfost_grid_data, HiddenPrints
 
-# TODO: Sanity checks for pymcfost parameters
-
 def warning(warning_msg):
 
         statement = f"Warning: {warning_msg} Continue? [y/n]: "
@@ -160,12 +158,12 @@ class Parameters(Constants):
         self.n_v = int(config["mcfost"]["n_v"])
 
         # pymcfost parameters
-        self.pymcfost_plots = bool(config["pymcfost"]["pymcfost_plots"])
-        self.velocity_channels = list(config["pymcfost"]["velocity_channels"])
-        self.beam = float(config["pymcfost"]["beam"])
-        self.obs_dir = str(config["pymcfost"]["obs_dir"])
-        self.sim_dir = str(config["pymcfost"]["sim_dir"])
-        self.v_system = float(config["pymcfost"]["v_system"])
+        #self.pymcfost_plots = bool(config["pymcfost"]["pymcfost_plots"])
+        #self.velocity_channels = list(config["pymcfost"]["velocity_channels"])
+        #self.beam = float(config["pymcfost"]["beam"])
+        #self.obs_dir = str(config["pymcfost"]["obs_dir"])
+        #self.sim_dir = str(config["pymcfost"]["sim_dir"])
+        #self.v_system = float(config["pymcfost"]["v_system"])
 
         # physical parameters
         self.gamma = float(config["physical"]["adiabatic_index"])

@@ -6,8 +6,6 @@ from copy                   import copy
 from burgers                import solve_burgers
 from transformations        import phi_wake, Eta, mod2pi, t, t_integral, t_integrand, g, Lambda_fu, Lambda_fv, get_chi, get_dens_vel, plot_r_t
 
-# TODO: Optimise/clean up further
-
 class NonLinearPerts():
     def __init__(self, parameters, Grid):
         

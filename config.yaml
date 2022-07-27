@@ -55,15 +55,6 @@ mcfost:
     v_max: 3.2                                   # maximum magnitude velocity for cube
     n_v: 40                                      # number of velocity channels for cube
 
-pymcfost:
-    pymcfost_plots: False                        # NOT IMPLEMENTED - create velocity channels plot using pymcfost (boolean)
-    velocity_channels:
-        [-1.6, -0.9, -0.2, 0.2, 0.9, 1.6]        # NOT IMPLEMENTED - velocity channels to be plotted by pymcfost -- must exist in cube generated
-    beam: 0                                      # NOT IMPLEMENTED - beam size
-    obs_dir: None                                # NOT IMPLEMENTED - directory of observations to plot
-    sim_dir: None                                # NOT IMPLEMENTED - directory of simulation to plot (must be already run through mcfost)
-    v_system: 5.8                                # NOT IMPLEMENTED - systemic velocity of the system
-
 # Don't change below parameters unless you know what you are doing
 
 physical:

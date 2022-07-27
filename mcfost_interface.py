@@ -1,9 +1,9 @@
-import numpy as np
-from scipy.interpolate import RectBivariateSpline
-import matplotlib.pyplot as plt
+import numpy                    as np
+import matplotlib.pyplot        as plt
 import os, sys, subprocess
-from pymcfost.parameters import Params
-from pymcfost.disc_structure import Disc
+from scipy.interpolate          import RectBivariateSpline
+from pymcfost.parameters        import Params
+from pymcfost.disc_structure    import Disc
 
 def make_mcfost_parameter_file(parameters):
     
@@ -15,38 +15,38 @@ def make_mcfost_parameter_file(parameters):
 
     # --- mcfost parameters that are not set by config.yaml
 
-    mp.phot.nphot_T = 1.28e+07          # set number of photons for temp. calculation
+    mp.phot.nphot_T     = 1.28e+07      # set number of photons for temp. calculation
     mp.simu.compute_SED = False         # don't compute SED
 
-    mp.map.nx = 1001                    # output resolution
-    mp.map.ny = 1001
+    mp.map.nx   = 1001                  # output resolution
+    mp.map.ny   = 1001
     mp.map.size = 1200
 
-    mp.simu.image_symmetry = False      # we don't have any symmetries
+    mp.simu.image_symmetry   = False    # we don't have any symmetries
     mp.simu.central_symmetry = False
-    mp.simu.axial_symmetry = False
+    mp.simu.axial_symmetry   = False
 
-    mp.mol.molecule[0].n_trans = 1      # unsure
-    mp.grid.n_rad_in = 1                # unsure
+    mp.mol.molecule[0].n_trans = 1      
+    mp.grid.n_rad_in           = 1            
 
-    mp.mol.v_turb = 0.05                # turbulence
+    mp.mol.v_turb = 0.0                 # no turbulence
 
     mp.zones[0].edge = 0.0              # not using smoothed inner and outer edge
 
-    mp.map.RT_n_az = 1                  # we are only using one azimuth
+    mp.map.RT_n_az   = 1                # we are only using one azimuth
     mp.map.RT_ntheta = 1                # we are only using one inclination
 
     # --- mcfost parameters that are set by config.yaml
 
-    mp.grid.n_rad = p.n_r               # grid geometry
-    mp.grid.n_az = p.n_phi
-    mp.grid.nz = p.n_z
-    mp.zones[0].Rin = p.r_inner
+    mp.grid.n_rad    = p.n_r            # grid geometry
+    mp.grid.n_az     = p.n_phi
+    mp.grid.nz       = p.n_z
+    mp.zones[0].Rin  = p.r_inner
     mp.zones[0].Rout = p.r_outer
 
-    mp.zones[0].h0 = p.h_ref            # scale height at reference radius
-    mp.zones[0].Rref = p.r_ref          # reference radius
-    mp.zones[0].Rc = p.r_c              # critical radius unused so set to 0
+    mp.zones[0].h0          = p.h_ref   # scale height at reference radius
+    mp.zones[0].Rref        = p.r_ref   # reference radius
+    mp.zones[0].Rc          = p.r_c     # critical radius unused so set to 0
     mp.zones[0].flaring_exp = p.beta    # flaring index: h \propto r^beta
 
     mp.map.distance = p.distance        # distance
@@ -62,7 +62,7 @@ def make_mcfost_parameter_file(parameters):
     mp.map.RT_az_max = p.PAp
 
     mp.mol.molecule[0].v_max = p.v_max  # max velocity
-    mp.mol.molecule[0].nv = p.n_v       # number of velocity channels
+    mp.mol.molecule[0].nv    = p.n_v    # number of velocity channels
 
     # write mcfost parameter file
     mp.writeto(f"{p.system}/{p.name}/mcfost/mcfost_{p.name}.para")
