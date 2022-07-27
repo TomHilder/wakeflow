@@ -207,17 +207,36 @@ class LinearPerts():
         R, Y_ = np.meshgrid(r, y_)
 
         # for the points on our annulus segment, use transformations to find the x,y values on the original perturbations grid
-        X_pert_grid = (np.sqrt(R**2 - Y_**2) - self.p.r_planet) / self.p.l
-        Y_pert_grid = Y_                                        / self.p.l
+        # if the user has chosen a linear box with very large angular extent, R and Y will be equal at some point, creating an error
+        with np.errstate(all='raise'):
+            try:
 
-        PHI = np.arctan2(Y_, np.sqrt(R**2 - Y_**2))
+                # pick x values for the box
+                if self.p.box_warp:
+                    X_pert_grid = (R - self.p.r_planet) / self.p.l
+                else:
+                    X_pert_grid = (np.sqrt(R**2 - Y_**2) - self.p.r_planet) / self.p.l
+
+                # get phi values
+                PHI = np.arctan2(Y_, np.sqrt(R**2 - Y_**2))
+
+            except FloatingPointError:
+                print("Error: Reduce 'scale_box_ang' parameter.")
+                print("Exiting")
+                sys.exit(1)
+        
+        # unscale Y
+        Y_pert_grid = Y_ / self.p.l
 
         # cut big perturbations grid to just outside annulus
         self.r_min = self.p.r_planet - x_box_size*self.p.l
         self.r_max = self.p.r_planet + x_box_size*self.p.l
 
+        x_min_global = np.sqrt(self.r_min**2 - (y_box_size*self.p.l)**2)
+        x_min_local  = (x_min_global - self.p.r_planet) / self.p.l
+
         # find cut indicies (remember we need to scale back to units of Hill radius )
-        x_cut_i1 = np.argmin(x < -x_box_size)
+        x_cut_i1 = np.argmin(x <  x_min_local)
         x_cut_i2 = np.argmin(x <  x_box_size) + 1
         y_cut_i1 = np.argmin(y < -y_box_size)
         y_cut_i2 = np.argmin(y <  y_box_size) + 1
@@ -231,7 +250,7 @@ class LinearPerts():
         cut_v_phi = self.pert_v_phi [y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]
         cut_rho   = self.pert_rho   [y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]
 
-        if False:
+        if True:
             plt.contourf(x_int_cut, y_int_cut, cut_rho, cmap="RdBu", vmin=-1, vmax=1, levels=100)
             plt.show()
 
@@ -252,7 +271,7 @@ class LinearPerts():
         self.pert_v_phi_ann = interp_v_phi.ev(Y_pert_grid, X_pert_grid)
         self.pert_rho_ann   = interp_v_rho.ev(Y_pert_grid, X_pert_grid)
 
-        if False:
+        if True:
             plt.imshow(self.pert_rho_ann, cmap="RdBu", vmin=-1, vmax=1)
             plt.show()
 
@@ -271,10 +290,10 @@ class LinearPerts():
         self.R_ann   = R
         self.PHI_ann = PHI
 
-        if False:
+        if True:
             # plotting (for debugging)
             _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-            myplot = ax.contourf(PHI, R, self.pert_v_r_ann, levels=300, vmin=-2E4, vmax=2E4, cmap='RdBu')
+            myplot = ax.contourf(PHI, R, self.pert_rho_ann/(self.p.m_planet/self.p.m_thermal), levels=300, vmin=-1, vmax=1, cmap='RdBu')
             ax.set_ylim(0, self.p.r_outer)
             plt.colorbar(myplot)
             plt.show()

@@ -1,9 +1,9 @@
-import numpy as np
-import matplotlib.pyplot as plt
+import numpy                as np
+import matplotlib.pyplot    as plt
 
 # TODO: Implement Numba on this function to make it a speedy boi
 
-def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_solution, linear_t, show_teta): # Solve eq. (10) Bollati et al. 2021
+def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_solution, linear_t, show_teta, tf_fac): # Solve eq. (10) Bollati et al. 2021
 
     profile = profile * (gamma+1) * beta_p / 2**(3/4) # Eq. (15) Bollati et al. 2021
 
@@ -12,7 +12,7 @@ def solve_burgers(eta, profile, gamma, beta_p, C, CFL, eta_tilde, t0, linear_sol
     tf_th = 300 # time required to develop N-wave for betap = 1
     tf = tf_th/beta_p # time required to display N-wave for generic betap, Eq. (39) Rafikov 2002
 
-    #tf *= 2 # test doubling value
+    tf *= tf_fac
 
     eta_min = -eta_tilde-np.sqrt(2*C*tf) - 3  # Eq. (18) Bollati et al. 2021
     eta_max = -eta_tilde+np.sqrt(2*C*tf) + 3

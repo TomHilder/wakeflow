@@ -181,12 +181,6 @@ class Grid:
     def add_linear_perturbations(self, LinearPerts, rho_background):
 
         # box size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs
-        #box_size = 2*self.p.scale_box
-        #min_phi = -self.p.scale_box_ang*np.arcsin(box_size*self.p.l / self.p.r_planet)
-        #max_phi = self.p.scale_box_ang*np.arcsin(box_size*self.p.l / self.p.r_planet)
-        #min_r = self.p.r_planet - box_size*self.p.l
-        #max_r = self.p.r_planet + box_size*self.p.l
-
         x_box_size = 2 * self.p.scale_box
         y_box_size = 2 * self.p.scale_box_ang
 
@@ -226,11 +220,6 @@ class Grid:
                 Y_new[i,j] = R[i,0,j] * np.sin(PHI[i,0,j])
 
                 # constructing mask
-                #if PHI_new[i,j] > min_phi and PHI_new[i,j] < max_phi and R_new[i,j] > min_r and R_new[i,j] < max_r:
-                #    linear_mask[i,j] = 1
-                #else:
-                #    linear_mask[i,j] = 0
-
                 if PHI_new[i,j] > min_phi and PHI_new[i,j] < max_phi \
                     and Y_new[i,j] > min_y and Y_new[i,j] < max_y \
                     and R_new[i,j] > min_r and R_new[i,j] < max_r:
@@ -387,8 +376,7 @@ class Grid:
             plt.close("all")
             plt.contourf(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.v_r[:,z_slice,:]), levels=contour_lvls, vmin=-vr_max, vmax=vr_max, cmap="RdBu")
             plt.colorbar(label=r"radial velocity [km/s]")
-            #plt.title(r"$v_r$")
-            plt.title(r"HD 163296 with $1 \, \mathrm{M_J}$ planet")
+            plt.title(r"$v_r$")
             plt.xlabel("x [au]")
             plt.ylabel("y [au]")
             if save:
