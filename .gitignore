@@ -6,3 +6,4 @@ config_*
 /*
 
 !/mcfost
+!default_config.yaml

@@ -1,9 +1,13 @@
-import numpy                    as np
-import matplotlib.pyplot        as plt
 import os, sys, subprocess
-from scipy.interpolate          import RectBivariateSpline
-from pymcfost.parameters        import Params
-from pymcfost.disc_structure    import Disc
+
+try:
+    print("You may safely ignore these warnings.")
+    from pymcfost.parameters        import Params
+    from pymcfost.disc_structure    import Disc
+except ImportError:
+    pass
+
+
 
 def make_mcfost_parameter_file(parameters):
     

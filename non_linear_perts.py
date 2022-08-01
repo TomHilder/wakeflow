@@ -592,7 +592,7 @@ class NonLinearPerts():
 
                     #dnl[j,i], unl[j,i], vnl[j,i] = get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p) 
                     # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
-                    dnl[i,j], unl[i,j], vnl[i,j] = get_dens_vel(
+                    dnl[j,i], unl[j,i], vnl[j,i] = get_dens_vel(
                         rr, 
                         Chi, 
                         gamma, 

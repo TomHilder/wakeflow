@@ -107,6 +107,33 @@ class Grid:
         self.R_xy   = np.sqrt   (self.X**2 + self.Y**2)
         self.PHI_xy = np.arctan2(self.Y,     self.X)
 
+    def remove_dimensions(self, scale_dens=False):
+        "This should only be used once all other steps are DONE, except for saving"
+
+        grid_length = self.p.U_len / self.p.au
+
+        if self.p.grid_type == "cartesian":
+            self.x      /= grid_length
+            self.y      /= grid_length
+            self.z_xy   /= grid_length
+            self.X      /= grid_length
+            self.Y      /= grid_length
+            self.Z_xy   /= grid_length
+
+        else:
+            self.r      /= grid_length
+            self.phi    /= 1.0
+            self.z_xy   /= grid_length
+            self.R      /= grid_length
+            self.PHI    /= 1.0
+            self.Z      /= grid_length
+            
+        self.v_r   /= self.p.U_vel
+        self.v_phi /= self.p.U_vel
+
+        if scale_dens:
+            self.rho /= self.p.rho_ref
+
     def make_keplerian_disk(self):
 
         print("Making Keplerian disk ")
@@ -255,7 +282,7 @@ class Grid:
         # plot for debugging
         """
         _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-        myplot = ax.contourf(PHI[:,0,:], R[:,0,:], global_lin_v_r*linear_mask, levels=300, vmin=-2E4, vmax=2E4, cmap='RdBu')
+        myplot = ax.contourf(PHI[:,0,:], R[:,0,:], global_lin_v_r, levels=300, cmap='RdBu')
         ax.set_ylim(0, self.p.r_outer)
         plt.colorbar(myplot)
         plt.show()
@@ -328,12 +355,10 @@ class Grid:
         g = grid_to_merge
 
         if type(grid_to_merge) is not Grid:
-            print("Error: merge_grids must be given a Grid object. Merging failed.")
-            return False
+            raise Exception("merge_grids must be given a Grid object. Merging failed.")
         
         if self.p != g.p:
-            print("Error: merge_grids requires both grids must have same parameters. Merging failed.")
-            return False
+            raise Exception("merge_grids requires both grids must have same parameters. Merging failed.")
 
         # merge data arrays
         self.v_r   += g.v_r
@@ -358,7 +383,7 @@ class Grid:
         # merge data arrays
         self.rho = g.rho
 
-    def show_disk2D(self, z_slice, show=False, save=False):   # NEED TO UPDATE SAVED DIRECTORIES FOR NEW STRUCTURE
+    def show_disk2D(self, z_slice, show=False, save=False, dimless=False):   # NEED TO UPDATE SAVED DIRECTORIES FOR NEW STRUCTURE
 
         # parameters
         savedir      = f"{self.p.system}/{self.p.name}/{self.p.m_planet}Mj"
@@ -367,18 +392,25 @@ class Grid:
         # find maximum contours
         vr_max   = np.max(self.v_r  [:,z_slice,:])
         vphi_max = np.max(self.v_phi[:,z_slice,:])
-        rho_max  = np.max(self.rho  [:,z_slice,:])
+        rho_max  = np.percentile(self.rho[:,z_slice,:], 99.9)
 
         # Cartesian grid plots
         if self.info["Type"] == "cartesian":
 
             # v_r
             plt.close("all")
-            plt.contourf(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.v_r[:,z_slice,:]), levels=contour_lvls, vmin=-vr_max, vmax=vr_max, cmap="RdBu")
-            plt.colorbar(label=r"radial velocity [km/s]")
-            plt.title(r"$v_r$")
-            plt.xlabel("x [au]")
-            plt.ylabel("y [au]")
+            fig, ax = plt.subplots(dpi=150)
+            c       = ax.pcolormesh(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.v_r[:,z_slice,:]), vmin=-vr_max, vmax=vr_max, cmap='RdBu', rasterized=True)
+            ax.axis('scaled')
+            ax.set_title(r"$\delta v_r$")
+            if not dimless:
+                ax.set_xlabel(r"$x \, [\mathrm{AU}]$")
+                ax.set_ylabel(r"$y \, [\mathrm{AU}]$")
+                fig.colorbar(c, extend="both", label="$\mathrm{km / s}$")
+            else:
+                ax.set_xlabel(r"$x$")
+                ax.set_ylabel(r"$y$")
+                fig.colorbar(c, extend="both")
             if save:
                 plt.savefig(f'{savedir}/vr_z{z_slice}.pdf')
             if show:
@@ -386,9 +418,18 @@ class Grid:
 
             # v_phi
             plt.close("all")
-            plt.contourf(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.v_phi[:,z_slice,:]), levels=contour_lvls, vmin=-vphi_max, vmax=vphi_max, cmap='RdBu')
-            plt.colorbar()
-            plt.title(r"$v_{\phi}$")
+            fig, ax = plt.subplots(dpi=150)
+            c       = ax.pcolormesh(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.v_phi[:,z_slice,:]), vmin=-vphi_max, vmax=vphi_max, cmap='RdBu', rasterized=True)
+            ax.axis('scaled')
+            ax.set_title(r"$\delta v_{\phi}$")
+            if not dimless:
+                ax.set_xlabel(r"$x \, [\mathrm{AU}]$")
+                ax.set_ylabel(r"$y \, [\mathrm{AU}]$")
+                fig.colorbar(c, extend="both", label="$\mathrm{km / s}$")
+            else:
+                ax.set_xlabel(r"$x$")
+                ax.set_ylabel(r"$y$")
+                fig.colorbar(c, extend="both")
             if save:
                 plt.savefig(f'{savedir}/vphi_z{z_slice}.pdf')
             if show:
@@ -396,9 +437,17 @@ class Grid:
 
             # rho
             plt.close("all")
-            plt.contourf(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.rho[:,z_slice,:]), levels=contour_lvls, vmin=-0.3*rho_max, vmax=0.3*rho_max, cmap='RdBu')
-            plt.colorbar()
-            plt.title(r"$\rho$")
+            fig, ax = plt.subplots(dpi=150)
+            c       = ax.pcolormesh(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.rho[:,z_slice,:]), vmin=-rho_max, vmax=rho_max, cmap='RdBu', rasterized=True)
+            ax.axis('scaled')
+            ax.set_title(r"$\delta \rho \, / \rho$")
+            if not dimless:
+                ax.set_xlabel(r"$x \, [\mathrm{AU}]$")
+                ax.set_ylabel(r"$y \, [\mathrm{AU}]$")
+            else:
+                ax.set_xlabel(r"$x$")
+                ax.set_ylabel(r"$y$")
+            fig.colorbar(c, extend="both")
             if save:
                 plt.savefig(f'{savedir}/rho_z{z_slice}.pdf')
             if show:

@@ -1,7 +1,6 @@
 import yaml, sys, os
 import shutil           as sh
 import numpy            as np
-from mcfost_interface   import make_mcfost_parameter_file, make_mcfost_grid_data, read_mcfost_grid_data, HiddenPrints
 
 def warning(warning_msg):
 
@@ -12,22 +11,34 @@ def warning(warning_msg):
         else:
             return True
 
-def run_setup():
+def load_config_file(config_file, default_config_dict=None):
 
-    # check that code has been loaded correctly
-    if len(sys.argv) != 2:
-        print("Error: Correct usage is '$python wakeflow.py config_file.yaml'")
-        print('Exiting')
-        sys.exit(1)
+    # read in config file as dictionary
+    config_dict = yaml.load(open(config_file), Loader=yaml.FullLoader)
 
-    # create Parameters object using configuration file
-    config_file = sys.argv[1]
-    params = Parameters(config_file)
+    if default_config_dict is not None:
+        for key in config_dict.keys():
+            if key not in default_config_dict.keys():
+                raise Exception(f"{key} is not a valid parameter.")
+
+    return config_dict
+
+def write_config_file(config_dict, directory, filename):
+
+    with open(f'{directory}{filename}', 'w') as yaml_file:
+        yaml.dump(config_dict, yaml_file, default_flow_style=False)
+
+def run_setup(param_dict, default_param_dict=None):
+
+    if default_param_dict is not None:
+        for key in param_dict.keys():
+            if key not in default_param_dict.keys():
+                raise Exception(f"{key} is not a valid parameter.")
+
+    params = Parameters(param_dict)
 
     # do sanity checks and exit if not passed
-    if params.do_sanity_checks() != True:
-        print('Exiting')
-        sys.exit(1)
+    params.do_sanity_checks()
 
     # check if directory for system exists, if not create it
     system_path = f"{params.system}/"
@@ -54,11 +65,13 @@ def run_setup():
         individual_result_path = f"{params.system}/{params.name}/{params.m_planet}Mj"
         os.makedirs(individual_result_path, exist_ok=True)
 
-    # copy configuration file used to results directory
-    sh.copy(config_file, results_path)
+    # write parameters used to a file in the results directory
+    write_config_file(param_dict, results_path, f"{params.name}_config.yaml")
 
     # run mcfost grid setup if needed
     if params.run_mcfost or params.grid_type == "mcfost":
+
+        from mcfost_interface import make_mcfost_parameter_file, make_mcfost_grid_data
 
         # make directory for mcfost outputs
         mcfost_path = f"{params.system}/{params.name}/mcfost/"
@@ -79,83 +92,84 @@ class Constants:
         from astropy import constants as c
 
         # all constants given in CGS units
-        self.m_solar = c.M_sun.cgs.value
-        self.m_jupiter = c.M_jup.cgs.value
-        self.G_const = c.G.cgs.value
-        self.au = c.au.cgs.value
+        self.m_solar    = c.M_sun.cgs.value
+        self.m_jupiter  = c.M_jup.cgs.value
+        self.G_const    = c.G.cgs.value
+        self.au         = c.au.cgs.value
 
 
 class Parameters(Constants):
-    def __init__(self, config_file):
+    def __init__(self, config):
 
-        print(f"Reading parameters from {config_file} \n ")
+        #print(f"Reading parameters from {config_file} \n ")
 
         # inherit constants
         super().__init__()
 
         # read in config file
-        config = yaml.load(open(config_file), Loader=yaml.FullLoader)
+        #config = yaml.load(open(config_file), Loader=yaml.FullLoader)
 
         # run_info parameters
-        self.name = str(config["run_info"]["name"])
-        self.system = str(config["run_info"]["system"])
+        self.name   = str(config["name"])
+        self.system = str(config["system"])
 
         # disk parameters
-        self.m_star = float(config["disk"]["m_star"])
+        self.m_star = float(config["m_star"])
 
         try:
-            self.m_planet = float(config["disk"]["m_planet"])
+            self.m_planet       = float(config["m_planet"])
             self.m_planet_array = None
         except:
-            self.m_planet = None
-            self.m_planet_array = list(config["disk"]["m_planet"])
+            self.m_planet       = None
+            self.m_planet_array = list(config["m_planet"])
 
-        self.r_outer = float(config["disk"]["r_outer"])
-        self.r_inner = float(config["disk"]["r_inner"])
-        self.r_planet = float(config["disk"]["r_planet"])
-        self.r_ref = float(config["disk"]["r_ref"])
-        self.r_c = float(config["disk"]["r_c"])
-        self.q = float(config["disk"]["q"])
-        self.p = float(config["disk"]["p"])
-        self.hr = float(config["disk"]["hr"])
-        self.rho_ref = float(config["disk"]["dens_ref"])
+        self.r_outer  = float(config["r_outer"])
+        self.r_inner  = float(config["r_inner"])
+        self.r_planet = float(config["r_planet"])
+        self.r_ref    = float(config["r_ref"])
+        self.r_c      = float(config["r_c"])
+        self.q        = float(config["q"])
+        self.p        = float(config["p"])
+        self.hr       = float(config["hr"])
+        self.rho_ref  = float(config["dens_ref"])
 
         # override given rotation, only calculated anticlockwise
-        self.cw_rotation = False
-        self.user_cw_rotation = bool(config["disk"]["cw_rotation"])
+        self.cw_rotation      = False
+        self.user_cw_rotation = bool(config["cw_rotation"])
 
         # angles parameters
-        self.inclination = float(config["angles"]["inclination"])
-        self.PA = float(config["angles"]["PA"])
-        self.PAp = float(config["angles"]["PAp"])
+        self.inclination = float(config["inclination"])
+        self.PA          = float(config["PA"])
+        self.PAp         = float(config["PAp"])
 
         # grid parameters
-        self.grid_type = str(config["grid"]["type"])
-        self.n_x = int(config["grid"]["n_x"])
-        self.n_y = int(config["grid"]["n_y"])
-        self.n_r = int(config["grid"]["n_r"])
-        self.n_phi = int(config["grid"]["n_phi"])
-        self.n_z = int(config["grid"]["n_z"])
-        self.r_log = bool(config["grid"]["r_log"])
+        self.grid_type = str (config["type"])
+        self.n_x       = int (config["n_x"])
+        self.n_y       = int (config["n_y"])
+        self.n_r       = int (config["n_r"])
+        self.n_phi     = int (config["n_phi"])
+        self.n_z       = int (config["n_z"])
+        self.r_log     = bool(config["r_log"])
 
         # plot parameters
-        self.make_midplane_plots = bool(config["plotting"]["make_midplane_plots"])
-        self.show_midplane_plots = bool(config["plotting"]["show_midplane_plots"])
-        self.show_teta_debug_plots = bool(config["plotting"]["show_teta_debug_plots"])
+        self.make_midplane_plots   = bool(config["make_midplane_plots"])
+        self.show_midplane_plots   = bool(config["show_midplane_plots"])
+        self.show_teta_debug_plots = bool(config["show_teta_debug_plots"])
 
         # results parameters
-        self.use_planet = bool(config["results"]["include_planet"])
-        self.include_linear = bool(config["results"]["include_linear"])
-        self.save_perturbations = bool(config["results"]["save_perturbations"])
-        self.save_total = bool(config["results"]["save_total"])
-        self.write_FITS = bool(config["results"]["write_FITS"])
+        self.use_planet         = bool(config["include_planet"])
+        self.include_linear     = bool(config["include_linear"])
+        self.save_perturbations = bool(config["save_perturbations"])
+        self.save_total         = bool(config["save_total"])
+        self.write_FITS         = bool(config["write_FITS"])
+        self.dimensionless      = bool(config["dimensionless"])
 
         # mcfost parameters
-        self.run_mcfost = bool(config["mcfost"]["run_mcfost"])
-        self.temp = float(config["mcfost"]["temp_star"])
-        self.distance = float(config["mcfost"]["distance"])
-        self.v_max = float(config["mcfost"]["v_max"])
-        self.n_v = int(config["mcfost"]["n_v"])
+        self.run_mcfost = bool (config["run_mcfost"])
+        self.temp       = float(config["temp_star"])
+        self.distance   = float(config["distance"])
+        self.v_max      = float(config["v_max"])
+        self.n_v        = int  (config["n_v"])
 
         # pymcfost parameters
         #self.pymcfost_plots = bool(config["pymcfost"]["pymcfost_plots"])
@@ -166,16 +180,16 @@ class Parameters(Constants):
         #self.v_system = float(config["pymcfost"]["v_system"])
 
         # physical parameters
-        self.gamma = float(config["physical"]["adiabatic_index"])
-        self.malpha = float(config["physical"]["damping_malpha"])
+        self.gamma  = float(config["adiabatic_index"])
+        self.malpha = float(config["damping_malpha"])
 
         # numerical parameters
-        self.CFL = float(config["numerical"]["CFL"])
-        self.scale_box = float(config["numerical"]["scale_box"])
-        self.scale_box_ang = float(config["numerical"]["scale_box_ang"])
-        self.box_warp = bool(config["numerical"]["box_warp"])
-        self.use_box_IC = bool(config["numerical"]["use_box_IC"])
-        self.tf_fac = float(config["numerical"]["tf_fac"])
+        self.CFL           = float(config["CFL"])
+        self.scale_box     = float(config["scale_box"])
+        self.scale_box_ang = float(config["scale_box_ang"])
+        self.box_warp      = bool (config["box_warp"])
+        self.use_box_IC    = bool (config["use_box_IC"])
+        self.tf_fac        = float(config["tf_fac"])
 
         # get flaring at r_planet
         self.hr_planet = self.hr * (self.r_planet / self.r_ref) ** (0.5 - self.q)
@@ -184,10 +198,10 @@ class Parameters(Constants):
         self.l = (2/3) * self.hr_planet * self.r_planet
 
         # get sound speed at planet radius and reference radius
-        v_kep_planet = np.sqrt(self.G_const*self.m_star*self.m_solar / (self.r_planet*self.au))
-        v_kep_ref = np.sqrt(self.G_const*self.m_star*self.m_solar / (self.r_ref*self.au))
+        v_kep_planet    = np.sqrt(self.G_const*self.m_star*self.m_solar / (self.r_planet*self.au))
+        v_kep_ref       = np.sqrt(self.G_const*self.m_star*self.m_solar / (self.r_ref*self.au))
         self.c_s_planet = v_kep_planet*self.hr_planet
-        self.c_s_0 = v_kep_ref*self.hr 
+        self.c_s_0      = v_kep_ref*self.hr 
 
         # clockwise rotation factor
         if self.cw_rotation == True:
@@ -204,6 +218,12 @@ class Parameters(Constants):
         # get thermal mass
         self.m_thermal = 0.6666667 * self.hr_planet ** 3 * (self.m_star * self.m_solar / self.m_jupiter)
 
+        # get dimensions
+        if self.dimensionless:
+            self.U_len  = self.r_ref * self.au
+            self.U_mass = self.m_solar
+            self.U_time = np.sqrt(self.U_len**3 / (self.G_const * self.U_mass)) 
+            self.U_vel  = self.U_len / self.U_time / 1E5
 
     def do_sanity_checks(self):
 
@@ -231,17 +251,14 @@ class Parameters(Constants):
 
         # check grid type
         if self.grid_type != "cartesian" and self.grid_type != "cylindrical" and self.grid_type != "mcfost":
-            print("Error: Please choose a valid grid type (cartesian or cylindrical or mcfost)")
-            return False
+            raise Exception("Invalid grid type. Choose either cartesian or cylindrical or mcfost)")
         
         # check settings OK if mcfost is to be run
         if self.run_mcfost:
             if self.grid_type != "mcfost":
-                print("Error: You must use mcfost grid to run mcfost")
-                return False
+                raise Exception("Cannot run mcfost without using mcfost grid")
             elif self.write_FITS != True:
-                print("Error: You must use write FITS file to run mcfost")
-                return False
+                raise Exception("Cannot run mcfost without writing FITS file (ie. require write_FITS: True)")
 
         # check linear box scale factor
         if self.scale_box != 1:
@@ -253,5 +270,5 @@ class Parameters(Constants):
             if not warning("CFL chosen > 0.5, this will likely break the numerical PDE solver."):
                 return False
 
-        print("Parameters Ok. Continuing. \n")
+        print("Parameters Ok. Continuing.")
         return True

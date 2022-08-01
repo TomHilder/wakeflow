@@ -1,0 +1,72 @@
+# DEFAULT parameter file for running wakeflow
+
+#run_info:
+name: "default_results_dir"                  # give your run a name (results are saved a directory called this, don't use spaces)
+system: "default_parent_dir"                 # name of the system you are modelling (parent directory of results directory)
+
+#disk:
+m_star: 1.0                                  # mass of central star in solar masses
+m_planet: 0.1                                # mass of embedded planet(s) in Jupiter masses (float or list of floats)
+r_outer: 500                                 # outer radius of disk in au
+r_inner: 100                                 # inner radius of disk in au (does not apply for Cartesian grid)
+r_planet: 250                                # orbital radius of embedded planet in au
+r_ref: 250                                   # reference radius R0 for H/R
+r_c: 0                                       # critical radius for exponentially tapered density profile. set to 0 for power law
+q: 0.25                                      # q index, defined as c_s \propto R^{-q}
+p: 1.0                                       # p index, defined as rho \propto R^{-p} or \propto R^{-p}*\exp{-R/r_c}^{2-p}
+hr: 0.10                                     # disc flaring H/R at R0
+dens_ref: 1                                  # rho at R0 in g/cm^3, unimportant for mcfost as it rescales
+cw_rotation: False                           # CURRENTLY DOES NOTHING, you will get anticlockwise and be pleased about it :-) (bool)
+
+#grid:
+type: "cartesian"                            # "cylindrical" or "cartesian" or "mcfost" -- must choose mcfost to write fits file
+n_x: 400                                     # number of x grid points
+n_y: 400                                     # number of y grid points
+n_r: 200                                     # number of r grid points
+n_phi: 160                                   # number of phi grid points
+n_z: 50                                      # number of z grid points
+r_log: False                                 # use logarithmic scale for r points (boolean) -- ignored for mcfost grid
+
+#plotting:
+make_midplane_plots: True                    # create midplane plots of velocity components and density
+show_midplane_plots: True                    # show plots as code runs
+show_teta_debug_plots: False                 # show t, eta space plots (including putting the linear solution into t,eta)
+
+#results:
+dimensionless: False                         # leave results dimensionless? Default is False in which case results are CGS with velocities in km/s
+include_planet: True                         # include perturbations from a planet? (lets you run an unperturbed disk) (bool)
+include_linear: True                         # include the results from the linear regime?
+save_perturbations: True                     # save perturbations to npy file
+save_total: True                             # save background + perturbations to npy file
+write_FITS: False                            # write a FITS file to run in mcfost -- requires {grid.type: "mcfost"}
+
+# The following angle settings are only necessary if you are going to run mcfost on the results
+
+#angles:
+inclination: -225                            # inclination of disk in degrees    (46.7)
+PA: 45                                       # position angle of disk in degrees    (133.3)
+PAp: 45                                      # planet_az    (currently azimuthal angle FROM the PA)
+
+# The following settings require an installation of mcfost and pymcfost
+
+#mcfost:
+run_mcfost: False                            # generate velocity channels by running mcfost (boolean) -- requires {grid.type: "mcfost"} and {results.write_FITS: True}
+temp_star: 9250                              # temperature of the central star in Kelvin
+distance: 101.5                              # distance of system in parsecs
+v_max: 3.2                                   # maximum magnitude velocity for cube
+n_v: 40                                      # number of velocity channels for cube
+
+# Don't change below parameters unless you know what you are doing
+
+#physical:
+adiabatic_index: 1.6666667                   # adiabatic index
+damping_malpha: 0                            # artificial damping
+
+#numerical:
+CFL: 0.5                                     # CFL safety factor for Godunov scheme that solves Burger's eqn
+scale_box: 1.0                               # scale factor for linear regime box side length    -- default is 1
+scale_box_ang: 1.0                           # scale factor for linear regime box angular extent -- default is 1
+box_warp: True                               # whether or not the linear box warps with the disk curvature (bool) -- default is True
+use_box_IC: False                            # whether or not to use the side of the box as seen in the results as the initial condition 
+                                             # for the non-linear evolution (bool) -- default is False, DO NOT CHANGE
+tf_fac: 1.0                                  # factor to multiply the final time Burger's equation is evolved to -- default is 1
