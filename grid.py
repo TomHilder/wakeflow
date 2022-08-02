@@ -123,7 +123,7 @@ class Grid:
         else:
             self.r      /= grid_length
             self.phi    /= 1.0
-            self.z_xy   /= grid_length
+            self.z      /= grid_length
             self.R      /= grid_length
             self.PHI    /= 1.0
             self.Z      /= grid_length
@@ -133,6 +133,19 @@ class Grid:
 
         if scale_dens:
             self.rho /= self.p.rho_ref
+
+    def flip_results(self):
+        """Go from counterclockwise to clockwise rotation. Should only be used once all other steps are DONE, except for saving"""
+
+        if self.p.grid_type == "cartesian":
+            self.y *= -1
+            self.Y *= -1
+        
+        else:
+            self.phi *= -1
+            self.PHI *= -1
+
+        self.v_phi *= -1
 
     def make_keplerian_disk(self):
 
@@ -273,8 +286,8 @@ class Grid:
         global_lin_rho   = global_lin_rho   * linear_mask
 
         # Add velocities, identical at all heights for now
-        self.v_r   +=  global_lin_v_r  [:, np.newaxis, :]
-        self.v_phi += -global_lin_v_phi[:, np.newaxis, :]
+        self.v_r   += global_lin_v_r  [:, np.newaxis, :]
+        self.v_phi += global_lin_v_phi[:, np.newaxis, :]
 
         # Add density, scaling by background density
         self.rho += global_lin_rho[:, np.newaxis, :] * rho_background
@@ -299,8 +312,8 @@ class Grid:
         nl_vr   = nonlin.vr  [:, np.newaxis, :]
         nl_vphi = nonlin.vphi[:, np.newaxis, :]
 
-        self.v_r   +=  nl_vr
-        self.v_phi += -nl_vphi
+        self.v_r   += nl_vr
+        self.v_phi += nl_vphi
 
         # Define scale height array
         if self.info["Type"] == "cartesian":
@@ -383,7 +396,7 @@ class Grid:
         # merge data arrays
         self.rho = g.rho
 
-    def show_disk2D(self, z_slice, show=False, save=False, dimless=False):   # NEED TO UPDATE SAVED DIRECTORIES FOR NEW STRUCTURE
+    def show_disk2D(self, z_slice, show=False, save=False, dimless=False, vphi_lim=1.0, cw=False):   # NEED TO UPDATE SAVED DIRECTORIES FOR NEW STRUCTURE
 
         # parameters
         savedir      = f"{self.p.system}/{self.p.name}/{self.p.m_planet}Mj"
@@ -391,7 +404,9 @@ class Grid:
 
         # find maximum contours
         vr_max   = np.max(self.v_r  [:,z_slice,:])
-        vphi_max = np.max(self.v_phi[:,z_slice,:])
+        vphi_max = np.max(self.v_phi[:,z_slice,:]) * vphi_lim
+        if cw == True:
+            vphi_max = np.min(self.v_phi[:,z_slice,:]) * vphi_lim
         rho_max  = np.percentile(self.rho[:,z_slice,:], 99.9)
 
         # Cartesian grid plots
@@ -400,13 +415,13 @@ class Grid:
             # v_r
             plt.close("all")
             fig, ax = plt.subplots(dpi=150)
-            c       = ax.pcolormesh(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.v_r[:,z_slice,:]), vmin=-vr_max, vmax=vr_max, cmap='RdBu', rasterized=True)
+            c       = ax.pcolormesh(self.x, self.y, np.transpose(self.v_r[:,z_slice,:]), vmin=-vr_max, vmax=vr_max, cmap='RdBu', rasterized=True)
             ax.axis('scaled')
             ax.set_title(r"$\delta v_r$")
             if not dimless:
                 ax.set_xlabel(r"$x \, [\mathrm{AU}]$")
                 ax.set_ylabel(r"$y \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$\mathrm{km / s}$")
+                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$x$")
                 ax.set_ylabel(r"$y$")
@@ -419,13 +434,13 @@ class Grid:
             # v_phi
             plt.close("all")
             fig, ax = plt.subplots(dpi=150)
-            c       = ax.pcolormesh(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.v_phi[:,z_slice,:]), vmin=-vphi_max, vmax=vphi_max, cmap='RdBu', rasterized=True)
+            c       = ax.pcolormesh(self.x, self.y, np.transpose(self.v_phi[:,z_slice,:]), vmin=-vphi_max, vmax=vphi_max, cmap='RdBu', rasterized=True)
             ax.axis('scaled')
             ax.set_title(r"$\delta v_{\phi}$")
             if not dimless:
                 ax.set_xlabel(r"$x \, [\mathrm{AU}]$")
                 ax.set_ylabel(r"$y \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$\mathrm{km / s}$")
+                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$x$")
                 ax.set_ylabel(r"$y$")
@@ -438,7 +453,7 @@ class Grid:
             # rho
             plt.close("all")
             fig, ax = plt.subplots(dpi=150)
-            c       = ax.pcolormesh(self.X[:,0,0], self.Y[0,0,:], np.transpose(self.rho[:,z_slice,:]), vmin=-rho_max, vmax=rho_max, cmap='RdBu', rasterized=True)
+            c       = ax.pcolormesh(self.x, self.y, np.transpose(self.rho[:,z_slice,:]), vmin=-rho_max, vmax=rho_max, cmap='RdBu', rasterized=True)
             ax.axis('scaled')
             ax.set_title(r"$\delta \rho \, / \rho$")
             if not dimless:
@@ -456,26 +471,75 @@ class Grid:
         # Polar grid plots
         else:
 
-            ulen  = self.p.au
-            umass = self.p.m_solar
-            utime = np.sqrt(ulen**3 / (self.p.G_const * umass)) 
-            uvel  = ulen / utime / 1E5
-
             # v_r
             plt.close("all")
-            #_, ax = plt.subplots() #subplot_kw=dict(projection='polar'))
-            #myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-vr_max, vmax=vr_max, cmap='RdBu')
-            #myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-0.05, vmax=0.05, cmap='RdBu_r')
-            plt.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-0.05, vmax=0.05, cmap='RdBu_r')
-            #plt.colorbar()
-            #ax.set_ylim(0, self.p.r_outer)
-            plt.ylim(self.p.r_inner, self.p.r_outer)
-            #plt.colorbar(myplot, label=r"radial velocity [km/s]")
+            fig, ax = plt.subplots(dpi=150)
+            c       = ax.pcolormesh(self.phi, self.r, np.transpose(self.v_r[:,z_slice,:]), vmin=-vr_max, vmax=vr_max, cmap='RdBu', rasterized=True)
+            ax.set_title(r"$\delta v_r$")
+            if not dimless:
+                ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
+                ax.set_ylabel(r"$r \, \, [\mathrm{AU}]$")
+                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+            else:
+                ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
+                ax.set_ylabel(r"$r$")
+                fig.colorbar(c, extend="both")
             if save:
                 plt.savefig(f'{savedir}/vr_z{z_slice}.pdf')
             if show:
                 plt.show()
 
+            # v_phi
+            plt.close("all")
+            fig, ax = plt.subplots(dpi=150)
+            c       = ax.pcolormesh(self.phi, self.r, np.transpose(self.v_phi[:,z_slice,:]), vmin=-vphi_max, vmax=vphi_max, cmap='RdBu', rasterized=True)
+            ax.set_title(r"$\delta v_\phi$")
+            if not dimless:
+                ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
+                ax.set_ylabel(r"$r \, \, [\mathrm{AU}]$")
+                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+            else:
+                ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
+                ax.set_ylabel(r"$r$")
+                fig.colorbar(c, extend="both")
+            if save:
+                plt.savefig(f'{savedir}/vphi_z{z_slice}.pdf')
+            if show:
+                plt.show()
+
+            # rho
+            plt.close("all")
+            fig, ax = plt.subplots(dpi=150)
+            c       = ax.pcolormesh(self.phi, self.r, np.transpose(self.rho[:,z_slice,:]), vmin=-rho_max, vmax=rho_max, cmap='RdBu', rasterized=True)
+            ax.set_title(r"$\delta \rho \, / \rho$")
+            if not dimless:
+                ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
+                ax.set_ylabel(r"$r \, \, [\mathrm{AU}]$")
+            else:
+                ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
+                ax.set_ylabel(r"$r$")
+            fig.colorbar(c, extend="both")
+            if save:
+                plt.savefig(f'{savedir}/rho_z{z_slice}.pdf')
+            if show:
+                plt.show()
+
+            ## v_r
+            #plt.close("all")
+            ##_, ax = plt.subplots() #subplot_kw=dict(projection='polar'))
+            ##myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-vr_max, vmax=vr_max, cmap='RdBu')
+            ##myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-0.05, vmax=0.05, cmap='RdBu_r')
+            #plt.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-0.05, vmax=0.05, cmap='RdBu_r')
+            ##plt.colorbar()
+            ##ax.set_ylim(0, self.p.r_outer)
+            #plt.ylim(self.p.r_inner, self.p.r_outer)
+            ##plt.colorbar(myplot, label=r"radial velocity [km/s]")
+            #if save:
+            #    plt.savefig(f'{savedir}/vr_z{z_slice}.pdf')
+            #if show:
+            #    plt.show()
+
+            """
             # v_phi
             plt.close("all")
             #_, ax = plt.subplots() #subplot_kw=dict(projection='polar'))
@@ -509,6 +573,7 @@ class Grid:
                 plt.savefig(f'{savedir}/rho_z{z_slice}.pdf')
             if show:
                 plt.show()
+            """
         
         plt.close("all")
     
@@ -574,7 +639,7 @@ class Grid:
                 f"{self.p.system}/{self.p.name}/{self.p.m_planet}Mj/mcfost.para"
             )
     
-    def save_results(self, label):
+    def save_results(self, label, printed):
 
         savedir = f"{self.p.system}/{self.p.name}/{self.p.m_planet}Mj"
 
@@ -592,5 +657,7 @@ class Grid:
         np.save(f"{savedir}/{label}_v_r.npy", self.v_r)
         np.save(f"{savedir}/{label}_v_phi.npy", self.v_phi)
         np.save(f"{savedir}/{label}_rho.npy", self.rho)
+
+        print(f"{printed} saved to files in {savedir}")
 
         

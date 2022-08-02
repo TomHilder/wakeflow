@@ -16,7 +16,7 @@ q: 0.25                                      # q index, defined as c_s \propto R
 p: 1.0                                       # p index, defined as rho \propto R^{-p} or \propto R^{-p}*\exp{-R/r_c}^{2-p}
 hr: 0.10                                     # disc flaring H/R at R0
 dens_ref: 1                                  # rho at R0 in g/cm^3, unimportant for mcfost as it rescales
-cw_rotation: False                           # CURRENTLY DOES NOTHING, you will get anticlockwise and be pleased about it :-) (bool)
+cw_rotation: False                           # clockwise (True) or anticlockwise results (False)
 
 #grid:
 type: "cartesian"                            # "cylindrical" or "cartesian" or "mcfost" -- must choose mcfost to write fits file

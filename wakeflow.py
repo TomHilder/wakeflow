@@ -112,11 +112,19 @@ class WakeflowModel():
             # merge grids for results
             grid_background.merge_grids(grid_nonlin_perts)
 
+            # flip results if desired
+            if params.user_cw_rotation:
+                grid_background.flip_results()
+
             # merge grids to save or plot perturbations
             if params.make_midplane_plots or params.save_perturbations:
 
                 if params.include_linear:
                     grid_nonlin_perts.merge_grids(grid_lin_perts)
+
+                # flip results if desired
+                if params.user_cw_rotation:
+                    grid_nonlin_perts.flip_results()
 
                 if params.dimensionless:
                     grid_nonlin_perts.remove_dimensions()
@@ -126,16 +134,16 @@ class WakeflowModel():
 
         # save perturbations
         if params.save_perturbations:
-            print("Saving perturbations to file")
-            grid_nonlin_perts.save_results("delta")
+            #print("Saving perturbations to file")
+            grid_nonlin_perts.save_results("delta", "Perturbations")
 
         if params.dimensionless:
             grid_background.remove_dimensions(scale_dens=True)
 
         # save perts + background
         if params.save_total:
-            print("Saving background + perturbations to file")
-            grid_background.save_results("total")
+            #print("Saving background + perturbations to file")
+            grid_background.save_results("total", "Background with perturbations")
 
         # write fits file
         if params.write_FITS:
