@@ -46,12 +46,12 @@ class WakeflowModel():
         # run wakeflow for each planet mass
         for mass_p in planet_masses:
             params.m_planet = mass_p
-            print(f"\n ===== Creating {mass_p} Mj model: =====")
+            print(f"\n* Creating {mass_p} Mj model:")
             self._run_wakeflow(params)
 
         # run mcfost for each model
         if params.run_mcfost == True:
-            print("\n ===== Running MCFOST on each model =====")
+            print("\n* Running MCFOST on each model:")
             for mass_p in planet_masses:
                 print(f"{mass_p} Mj...")
                 working_dir = os.getcwd()
@@ -61,9 +61,12 @@ class WakeflowModel():
                     stdout=subprocess.DEVNULL
                 )
                 os.chdir(working_dir)
-            print("Done")
+
+        print("\n* Done!")
 
     def _run_wakeflow(self, params):
+
+        print("Generating unperturbed background disk")
 
         # make empty grid for unperturbed disk
         grid_background = Grid(params)
@@ -73,6 +76,8 @@ class WakeflowModel():
         grid_background.make_keplerian_disk()
 
         if params.use_planet:
+
+            print("Extracting linear perturbations nearby planet")
 
             # make empty grid for linear perturbations
             grid_lin_perts = Grid(params)
@@ -130,7 +135,12 @@ class WakeflowModel():
                     grid_nonlin_perts.remove_dimensions()
 
                 if params.make_midplane_plots:
+                    if params.show_midplane_plots:
+                        print('* Displaying results:')
                     grid_nonlin_perts.show_disk2D(0, show=params.show_midplane_plots, save=True, dimless=params.dimensionless)
+
+        if params.save_perturbations or params.save_total:
+            print("* Saving results:")
 
         # save perturbations
         if params.save_perturbations:
@@ -143,7 +153,7 @@ class WakeflowModel():
         # save perts + background
         if params.save_total:
             #print("Saving background + perturbations to file")
-            grid_background.save_results("total", "Background with perturbations")
+            grid_background.save_results("total", "Total        ")
 
         # write fits file
         if params.write_FITS:

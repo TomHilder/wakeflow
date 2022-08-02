@@ -51,7 +51,7 @@ def run_setup(param_dict, default_param_dict=None, overwrite=False):
     results_exist = os.path.isdir(results_path)
     if results_exist is True:
         if overwrite:
-            print("Results already exist for run name, they will be overwritten.")
+            print("Overwriting previous results")
             sh.rmtree(results_path)
             os.makedirs(results_path)
         else:
@@ -228,19 +228,24 @@ class Parameters(Constants):
 
     def do_sanity_checks(self):
 
+        print("* Performing sanity checks on model parameters:")
+
         if self.m_planet != None:
-            print(f"Thermal mass is {self.m_thermal} M_Jup")
-            print(f"Planet mass is {self.m_planet / self.m_thermal} thermal masses")
+            print(f"M_thermal = {self.m_thermal:.3f} M_Jup")
+            print(f"M_planet  = {(self.m_planet / self.m_thermal):.3f} M_th")
 
             # check that planet mass does not exceed thermal mass
             if self.m_planet > self.m_thermal:
-                print("Planet mass exceeds thermal mass. This may break the solution. ")
+                print("WARNING: M_planet > M_thermal. This may break the solution.")
                 
         else:
-            print(f"Thermal mass is {self.m_thermal} M_Jup")
-            print(f"Planet masses are: ", end='')
-            print(np.array(self.m_planet_array)/self.m_thermal, end='')
-            print(" thermal masses")
+            print(f"M_thermal = {self.m_thermal:.3f} M_Jup")
+            print(f"M_planets = {np.array2string(np.array(self.m_planet_array)/self.m_thermal, precision=3, floatmode='fixed')} M_th")
+            
+            
+            #print(f"Planet masses are: ", end='')
+            #print(np.array(self.m_planet_array)/self.m_thermal, end='')
+            #print(" thermal masses")
 
             # check that planet mass does not exceed thermal mass
             exceed = False
@@ -281,5 +286,5 @@ class Parameters(Constants):
         if self.show_teta_debug_plots:
             print("WARNING: Choosing show_teta_debug_plots=True may cause the run to fail.")
 
-        print("Parameters Ok. Continuing.")
+        print("Parameters Ok - continuing")
         return True

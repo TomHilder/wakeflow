@@ -1,8 +1,9 @@
-import math
+import time
 import numpy                as np
 import matplotlib.pyplot    as plt
 from scipy.interpolate      import griddata
 from copy                   import copy
+from tqdm              import tqdm
 from burgers                import solve_burgers
 from transformations        import phi_wake, Eta, mod2pi, t, t_integral, t_integrand, g, Lambda_fu, Lambda_fv, get_chi, get_dens_vel, plot_r_t
 
@@ -17,7 +18,7 @@ class NonLinearPerts():
 
     def extract_ICs(self, LinearPerts, LinearPerts2=None):
 
-        print('  * Extracting Burgers initial conditions from linear density perturbation ...')
+        #print('  * Extracting Burgers initial conditions from linear density perturbation ...')
         
         # grab linear perturbations object
         lp = LinearPerts
@@ -131,14 +132,14 @@ class NonLinearPerts():
         C0_inner = -np.trapz(profile0_inner, dx = deta_inner)
         self.C_inner = (self.p.gamma + 1) * (self.p.m_planet / self.p.m_thermal) * C0_inner / 2**(3/4)
 
-        print('     Outer Wake:')
-        print('         eta_tilde = ', self.eta_tilde_outer)
-        print('         C0 = ', C0_outer)
-        print('         t0 = ', self.t0_outer)
-        print('     Inner Wake:')
-        print('         eta_tilde = ', self.eta_tilde_inner)
-        print('         C0 = ', C0_inner)
-        print('         t0 = ', self.t0_inner)
+        #print('     Outer Wake:')
+        #print('         eta_tilde = ', self.eta_tilde_outer)
+        #print('         C0 = ', C0_outer)
+        #print('         t0 = ', self.t0_outer)
+        #print('     Inner Wake:')
+        #print('         eta_tilde = ', self.eta_tilde_inner)
+        #print('         C0 = ', C0_inner)
+        #print('         t0 = ', self.t0_inner)
 
         # ======================================
         # === put linear solution into t,eta ===
@@ -342,7 +343,7 @@ class NonLinearPerts():
 
     def extract_ICs_ann(self, LinearPerts):
         
-        print('  * Extracting Burgers initial conditions from linear density perturbation ...')
+        #print('  * Extracting Burgers initial conditions from linear density perturbation ...')
         
         # grab linear perturbations object
         lp = LinearPerts
@@ -414,14 +415,14 @@ class NonLinearPerts():
         C0_inner = -np.trapz(profile0_inner, dx = deta_inner)
         self.C_inner = (self.p.gamma + 1) * (self.p.m_planet / self.p.m_thermal) * C0_inner / 2**(3/4)
 
-        print('     Outer Wake:')
-        print('         eta_tilde = ', self.eta_tilde_outer)
-        print('         C0 = ', C0_outer)
-        print('         t0 = ', self.t0_outer)
-        print('     Inner Wake:')
-        print('         eta_tilde = ', self.eta_tilde_inner)
-        print('         C0 = ', C0_inner)
-        print('         t0 = ', self.t0_inner)
+        #print('     Outer Wake:')
+        #print('         eta_tilde = ', self.eta_tilde_outer)
+        #print('         C0 = ', C0_outer)
+        #print('         t0 = ', self.t0_outer)
+        #print('     Inner Wake:')
+        #print('         eta_tilde = ', self.eta_tilde_inner)
+        #print('         C0 = ', C0_inner)
+        #print('         t0 = ', self.t0_inner)
 
         # hard to explain, but they're not needed so set to zero
         self.linear_solution = 0
@@ -431,7 +432,9 @@ class NonLinearPerts():
 
         beta_p = self.p.m_planet / self.p.m_thermal
 
-        print('  * Solving Burgers equation for outer wake...')
+        print('Propagating outer wake... ', end='')
+
+        timer_0 = time.perf_counter()
 
         time_outer, eta_outer, solution_outer = solve_burgers(
             self.eta_outer, 
@@ -448,7 +451,13 @@ class NonLinearPerts():
             self.p.tf_fac
         )
 
-        print('  * Solving Burgers equation for inner wake...')
+        timer_1 = time.perf_counter()
+
+        print(f'finished in {timer_1-timer_0:0.2f} s')
+
+        print('Propagating inner wake... ', end='')
+
+        timer_0 = time.perf_counter()
 
         time_inner, eta_inner, solution_inner = solve_burgers(
             self.eta_inner, 
@@ -465,7 +474,11 @@ class NonLinearPerts():
             self.p.tf_fac
         )
 
-        print('  * Computing nonlinear perturbations ...')
+        timer_1 = time.perf_counter()
+
+        print(f'finished in {timer_1-timer_0:0.2f} s')
+
+        #print('  * Computing nonlinear perturbations ...')
 
         # final time of solutions before N-wave behaviour
         tf_outer = time_outer[-1]
@@ -502,9 +515,9 @@ class NonLinearPerts():
             unl = np.zeros((len(x), len(y)))
             vnl = np.zeros((len(x), len(y)))
 
-            for i in range(len(x)):
+            for i in tqdm(range(len(x)), desc="* Mapping to physical coords"):
                 for j in range(len(y)):
-                    
+
                     xx = x[i]
                     yy = y[j]
                     rr = np.sqrt(xx**2 + yy**2)
@@ -559,7 +572,7 @@ class NonLinearPerts():
             r = self.g.r
             phi = self.g.phi
 
-            for i in range(self.p.n_r):
+            for i in tqdm(range(self.p.n_r), desc="* Mapping to physical coords"):
                 rr = r[i]
                 for j in range(self.p.n_phi):
 

@@ -12,7 +12,7 @@ class LinearPerts():
         #if ph_pixelmap_loc is None:
         if True:
 
-            print("Reading in Linear Perturbations")
+            #print("Reading in Linear Perturbations")
 
             # grab parameters object
             self.p = parameters
@@ -181,7 +181,7 @@ class LinearPerts():
 
     def cut_box_annulus_segment(self):
 
-        print("Extracting Linear Perturbations in the Vicinity of the Planet")
+        #print("Extracting Linear Perturbations in the Vicinity of the Planet")
 
         # box size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs
         x_box_size = 2*self.p.scale_box

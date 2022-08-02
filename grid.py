@@ -30,7 +30,7 @@ class Grid:
 
     def make_grid(self):
 
-        print(f"Constructing {self.p.grid_type} Grid ")
+        #print(f"Constructing {self.p.grid_type} Grid ")
 
         # define disk height (not used for mcfost grid)
         self.height = self.p.hr * (self.p.r_outer / self.p.r_ref)**(0.5 - self.p.q) * self.p.r_outer
@@ -149,7 +149,7 @@ class Grid:
 
     def make_keplerian_disk(self):
 
-        print("Making Keplerian disk ")
+        #print("Making Keplerian disk ")
 
         # get radii
         if self.info["Type"] == "cartesian":
@@ -581,7 +581,7 @@ class Grid:
 
         if self.info["Type"] == "cartesian":
 
-            print("Cannot write FITS file when using Cartesian grid")
+            print("WARNING: Cannot write FITS file when using Cartesian grid.")
 
         else:
 
@@ -629,9 +629,9 @@ class Grid:
             hdul = fits.HDUList([primary_hdu, second_hdu, tertiary_hdu])
 
             # Write a fits file for mcfost
-            print("Writing a fits file for MCFOST")
             fitsname = "wakeflow_model.fits"
             hdul.writeto(f"{self.p.system}/{self.p.name}/{self.p.m_planet}Mj/{fitsname}", overwrite=True)
+            print("Saved FITS file formatted for MCFOST.")
 
             # Copy mcfost parameter file here too
             sh.copy(
@@ -658,6 +658,6 @@ class Grid:
         np.save(f"{savedir}/{label}_v_phi.npy", self.v_phi)
         np.save(f"{savedir}/{label}_rho.npy", self.rho)
 
-        print(f"{printed} saved to files in {savedir}")
+        print(f"{printed} saved to {savedir}")
 
         
