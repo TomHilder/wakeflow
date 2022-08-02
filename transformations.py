@@ -180,12 +180,12 @@ def get_chi(
 
 def get_dens_vel(rr, Chi, gamma ,Rp, cw, csp, hr, q, p):
     g1  = g(rr, Rp, hr, q, p)
-    dnl = Chi * 2 / (g1*(gamma + 1))     # Eq. (11) Bollati et al. 2021
+    dnl = Chi * 2 / (g1 * (gamma + 1))     # Eq. (11) Bollati et al. 2021
 
     Lfu = Lambda_fu(rr, Rp, csp, hr, gamma, q, p)
     Lfv = Lambda_fv(rr, Rp, csp, hr, gamma, q, p)
-    unl = np.sign(rr-Rp) * Lfu * Chi           # Eq. (23) Bollati et al. 2021
-    vnl = np.sign(rr-Rp) * Lfv * Chi * (-cw) # Eq. (24) Bollati et al. 2021 (the sign of v is reversed if we change cw)
+    unl = np.sign(rr - Rp) * Lfu * Chi           # Eq. (23) Bollati et al. 2021
+    vnl = np.sign(rr - Rp) * Lfv * Chi * (-cw) # Eq. (24) Bollati et al. 2021 (the sign of v is reversed if we change cw)
 
     return dnl, unl, vnl
 

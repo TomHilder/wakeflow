@@ -30,12 +30,11 @@ r_log: False                                 # use logarithmic scale for r point
 #plotting:
 make_midplane_plots: True                    # create midplane plots of velocity components and density
 show_midplane_plots: True                    # show plots as code runs
-show_teta_debug_plots: False                 # show t, eta space plots (including putting the linear solution into t,eta)
 
 #results:
 dimensionless: False                         # leave results dimensionless? Default is False in which case results are CGS with velocities in km/s
-include_planet: True                         # include perturbations from a planet? (lets you run an unperturbed disk) (bool)
-include_linear: True                         # include the results from the linear regime?
+include_planet: True                         # include perturbations from a planet? (lets you run an unperturbed disk by choosing false) (bool)
+include_linear: True                         # include the results from the linear regime near the planet?
 save_perturbations: True                     # save perturbations to npy file
 save_total: True                             # save background + perturbations to npy file
 write_FITS: False                            # write a FITS file to run in mcfost -- requires {grid.type: "mcfost"}
@@ -60,13 +59,16 @@ n_v: 40                                      # number of velocity channels for c
 
 #physical:
 adiabatic_index: 1.6666667                   # adiabatic index
-damping_malpha: 0                            # artificial damping
+damping_malpha: 0.0                          # artificial damping
 
 #numerical:
 CFL: 0.5                                     # CFL safety factor for Godunov scheme that solves Burger's eqn
 scale_box: 1.0                               # scale factor for linear regime box side length    -- default is 1
 scale_box_ang: 1.0                           # scale factor for linear regime box angular extent -- default is 1
+tf_fac: 1.0                                  # factor to multiply the final time Burger's equation is evolved to -- default is 1
+
+# developer
+show_teta_debug_plots: False                 # show t, eta space plots (including putting the linear solution into t,eta)
 box_warp: True                               # whether or not the linear box warps with the disk curvature (bool) -- default is True
 use_box_IC: False                            # whether or not to use the side of the box as seen in the results as the initial condition 
                                              # for the non-linear evolution (bool) -- default is False, DO NOT CHANGE
-tf_fac: 1.0                                  # factor to multiply the final time Burger's equation is evolved to -- default is 1

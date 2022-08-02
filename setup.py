@@ -2,14 +2,14 @@ import yaml, sys, os
 import shutil           as sh
 import numpy            as np
 
-def warning(warning_msg):
-
-        statement = f"Warning: {warning_msg} Continue? [y/n]: "
-        cont = input(statement)
-        if cont != "y":
-            return False
-        else:
-            return True
+#def warning(warning_msg):
+#
+#        statement = f"Warning: {warning_msg} Continue? [y/n]: "
+#        cont = input(statement)
+#        if cont != "y":
+#            return False
+#        else:
+#            return True
 
 def load_config_file(config_file, default_config_dict=None):
 
@@ -28,7 +28,7 @@ def write_config_file(config_dict, directory, filename):
     with open(f'{directory}{filename}', 'w') as yaml_file:
         yaml.dump(config_dict, yaml_file, default_flow_style=False)
 
-def run_setup(param_dict, default_param_dict=None):
+def run_setup(param_dict, default_param_dict=None, overwrite=False):
 
     if default_param_dict is not None:
         for key in param_dict.keys():
@@ -50,11 +50,12 @@ def run_setup(param_dict, default_param_dict=None):
     # check if results directory already exists, ask to overwrite if yes
     results_exist = os.path.isdir(results_path)
     if results_exist is True:
-        if not warning("Results already exist for run name, they will be overwritten."):
-            sys.exit(1)
-        else:
+        if overwrite:
+            print("Results already exist for run name, they will be overwritten.")
             sh.rmtree(results_path)
             os.makedirs(results_path)
+        else:
+            raise Exception("Results already exist for run name. Either choose a different name, or run with overwrite=True")
 
     # create individual directories for each planet mass result
     if params.m_planet_array is not None:
@@ -262,13 +263,23 @@ class Parameters(Constants):
 
         # check linear box scale factor
         if self.scale_box != 1:
-            if not warning("Changing linear box scale factor can cause strange results."):
-                return False
+            print("WARNING: Changing linear box scale factor can cause strange results.")
 
         # check CFL
         if self.CFL > 0.5:
-            if not warning("CFL chosen > 0.5, this will likely break the numerical PDE solver."):
-                return False
+            print("WARNING: CFL chosen > 0.5, this will likely break the numerical PDE solver.")
+
+        # check box warp
+        if not self.box_warp:
+            print("WARNING: Choosing box_warp=False may invalidate your results.")
+
+        # check IC read out
+        if self.use_box_IC:
+            print("WARNING: Choosing use_box_IC=True will almost certainly invalidate your results.")
+
+        # debug plots t eta
+        if self.show_teta_debug_plots:
+            print("WARNING: Choosing show_teta_debug_plots=True may cause the run to fail.")
 
         print("Parameters Ok. Continuing.")
         return True

@@ -504,6 +504,7 @@ class NonLinearPerts():
 
             for i in range(len(x)):
                 for j in range(len(y)):
+                    
                     xx = x[i]
                     yy = y[j]
                     rr = np.sqrt(xx**2 + yy**2)
@@ -561,9 +562,9 @@ class NonLinearPerts():
             for i in range(self.p.n_r):
                 rr = r[i]
                 for j in range(self.p.n_phi):
+
                     pphi = phi[j]
 
-                    #Chi = get_chi(pphi, rr, time, eta, eta_inner, eta_tilde, C, solution, solution_inner, t0, tf, Rp, x_match, l, cw, hr, q, p)
                     Chi = get_chi(
                         pphi, 
                         rr, 
@@ -590,7 +591,6 @@ class NonLinearPerts():
                         p
                     )
 
-                    #dnl[j,i], unl[j,i], vnl[j,i] = get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p) 
                     # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
                     dnl[j,i], unl[j,i], vnl[j,i] = get_dens_vel(
                         rr, 

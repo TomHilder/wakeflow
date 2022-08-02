@@ -32,10 +32,10 @@ class WakeflowModel():
         else:
             print("Model configuration left as default.")
 
-    def run(self) -> None:
+    def run(self, overwrite: bool = False) -> None:
         
         # run setup
-        params = run_setup(self.model_params, self.default_params)
+        params = run_setup(self.model_params, default_param_dict=self.default_params, overwrite=overwrite)
 
         # grab list of planet masses
         if params.m_planet is not None:
