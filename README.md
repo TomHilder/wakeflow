@@ -82,34 +82,56 @@ About `wakeflow`.
 <!-- GETTING STARTED -->
 ## Installation
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+`wakeflow` may be most easily installed from the Python Package Index ([PyPI](https://example.com)), or can also be installed from the GitHub repo if you wish to contribute. Dependencies for `wakeflow` consist mostly of standard python libraries. We recommend using a package manager such as [Anaconda](https://www.anaconda.com/products/distribution) to make your life easier, but this is not required.
+
+
 
 ### Dependencies
 
-Depends
+Python packages:
 
-### PyPI
+* `numpy`
+* `matplotlib`
+* `astropy`
+* `scipy`
+* `setuptools`
+* `pyyaml`
+* `tqdm`
+* `pytest`
 
-pip install
 
-### From source
 
-_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
+### PyPI (pip)
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
-   ```sh
-   git clone https://github.com/your_username_/Project-Name.git
-   ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
+The easiest way to install `wakeflow` is via [PyPI](https://example.com), using pip:
+```sh
+pip install wakeflow
+```
+that's it!
+
+
+
+### From source (GitHub)
+
+If you want to contribute to, or modify `wakeflow`, you should install it from the GitHub repository found [here](https://github.com/TomHilder/wakeflow). Simply fork the repo using the button in the top right, and then clone it:
+```sh
+git clone https://github.com/<replace-by-your-username>/wakeflow.git
+```
+Navigate to the directory it is installed in:
+```sh
+cd wakeflow
+```
+You can verify that you are in the correct directory by checking that you see `README.md` when you run:
+```sh
+ls
+```
+Now we use `pip` to create a local and _editable_ install of `wakeflow`:
+```sh
+python -m pip install -e .
+```
+Do not forget the dot (.) in the above command, as it tells `pip` to look in the current working directory (where `wakeflow` is). The advantage of installing this way is that it places a link to the current directory where you have cloned `wakeflow` to in your `site-packages` folder instead of _moving_ it there. Now when you edit the code in `wakeflow/src/wakeflow/`, it will edit your installation!
+
+
 
 ### Installation
 
