@@ -32,8 +32,8 @@
   <p align="center">
     Generate and manipulate semi-analytic models for planet wakes
     <br />
-    <a href="https://github.com/TomHilder/wakeflow"><strong>Quickstart tutorial »</strong></a>
     <br />
+    <a href="https://github.com/TomHilder/wakeflow"><strong>Quickstart tutorial »</strong></a>
     <br />
     <a href="https://github.com/TomHilder/wakeflow"><strong>Documentation »</strong></a>
     <br />
