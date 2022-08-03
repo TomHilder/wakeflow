@@ -1,9 +1,6 @@
 **/__pycache__
 *.npy
 *.pdf
-config_*
 .DS_Store
-/*
+/default_parent_dir
 
-!/mcfost
-!default_config.yaml
