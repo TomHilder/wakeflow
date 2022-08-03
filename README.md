@@ -186,6 +186,8 @@ Please cite [Hilder et al. (in prep)](https://example.com) in any work where `wa
 <!-- CONTACT -->
 ## Contact
 
+If you are having difficulties installing or using `wakeflow`, please let us know! We are happy to answer any questions or provide assistance. 
+
 Thomas Hilder - thil0004@student.monash.edu
 
 Project Link: [https://github.com/TomHilder/wakeflow](https://github.com/TomHilder/wakeflow)
