@@ -228,7 +228,7 @@ class Parameters(Constants):
 
     def do_sanity_checks(self):
 
-        print("* Performing sanity checks on model parameters:")
+        print("\n* Performing sanity checks on model parameters:")
 
         if self.m_planet != None:
             print(f"M_thermal = {self.m_thermal:.3f} M_Jup")
