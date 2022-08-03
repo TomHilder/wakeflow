@@ -82,7 +82,7 @@ About `wakeflow`.
 <!-- GETTING STARTED -->
 ## Installation
 
-`wakeflow` may be most easily installed from the Python Package Index ([PyPI](https://example.com)), or can also be installed from the [GitHub repository](https://github.com/TomHilder/wakeflow) if you wish make contributions. Dependencies for `wakeflow` consist mostly of standard python libraries. We recommend using a package manager such as [Anaconda](https://www.anaconda.com/products/distribution) to make your life easier, but this is not required.
+`wakeflow` may be most easily installed from the Python Package Index ([PyPI](https://pypi.org/project/wakeflow/)), or can also be installed from the [GitHub repository](https://github.com/TomHilder/wakeflow) if you wish make contributions. Dependencies for `wakeflow` consist mostly of standard python libraries. We recommend using a package manager such as [Anaconda](https://www.anaconda.com/products/distribution) to make your life easier, but this is not required.
 
 
 
@@ -103,7 +103,7 @@ Python packages:
 
 ### PyPI (pip)
 
-The easiest way to install `wakeflow` is via [PyPI](https://example.com), using `pip`:
+The easiest way to install `wakeflow` is via [PyPI](https://pypi.org/project/wakeflow/), using `pip`:
 ```sh
 pip install wakeflow
 ```
@@ -211,8 +211,8 @@ Additional acknowledgements:
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[pypi-shield]: https://img.shields.io/badge/PyPI-0.0.1-brightgreen?style=for-the-badge&logo=appveyor
-[pypi-url]: https://example.com
+[pypi-shield]: https://img.shields.io/badge/PyPI-1.0.1-brightgreen?style=for-the-badge&logo=appveyor
+[pypi-url]: https://pypi.org/project/wakeflow/
 [python-shield]: https://img.shields.io/badge/Python-3.8%2B-orange?style=for-the-badge&logo=appveyor
 [python-url]: https://www.python.org
 [license-shield]: https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=appveyor
