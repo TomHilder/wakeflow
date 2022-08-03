@@ -17,6 +17,8 @@
 
 [![PyPI Package][pypi-shield]][pypi-url]
 [![Python][python-shield]][python-url]
+[![License][license-shield]][license-url]
+[![JOSS][JOSS-shield]][JOSS-url]
 
 <!-- PROJECT LOGO -->
 <br />
@@ -234,6 +236,10 @@ Use this space to list resources you find helpful and would like to give credit 
 [pypi-url]: https://www.google.com
 [python-shield]: https://img.shields.io/badge/Python-3.7%2B-orange?style=for-the-badge&logo=appveyor
 [python-url]: https://www.python.org
+[license-shield]: https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=appveyor
+[license-url]: https://opensource.org/licenses/MIT
+[JOSS-shield]: https://img.shields.io/badge/JOSS-coming%20soon-lightgrey?style=for-the-badge&logo=appveyor
+[JOSS-url]: https://www.google.com
 
 <!--
 [forks-shield]: https://img.shields.io/github/forks/othneildrew/Best-README-Template.svg?style=for-the-badge
