@@ -3,4 +3,3 @@
 include src/wakeflow/data/*.tar.gz
 include src/wakeflow/data/*.para
 include src/wakeflow/data/default_config.yaml
-include logo.png
