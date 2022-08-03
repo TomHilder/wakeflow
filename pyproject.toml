@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wakeflow"
-version = "0.0.1"
+version = "0.0.2"
 description = "Generate semi-analytic models of planet wakes"
 readme = "README.md"
 authors = [{ name = "Thomas Hilder", email = "tom.hilder.dlhp@gmail.com" }]
