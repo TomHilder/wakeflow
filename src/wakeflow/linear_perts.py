@@ -2,8 +2,8 @@ import sys, pkg_resources, tarfile
 import numpy                    as np
 import matplotlib.pyplot        as plt
 from scipy.interpolate      import RectBivariateSpline
-from mpl_toolkits.mplot3d   import Axes3D
-from matplotlib             import ticker, cm
+#from mpl_toolkits.mplot3d  import Axes3D
+#from matplotlib            import ticker, cm
 #from phantom_interface     import PhantomDump
 
 class LinearPerts():
