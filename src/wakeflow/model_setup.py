@@ -63,7 +63,7 @@ def run_setup(param_dict, default_param_dict=None, overwrite=False):
     # run mcfost grid setup if needed
     if params.run_mcfost or params.grid_type == "mcfost":
 
-        from mcfost_interface import make_mcfost_parameter_file, make_mcfost_grid_data
+        from .mcfost_interface import make_mcfost_parameter_file, make_mcfost_grid_data
 
         # make directory for mcfost outputs
         mcfost_path = f"{params.system}/{params.name}/mcfost/"

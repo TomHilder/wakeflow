@@ -119,10 +119,17 @@ class Grid:
             self.Y      /= grid_length
             self.Z_xy   /= grid_length
 
-        else:
+        elif self.p.grid_type == "cylindrical":
             self.r      /= grid_length
             self.phi    /= 1.0
             self.z      /= grid_length
+            self.R      /= grid_length
+            self.PHI    /= 1.0
+            self.Z      /= grid_length
+
+        else:
+            self.r      /= grid_length
+            self.phi    /= 1.0
             self.R      /= grid_length
             self.PHI    /= 1.0
             self.Z      /= grid_length
