@@ -24,7 +24,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/TomHilder/wakeflow">
-    <img src="logo.png" alt="Logo" width="270" height="270">
+    <img src="logo.png" alt="Logo" width="400" height="400">
   </a>
 
   <h3 align="center">Wakeflow</h3>
