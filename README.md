@@ -82,7 +82,7 @@ About `wakeflow`.
 <!-- GETTING STARTED -->
 ## Installation
 
-`wakeflow` may be most easily installed from the Python Package Index ([PyPI](https://example.com)), or can also be installed from the GitHub repo if you wish to contribute. Dependencies for `wakeflow` consist mostly of standard python libraries. We recommend using a package manager such as [Anaconda](https://www.anaconda.com/products/distribution) to make your life easier, but this is not required.
+`wakeflow` may be most easily installed from the Python Package Index ([PyPI](https://example.com)), or can also be installed from the [GitHub repository](https://github.com/TomHilder/wakeflow) if you wish make contributions. Dependencies for `wakeflow` consist mostly of standard python libraries. We recommend using a package manager such as [Anaconda](https://www.anaconda.com/products/distribution) to make your life easier, but this is not required.
 
 
 
@@ -113,7 +113,7 @@ that's it!
 
 ### From source (GitHub)
 
-If you want to contribute to, or modify `wakeflow`, you should install it from the GitHub repository found [here](https://github.com/TomHilder/wakeflow). Simply fork the repo using the button in the top right, and then clone it:
+If you want to contribute to, or modify `wakeflow`, you should install it from the [GitHub repository](https://github.com/TomHilder/wakeflow). Simply fork the repo using the button in the top right, and then clone it:
 ```sh
 git clone https://github.com/<replace-by-your-username>/wakeflow.git
 ```
