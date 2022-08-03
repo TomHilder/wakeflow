@@ -91,7 +91,7 @@ Depends
 
 ### PyPI
 
-pip
+pip install
 
 ### From source
 
