@@ -103,7 +103,7 @@ Python packages:
 
 ### PyPI (pip)
 
-The easiest way to install `wakeflow` is via [PyPI](https://example.com), using pip:
+The easiest way to install `wakeflow` is via [PyPI](https://example.com), using `pip`:
 ```sh
 pip install wakeflow
 ```
@@ -129,12 +129,7 @@ Now we use `pip` to create a local and _editable_ install of `wakeflow`:
 ```sh
 python -m pip install -e .
 ```
-Do not forget the dot (.) in the above command, as it tells `pip` to look in the current working directory (where `wakeflow` is). The advantage of installing this way is that it places a link to the current directory where you have cloned `wakeflow` to in your `site-packages` folder instead of _moving_ it there. Now when you edit the code in `wakeflow/src/wakeflow/`, it will edit your installation!
-
-
-
-### Installation
-
+Do not forget the dot (.) in the above command, as it tells `pip` to look in the current working directory (where `wakeflow` is). The advantage of installing this way is that it places a _link_ to `wakeflow` in your `site-packages` folder instead of _moving_ it there. Now when you edit the code in `wakeflow/src/wakeflow/` it will edit your installation!
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -156,7 +151,7 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 
 Contributions to `wakeflow` are welcome. If you would like to implement a new feature, please:
 
-1. Fork the Project
+1. Install using the above [From source instructions](from-source-(GitHub))
 2. Create your Feature Branch (`git checkout -b feature/NewFeature`)
 3. Commit your Changes (`git commit -m 'Add some NewFeature'`)
 4. Push to the Branch (`git push origin feature/NewFeature`)
