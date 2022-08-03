@@ -432,7 +432,7 @@ class NonLinearPerts():
 
         beta_p = self.p.m_planet / self.p.m_thermal
 
-        print('Propagating outer wake... ', end='')
+        print('Propagating outer wake... ')
 
         timer_0 = time.perf_counter()
 
@@ -453,9 +453,9 @@ class NonLinearPerts():
 
         timer_1 = time.perf_counter()
 
-        print(f'finished in {timer_1-timer_0:0.2f} s')
+        print(f'Completed in {timer_1-timer_0:0.2f} s')
 
-        print('Propagating inner wake... ', end='')
+        print('Propagating inner wake... ')
 
         timer_0 = time.perf_counter()
 
@@ -476,9 +476,7 @@ class NonLinearPerts():
 
         timer_1 = time.perf_counter()
 
-        print(f'finished in {timer_1-timer_0:0.2f} s')
-
-        #print('  * Computing nonlinear perturbations ...')
+        print(f'Completed in {timer_1-timer_0:0.2f} s')
 
         # final time of solutions before N-wave behaviour
         tf_outer = time_outer[-1]
@@ -504,6 +502,8 @@ class NonLinearPerts():
 
         # physical parameters
         gamma = self.p.gamma
+
+        print()
 
         # if using a Cartesian grid
         if self.g.info["Type"] == "cartesian":

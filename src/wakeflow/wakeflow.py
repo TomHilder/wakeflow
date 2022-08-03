@@ -143,11 +143,11 @@ class WakeflowModel():
 
                 if params.make_midplane_plots:
                     if params.show_midplane_plots:
-                        print('* Displaying results:')
+                        print('\n* Displaying results:')
                     grid_nonlin_perts.show_disk2D(0, show=params.show_midplane_plots, save=True, dimless=params.dimensionless)
 
         if params.save_perturbations or params.save_total:
-            print("* Saving results:")
+            print("\n* Saving results:")
 
         # save perturbations
         if params.save_perturbations:
