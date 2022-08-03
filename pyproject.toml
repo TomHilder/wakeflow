@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "wakeflow"
 version = "0.0.1"
-description = "Package to generate semi-analytic models of planet wakes"
+description = "Generate semi-analytic models of planet wakes"
 readme = "README.md"
 authors = [{ name = "Thomas Hilder", email = "tom.hilder.dlhp@gmail.com" }]
 license = { file = "LICENSE" }
