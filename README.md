@@ -16,6 +16,7 @@
 -->
 
 [![PyPI Package][pypi-shield]][pypi-url]
+[![Python][python-shield][python-url]]
 
 <!-- PROJECT LOGO -->
 <br />
@@ -230,7 +231,9 @@ Use this space to list resources you find helpful and would like to give credit 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [pypi-shield]: https://img.shields.io/badge/PyPI-0.0.1-brightgreen?style=for-the-badge&logo=appveyor
-[pypi-url]: https://github.com/othneildrew/Best-README-Template/graphs/contributors
+[pypi-url]: https://www.google.com
+[python-shield]: https://img.shields.io/badge/Python-3.7%2B-orange?style=for-the-badge&logo=appveyor
+[python-url]: https://www.python.org
 
 <!--
 [forks-shield]: https://img.shields.io/github/forks/othneildrew/Best-README-Template.svg?style=for-the-badge
