@@ -16,7 +16,7 @@
 -->
 
 [![PyPI Package][pypi-shield]][pypi-url]
-[![Python][python-shield][python-url]]
+[![Python][python-shield]][python-url]
 
 <!-- PROJECT LOGO -->
 <br />
