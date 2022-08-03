@@ -24,26 +24,25 @@
 <br />
 <div align="center">
   <a href="https://github.com/TomHilder/wakeflow">
-    <img src="logo.png" alt="Logo" width="400" height="400">
+    <img src="logo.png" alt="Logo" width="500" height="500">
   </a>
 
-  <h3 align="center">Wakeflow</h3>
+<!--  <h3 align="center">Wakeflow</h3> -->
 
   <p align="center">
-    Generate semi-analytic models for planet wakes!
+    Generate and manipulate semi-analytic models for planet wakes
     <br />
-    <a href="https://github.com/TomHilder/wakeflow"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/TomHilder/wakeflow"><strong>Quickstart tutorial »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/TomHilder/wakeflow">View Demo</a>
-    ·
-    <a href="https://github.com/TomHilder/wakeflow/issues">Report Bug</a>
+    <a href="https://github.com/TomHilder/wakeflow"><strong>Documentation »</strong></a>
+    <br />
   </p>
 </div>
 
 
 
-<!-- TABLE OF CONTENTS -->
+<!-- TABLE OF CONTENTS 
 <details>
   <summary>Table of Contents</summary>
   <ol>
@@ -68,7 +67,7 @@
     <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
-
+-->
 
 
 <!-- ABOUT THE PROJECT -->
@@ -237,7 +236,7 @@ Use this space to list resources you find helpful and would like to give credit 
 [python-url]: https://www.python.org
 [license-shield]: https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=appveyor
 [license-url]: https://opensource.org/licenses/MIT
-[JOSS-shield]: https://img.shields.io/badge/JOSS-coming%20soon-lightgrey?style=for-the-badge&logo=appveyor
+[JOSS-shield]: https://img.shields.io/badge/JOSS-coming%20soon-green?style=for-the-badge&logo=appveyor
 [JOSS-url]: https://www.google.com
 
 <!--
@@ -258,4 +257,4 @@ Use this space to list resources you find helpful and would like to give credit 
 [Bootstrap-url]: https://getbootstrap.com
 [JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
 [JQuery-url]: https://jquery.com 
---!>
+-->
