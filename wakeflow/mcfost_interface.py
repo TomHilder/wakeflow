@@ -1,7 +1,7 @@
-import os, sys, subprocess
+import os, sys, subprocess, pkg_resources
 
 try:
-    print("You may safely ignore these warnings.")
+    print("You may safely ignore these warnings:")
     from pymcfost.parameters        import Params
     from pymcfost.disc_structure    import Disc
 except ImportError:
@@ -12,8 +12,11 @@ def make_mcfost_parameter_file(parameters):
     # grab run parameters
     p = parameters
 
+    # get location of mcfost reference para file
+    mcfost_para_file = pkg_resources.resource_filename('wakeflow', 'data/ref3.0_3D.para')
+
     # setting up an mcfost parameters object
-    mp = Params("data/ref3.0_3D.para")
+    mp = Params(mcfost_para_file)
 
     # --- mcfost parameters that are not set by config.yaml
 

@@ -1,10 +1,10 @@
-import numpy                as np
-import sys
-import matplotlib.pyplot    as plt
+import sys, pkg_resources, tarfile
+import numpy                    as np
+import matplotlib.pyplot        as plt
 from scipy.interpolate      import RectBivariateSpline
 from mpl_toolkits.mplot3d   import Axes3D
 from matplotlib             import ticker, cm
-#from phantom_interface      import PhantomDump
+#from phantom_interface     import PhantomDump
 
 class LinearPerts():
     def __init__(self, parameters): #, ph_pixelmap_loc=None, ph_planet_loc=None):
@@ -17,9 +17,34 @@ class LinearPerts():
             # grab parameters object
             self.p = parameters
 
+            # get location of linear perturbations data files
+            pert_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations.npy')
+            mesh_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations_mesh.npy')
+
             # read perturbations from files
-            perts = np.load("data/linear_perturbations.npy")
-            mesh  = np.load("data/linear_perturbations_mesh.npy")
+            try:
+                perts = np.load(pert_loc)
+                mesh  = np.load(mesh_loc)
+
+            # in the case files have not been extracted from tarballs yet, extract them
+            except FileNotFoundError:
+
+                # open tarballs
+                pert_tar = tarfile.open(f"{pert_loc}.tar.gz")
+                mesh_tar = tarfile.open(f"{mesh_loc}.tar.gz")
+
+                # extract npy files
+                loc = pkg_resources.resource_filename('wakeflow', 'data')
+                pert_tar.extractall(loc)
+                mesh_tar.extractall(loc)
+
+                # close tarballs
+                pert_tar.close()
+                mesh_tar.close()
+
+                # read perturbations from files
+                perts = np.load(pert_loc)
+                mesh  = np.load(mesh_loc)
 
             # get perturbation arrays
             self.pert_v_r   = perts[0]

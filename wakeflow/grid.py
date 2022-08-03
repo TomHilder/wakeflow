@@ -1,11 +1,10 @@
 import numpy                as np
 import matplotlib.pyplot    as plt
-import pymcfost
 import astropy.io.fits      as fits
 import shutil               as sh
 from scipy.interpolate  import RectBivariateSpline
-from mcfost_interface   import read_mcfost_grid_data
 from matplotlib.colors  import LogNorm
+from .mcfost_interface  import read_mcfost_grid_data
 
 # NOTE: grid dimensions are (x,z,y) or (phi,z,r)
 
@@ -523,57 +522,6 @@ class Grid:
                 plt.savefig(f'{savedir}/rho_z{z_slice}.pdf')
             if show:
                 plt.show()
-
-            ## v_r
-            #plt.close("all")
-            ##_, ax = plt.subplots() #subplot_kw=dict(projection='polar'))
-            ##myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-vr_max, vmax=vr_max, cmap='RdBu')
-            ##myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-0.05, vmax=0.05, cmap='RdBu_r')
-            #plt.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_r[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-0.05, vmax=0.05, cmap='RdBu_r')
-            ##plt.colorbar()
-            ##ax.set_ylim(0, self.p.r_outer)
-            #plt.ylim(self.p.r_inner, self.p.r_outer)
-            ##plt.colorbar(myplot, label=r"radial velocity [km/s]")
-            #if save:
-            #    plt.savefig(f'{savedir}/vr_z{z_slice}.pdf')
-            #if show:
-            #    plt.show()
-
-            """
-            # v_phi
-            plt.close("all")
-            #_, ax = plt.subplots() #subplot_kw=dict(projection='polar'))
-            #myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_phi[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-vphi_max, vmax=vphi_max, cmap='RdBu')
-            #myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_phi[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-0.05, vmax=0.05, cmap='RdBu_r')
-            plt.contourf(self.PHI[:,0,:], self.R[:,0,:], self.v_phi[:,z_slice,:]/uvel, levels=contour_lvls, vmin=-0.05, vmax=0.05, cmap='RdBu')
-            #ax.set_ylim(0, self.p.r_outer)
-            plt.ylim(self.p.r_inner, self.p.r_outer)
-            #plt.colorbar()
-            #plt.colorbar(myplot)
-            plt.title(r"$v_{\phi}$")
-            plt.title(r"$v_{\phi}$")
-            if save:
-                plt.savefig(f'{savedir}/vphi_z{z_slice}.pdf')
-            if show:
-                plt.show()
-
-            # rho
-            plt.close("all")
-            _, ax = plt.subplots() #subplot_kw=dict(projection='polar'))
-            #myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.rho[:,z_slice,:], levels=contour_lvls, vmin=-rho_max, vmax=rho_max, cmap='RdBu')
-            #myplot = ax.contourf(self.PHI[:,0,:], self.R[:,0,:], self.rho[:,z_slice,:], levels=contour_lvls, vmin=-0.5, vmax=0.5, cmap='RdBu_r')
-            plt.contourf(self.PHI[:,0,:], self.R[:,0,:], self.rho[:,z_slice,:], levels=contour_lvls, vmin=-0.5, vmax=0.5, cmap='RdBu_r')
-            #ax.set_ylim(0, self.p.r_outer)
-            plt.ylim(self.p.r_inner, self.p.r_outer)
-            #plt.colorbar()
-            #plt.colorbar(myplot)
-            plt.title(r"$\rho$")
-            plt.title(r"$\rho$")
-            if save:
-                plt.savefig(f'{savedir}/rho_z{z_slice}.pdf')
-            if show:
-                plt.show()
-            """
         
         plt.close("all")
     

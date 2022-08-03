@@ -1,15 +1,6 @@
 import yaml, sys, os
-import shutil           as sh
-import numpy            as np
-
-#def warning(warning_msg):
-#
-#        statement = f"Warning: {warning_msg} Continue? [y/n]: "
-#        cont = input(statement)
-#        if cont != "y":
-#            return False
-#        else:
-#            return True
+import shutil   as sh
+import numpy    as np
 
 def load_config_file(config_file, default_config_dict=None):
 

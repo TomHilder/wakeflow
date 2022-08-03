@@ -1,11 +1,11 @@
 import time
-import numpy                as np
-import matplotlib.pyplot    as plt
+import numpy                    as np
+import matplotlib.pyplot        as plt
 from scipy.interpolate      import griddata
 from copy                   import copy
 from tqdm                   import tqdm
-from burgers                import solve_burgers
-from transformations        import phi_wake, Eta, mod2pi, t, t_integral, t_integrand, g, Lambda_fu, Lambda_fv, get_chi, get_dens_vel, plot_r_t
+from .burgers               import solve_burgers
+from .transformations       import Eta, t, Lambda_fu, Lambda_fv, get_chi, get_dens_vel, plot_r_t
 
 class NonLinearPerts():
     def __init__(self, parameters, Grid):

@@ -1,16 +1,19 @@
-import subprocess, os
-from setup               import load_config_file, run_setup
-from grid                import Grid
+import subprocess, os, pkg_resources
+from .model_setup         import load_config_file, run_setup
+from .grid                import Grid
+from .linear_perts        import LinearPerts
+from .non_linear_perts    import NonLinearPerts
 #from phantom_interface   import PhantomDump
-from linear_perts        import LinearPerts
-from non_linear_perts    import NonLinearPerts
 
 class WakeflowModel():
 
     def __init__(self):
-        
+
+        # find default config file
+        default_config_file = pkg_resources.resource_filename('wakeflow', 'data/default_config.yaml')
+
         # load default parameters
-        self.default_params = load_config_file("default_config.yaml")
+        self.default_params = load_config_file(default_config_file)
         print("Model initialised.")
 
     def configure(self, param_dict: dict = None, param_file: str = None) -> None:
