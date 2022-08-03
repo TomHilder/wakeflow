@@ -153,7 +153,7 @@ Contributions to `wakeflow` are welcome. If you would like to implement a new fe
 
 1. Install using the above installatio from source instructions
 2. Create your Feature Branch (`git checkout -b feature/NewFeature`)
-3. Commit your Changes (`git commit -m 'Add some NewFeature'`)
+3. Commit your Changes (`git commit -m 'Added some NewFeature'`)
 4. Push to the Branch (`git push origin feature/NewFeature`)
 5. Open a Pull Request
 
