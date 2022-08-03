@@ -7,15 +7,13 @@ try:
 except ImportError:
     pass
 
-
-
 def make_mcfost_parameter_file(parameters):
     
     # grab run parameters
     p = parameters
 
     # setting up an mcfost parameters object
-    mp = Params("mcfost/ref3.0_3D.para")
+    mp = Params("data/ref3.0_3D.para")
 
     # --- mcfost parameters that are not set by config.yaml
 

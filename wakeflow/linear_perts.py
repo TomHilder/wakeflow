@@ -18,8 +18,8 @@ class LinearPerts():
             self.p = parameters
 
             # read perturbations from files
-            perts = np.load("linear_perturbations.npy")
-            mesh  = np.load("linear_perturbations_mesh.npy")
+            perts = np.load("data/linear_perturbations.npy")
+            mesh  = np.load("data/linear_perturbations_mesh.npy")
 
             # get perturbation arrays
             self.pert_v_r   = perts[0]
