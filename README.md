@@ -151,7 +151,7 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 
 Contributions to `wakeflow` are welcome. If you would like to implement a new feature, please:
 
-1. Install using the above [From source instructions](https://github.com/TomHilder/wakeflow#from-source-github)
+1. Install using the above [From source instructions](#from-source-(GitHub))
 2. Create your Feature Branch (`git checkout -b feature/NewFeature`)
 3. Commit your Changes (`git commit -m 'Add some NewFeature'`)
 4. Push to the Branch (`git push origin feature/NewFeature`)
