@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wakeflow"
-version = "1.0.2"
+version = "1.0.3"
 description = "Generate and manipulate semi-analytic models of planet wakes"
 readme = "README.md"
 authors = [{ name = "Thomas Hilder", email = "tom.hilder.dlhp@gmail.com" }]
@@ -37,7 +37,7 @@ requires-python = ">=3.6"
 Homepage = "https://github.com/TomHilder/wakeflow"
 
 [tool.bumpver]
-current_version = "1.0.2"
+current_version = "1.0.3"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
