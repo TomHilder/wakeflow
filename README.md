@@ -213,7 +213,7 @@ Additional acknowledgements:
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [pypi-shield]: https://img.shields.io/badge/PyPI-1.0.2-brightgreen?style=for-the-badge&logo=appveyor
 [pypi-url]: https://pypi.org/project/wakeflow/
-[python-shield]: https://img.shields.io/badge/Python-3.8%2B-orange?style=for-the-badge&logo=appveyor
+[python-shield]: https://img.shields.io/badge/Python-3.6%2B-orange?style=for-the-badge&logo=appveyor
 [python-url]: https://www.python.org
 [license-shield]: https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=appveyor
 [license-url]: https://opensource.org/licenses/MIT
