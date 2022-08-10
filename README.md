@@ -65,7 +65,7 @@ Python packages:
 * `pyyaml`
 * `tqdm`
 * `pytest`
-* [`pymcfost](https://github.com/cpinte/pymcfost) (if interfacing with [MCFOST](https://github.com/cpinte/mcfost))
+* [`pymcfost`](https://github.com/cpinte/pymcfost) (if interfacing with [MCFOST](https://github.com/cpinte/mcfost))
 
 
 
