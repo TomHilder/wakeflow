@@ -20,7 +20,7 @@
 <!--  <h3 align="center">Wakeflow</h3> -->
 
   <p align="center">
-    Generate and manipulate semi-analytic models for planet wakes
+    Generate and manipulate semi-analytic models of planet wakes
     <br />
     <br />
     <a href="https://github.com/TomHilder/wakeflow"><strong>Quickstart tutorial »</strong></a>
