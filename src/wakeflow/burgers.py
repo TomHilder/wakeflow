@@ -116,6 +116,24 @@ def solve_burgers(
         # return CentralDifferenceFlux(uL,uR)
         return GodunovNumericalFlux(uL, uR)
 
+
+    def NumericalFluxVector(uL, uR):
+        FL = 0.5 * uL**2
+        FR = 0.5 * uR**2
+
+        # compute the shock speed
+        s = 0.5 * (uL + uR)
+
+        # See "GodunovNumericalFlux".
+        # This returns the same value without branching
+        # through the if statements.
+        return  (uL >= uR) * (
+            (s > 0.0) * FL + (s <= 0.0) * FR
+            ) + (uL < uR) * (
+                (uL > 0.0) * (FL) +
+                (uL <= 0.0) * (uR < 0.0) * FR
+            )
+
     # initialise
     lapsed_time = 0
     counter     = 0
@@ -134,10 +152,7 @@ def solve_burgers(
         lapsed_time += dt
 
         # compute the interior fluxes
-        for i in range(1, Neta):
-            uL   = solution[-1][i - 1]
-            uR   = solution[-1][i]
-            F[i] = NumericalFlux(uL, uR)
+        F[1:Neta] = NumericalFluxVector(solution[-1][0:-1], solution[-1][1:])
 
         # compute the left boundary flux
         if solution[-1][0] < 0.0:
