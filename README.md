@@ -73,7 +73,12 @@
 <!-- ABOUT THE PROJECT -->
 ## About
 
-About `wakeflow`.
+`wakeflow` is a Python package primarily for calculating tidally-induced perturbations resulting from a planet embedded in a gas disk. It is an implementation of both the linear theory for planet wake generation ([Goldreich and Tremaine 1979](https://ui.adsabs.harvard.edu/abs/1979ApJ...233..857G)) and the non-linear theory of wake propagation ([Rafikov 2002](https://ui.adsabs.harvard.edu/abs/2002ApJ...569..997R/abstract)) in 2D. `wakeflow` lets you generate these models by specifying disk and system properties as typically parameterised in the planet formation literature. It also contains additional tools allowing you to:
+* Visualise your results
+* Create 3D models under some assumptions
+* Interface directly with the radiative transfer code [MCFOST](https://github.com/cpinte/mcfost) to generate synthetic images of these models
+* (Planned) Rotate and project your models to create line-of-sight maps of velocity perturbations at some emitting layer
+* (Planned) Create analytic predictions for peak velocity maps as found in [Calcino et al. 2022](https://ui.adsabs.harvard.edu/abs/2022ApJ...929L..25C/abstract)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -138,9 +143,7 @@ Do not forget the dot (.) in the above command, as it tells `pip` to look in the
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
-
-_For more examples, please refer to the [Documentation](https://example.com)_
+Please refer to the [Quickstart tutorial](https://example.com) for the most typical usage of `wakeflow` including generating models and reading the results. Additional example of more advanced usage can be found in the [Documentation](https://example.com).
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
