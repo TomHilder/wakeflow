@@ -1,24 +1,12 @@
 <div id="top"></div>
 
 <!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
-
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
--->
-
 [![PyPI Package][pypi-shield]][pypi-url]
 [![Python][python-shield]][python-url]
 [![License][license-shield]][license-url]
 [![JOSS][JOSS-shield]][JOSS-url]
+
+
 
 <!-- PROJECT LOGO -->
 <br />
@@ -26,6 +14,8 @@
   <a href="https://github.com/TomHilder/wakeflow">
     <img src="https://github.com/TomHilder/wakeflow/blob/main/logo.png?raw=true" alt="Logo" width="500" height="500">
   </a>
+
+
 
 <!--  <h3 align="center">Wakeflow</h3> -->
 
@@ -40,34 +30,6 @@
   </p>
 </div>
 
-
-
-<!-- TABLE OF CONTENTS 
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
--->
 
 
 <!-- ABOUT THE PROJECT -->
@@ -143,7 +105,7 @@ Do not forget the dot (.) in the above command, as it tells `pip` to look in the
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Please refer to the [Quickstart tutorial](https://example.com) for the most typical usage of `wakeflow` including generating models and reading the results. Additional example of more advanced usage can be found in the [Documentation](https://example.com).
+Please refer to the [Quickstart tutorial](https://example.com) for the most typical usage of `wakeflow` including generating models and reading the results. Additional examples of more advanced usage can be found in the [Documentation](https://example.com).
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -222,23 +184,3 @@ Additional acknowledgements:
 [license-url]: https://opensource.org/licenses/MIT
 [JOSS-shield]: https://img.shields.io/badge/JOSS-coming%20soon-green?style=for-the-badge&logo=appveyor
 [JOSS-url]: https://example.com
-
-<!--
-[product-screenshot]: images/screenshot.png
-[Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
-[Next-url]: https://nextjs.org/
-[React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
-[React-url]: https://reactjs.org/
-[Vue.js]: https://img.shields.io/badge/Vue.js-35495E?style=for-the-badge&logo=vuedotjs&logoColor=4FC08D
-[Vue-url]: https://vuejs.org/
-[Angular.io]: https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white
-[Angular-url]: https://angular.io/
-[Svelte.dev]: https://img.shields.io/badge/Svelte-4A4A55?style=for-the-badge&logo=svelte&logoColor=FF3E00
-[Svelte-url]: https://svelte.dev/
-[Laravel.com]: https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white
-[Laravel-url]: https://laravel.com
-[Bootstrap.com]: https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white
-[Bootstrap-url]: https://getbootstrap.com
-[JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
-[JQuery-url]: https://jquery.com 
--->
