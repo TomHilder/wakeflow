@@ -1,3 +1,12 @@
+"""
+grid.py
+
+Written by Thomas Hilder
+Last modified 11.08.2022
+
+Contains the Grid class on which all Wakeflow models are run/stored.
+"""
+
 import numpy                as np
 import matplotlib.pyplot    as plt
 import astropy.io.fits      as fits

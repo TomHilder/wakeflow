@@ -1,3 +1,13 @@
+"""
+model_setup.py
+
+Written by Thomas Hilder
+Last modified 11.08.2022
+
+Contains the Parameters class responsible for storing the parameters used in a Wakeflow model. Additionally, contains
+functions used read in said parameters, check their validity, and create/replace the results directory.
+"""
+
 import yaml, sys, os
 import shutil   as sh
 import numpy    as np
@@ -219,7 +229,7 @@ class Parameters(Constants):
 
     def do_sanity_checks(self):
 
-        print("\n* Performing sanity checks on model parameters:")
+        print("\n* Performing checks on model parameters:")
 
         if self.m_planet != None:
             print(f"M_thermal = {self.m_thermal:.3f} M_Jup")

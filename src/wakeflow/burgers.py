@@ -1,3 +1,14 @@
+"""
+burgers.py
+
+Written by Thomas Hilder and Francesco Bollati
+Last modified 11.08.2022
+
+Contains the solve_burgers function used in the wake non-linear propagation calculations.
+
+Vectorisation of the NumericalFlux function by Jacob Vandenberg.
+"""
+
 import numpy                as np
 import matplotlib.pyplot    as plt
 
@@ -16,6 +27,11 @@ def solve_burgers(
     tf_fac
 ): 
     """ Solve eq. (10) Bollati et al. 2021
+
+    used by non_linear_perts.py to solve for inner and out
+    wake propagation in the disk, using the edge of the linear regime as an initial condition.
+    solve_burgers has been written specifically for the case it is needed here, and could not
+    easily be used as a generic burgers equation solver
     """
 
     # Eq. (15) Bollati et al. 2021

@@ -1,3 +1,12 @@
+"""
+wakeflow.py
+
+Written by Thomas Hilder
+Last modified 11.08.2022
+
+Contains the WakeflowModel class, intended for use by users to generate, configure and run models of planet wakes.
+"""
+
 import subprocess, os, pkg_resources
 from .model_setup         import load_config_file, run_setup
 from .grid                import Grid

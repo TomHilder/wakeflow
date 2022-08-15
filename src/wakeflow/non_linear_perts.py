@@ -1,3 +1,12 @@
+"""
+non_linear_perts.py
+
+Written by Thomas Hilder, Daniele Fasano and Francesco Bollati
+Last modified 11.08.2022
+
+Contains the NonLinearPerts class responsible for handling the non-linear regime of the models.
+"""
+
 import time
 import numpy                    as np
 import matplotlib.pyplot        as plt

@@ -1,3 +1,12 @@
+"""
+linear_perts.py
+
+Written by Thomas Hilder and Francesco Bollati
+Last modified 11.08.2022
+
+Contains the LinearPerts class responsible for handling the linear regime of the models.
+"""
+
 import sys, pkg_resources, tarfile
 import numpy                    as np
 import matplotlib.pyplot        as plt

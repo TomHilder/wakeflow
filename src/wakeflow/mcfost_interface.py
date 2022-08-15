@@ -1,3 +1,13 @@
+"""
+mcfost_interface.py
+
+Written by Thomas Hilder
+Last modified 11.08.2022
+
+Contains functions for generating MCFOST grid information and writing MCFOST parameter files.
+Requires pymcfost which may be found here: https://github.com/cpinte/pymcfost
+"""
+
 import os, sys, subprocess, pkg_resources
 
 try:
