@@ -7,7 +7,7 @@ Last modified 11.08.2022
 Contains the WakeflowModel class, intended for use by users to generate, configure and run models of planet wakes.
 """
 
-import subprocess, os, pkg_resources
+import subprocess, os
 from .model_setup         import load_config_file, run_setup
 from .grid                import Grid
 from .linear_perts        import LinearPerts
@@ -16,42 +16,129 @@ from .non_linear_perts    import NonLinearPerts
 
 class WakeflowModel():
 
-    def __init__(self):
+    def __init__(self) -> None:
 
-        # find default config file
-        default_config_file = pkg_resources.resource_filename('wakeflow', 'data/default_config.yaml')
+        ## find default config file
+        #default_config_file = pkg_resources.resource_filename('wakeflow', 'data/default_config.yaml')
+        #
+        ## load default parameters
+        #self.default_params = load_config_file(default_config_file)
 
-        # load default parameters
-        self.default_params = load_config_file(default_config_file)
         print("Model initialised.")
 
-    def configure(self, param_dict: dict = None, param_file: str = None) -> None:
+    def configure(
+        self,
+        name:                 str = "default_results_dir",
+        system:               str = "default_parent_dir",
+        m_star:             float = 1.0,
+        m_planet:           float = 0.1,
+        r_outer:            float = 500,
+        r_inner:            float = 100,
+        r_planet:           float = 250,
+        r_ref:              float = 250,
+        r_c:                float = 0,
+        q:                  float = 0.25,
+        p:                  float = 1.0,
+        hr:                 float = 0.10,
+        dens_ref:           float = 1.0,
+        cw_rotation:         bool = False,
+        type:               float = "cartesian",
+        n_x:                  int = 400,
+        n_y:                  int = 400,
+        n_r:                  int = 200,
+        n_phi:                int = 160,
+        n_z:                  int = 50,
+        r_log:                int = False,
+        make_midplane_plots: bool = True,
+        show_midplane_plots: bool = True,
+        dimensionless:       bool = False,
+        include_planet:      bool = True,
+        include_linear:      bool = True,
+        save_perturbations:  bool = True,
+        save_total:          bool = True,
+        write_FITS:          bool = False,
+        run_mcfost:          bool = False,
+        inclination:        float = -225,
+        PA:                 float = 45,
+        PAp:                float = 45,
+        temp_star:          float = 9250,
+        distance:           float = 101.5,
+        v_max:              float = 3.2,
+        n_v:                float = 40
+    ) -> None:
 
-        if param_dict is not None and param_file is not None:
-            raise Exception("Please use either dictionary or file to configure, not both")
+        # developer parameters
+        adiabatic_index         = 1.6666667
+        damping_malpha          = 0.0
+        CFL                     = 0.5
+        scale_box               = 1.0
+        scale_box_ang           = 1.0
+        tf_fac                  = 1.0
+        show_teta_debug_plots   = False
+        box_warp                = True
+        use_box_IC              = False  
 
-        # update parameters from provided dictionary
-        if param_dict is not None:
-            self.model_params = {**self.default_params, **param_dict}
-            print(f"Model configuration updated from dictionary: {param_dict}")
+        # generate dictionary for model parameters by grabbing all local variables
+        self.model_params = locals()
 
-        # read parameters from provided file
-        elif param_file is not None:
-            self.model_params = load_config_file(param_file, self.default_params)
-            print(f"Model configuration read from file: {param_file}")
+        # remove "self" item
+        del self.model_params["self"]
 
-        # leave parameters unchanged
-        else:
-            print("Model configuration left as default.")
+        # confirmation message
+        print("Model configured.")
+
+    def configure_from_file(
+        self,
+        param_file: str
+    ) -> None:
+
+        # generate default parameters
+        self.configure()
+        self.default_params = self.model_params
+        del self.model_params
+
+        # read in file to dictionary
+        self.model_params = load_config_file(param_file, self.default_params)
+
+        # confirmation message
+        print(f"Model configuration read from file: {param_file}")
+
+#    def configure_old(
+#        self, 
+#        param_dict: dict = None, 
+#        param_file: str = None, 
+#    ) -> None:
+#
+#        if param_dict is not None and param_file is not None:
+#            raise Exception("Please use either dictionary or file to configure, not both")
+#
+#        # update parameters from provided dictionary
+#        if param_dict is not None:
+#            self.model_params = {**self.default_params, **param_dict}
+#            print(f"Model configuration updated from dictionary: {param_dict}")
+#
+#        # read parameters from provided file
+#        elif param_file is not None:
+#            self.model_params = load_config_file(param_file, self.default_params)
+#            print(f"Model configuration read from file: {param_file}")
+#
+#        # leave parameters unchanged
+#        else:
+#            print("Model configuration left as default.")
 
     def run(self, overwrite: bool = False) -> None:
         
         # run setup
         try:
-            params = run_setup(self.model_params, default_param_dict=self.default_params, overwrite=overwrite)
-        except AttributeError:
-            self.model_params = self.default_params
-            params = run_setup(self.model_params, default_param_dict=self.default_params, overwrite=overwrite)
+            params = run_setup(self.model_params, overwrite=overwrite)
+        except ArithmeticError:
+            raise Exception("Model has not been configured.")
+
+        #try:
+        #    params = run_setup(self.model_params, default_param_dict=self.default_params, overwrite=overwrite)
+        #except AttributeError:
+        #    self.model_params = self.default_params
+        #    params = run_setup(self.model_params, default_param_dict=self.default_params, overwrite=overwrite)
 
         # grab list of planet masses
         if params.m_planet is not None:

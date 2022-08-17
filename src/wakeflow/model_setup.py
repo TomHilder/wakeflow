@@ -8,7 +8,7 @@ Contains the Parameters class responsible for storing the parameters used in a W
 functions used read in said parameters, check their validity, and create/replace the results directory.
 """
 
-import yaml, sys, os
+import yaml, os
 import shutil   as sh
 import numpy    as np
 
@@ -17,6 +17,7 @@ def load_config_file(config_file, default_config_dict=None):
     # read in config file as dictionary
     config_dict = yaml.load(open(config_file), Loader=yaml.FullLoader)
 
+    # check that config is valid
     if default_config_dict is not None:
         for key in config_dict.keys():
             if key not in default_config_dict.keys():
@@ -29,12 +30,12 @@ def write_config_file(config_dict, directory, filename):
     with open(f'{directory}{filename}', 'w') as yaml_file:
         yaml.dump(config_dict, yaml_file, default_flow_style=False)
 
-def run_setup(param_dict, default_param_dict=None, overwrite=False):
+def run_setup(param_dict, overwrite=False):
 
-    if default_param_dict is not None:
-        for key in param_dict.keys():
-            if key not in default_param_dict.keys():
-                raise Exception(f"{key} is not a valid parameter.")
+    #if default_param_dict is not None:
+    #    for key in param_dict.keys():
+    #        if key not in default_param_dict.keys():
+    #            raise Exception(f"{key} is not a valid parameter.")
 
     params = Parameters(param_dict)
 
