@@ -1,12 +1,8 @@
+# burgers.py
+# Written by Thomas Hilder and Francesco Bollati
+
 """
-burgers.py
-
-Written by Thomas Hilder and Francesco Bollati
-Last modified 11.08.2022
-
 Contains the solve_burgers function used in the wake non-linear propagation calculations.
-
-Vectorisation of the NumericalFlux function by Jacob Vandenberg.
 """
 
 import numpy                as np
@@ -97,13 +93,11 @@ def solve_burgers(
         return 0.5 * u**2
 
     # define the Central difference numerical flux---> ritorna la media aritmetica dei flux sx e dx passati
-    """
-    def CentralDifferenceFlux(uL,uR):
-        # compute physical fluxes at left and right state
-        FL = flux(uL)
-        FR = flux(uR)
-        return 0.5*(FL+FR)
-        """
+    #def CentralDifferenceFlux(uL,uR):
+    #    # compute physical fluxes at left and right state
+    #    FL = flux(uL)
+    #    FR = flux(uR)
+    #    return 0.5*(FL+FR)
 
     def GodunovNumericalFlux(uL, uR):
 
@@ -194,19 +188,17 @@ def solve_burgers(
     time     = np.array(time)
 
     # plot Fig. 3 Bollati et al. 2021
-    r"""
-    plt.plot(eta, solution[:,0], label = "$t=t_0+$ ")#+str(0*dt))
-    plt.plot(eta, solution[:,100], label = "$t=t_0+$ ")#+str(round(dt*Nt/10,2)))
-    plt.plot(eta, solution[:,200], label = "$t=t_0+$ ")#+str(round(dt*Nt/6,2)))
-    plt.plot(eta, solution[:,300], label = "$t=t_0+$ ")#+str(round(dt*Nt/3,2)))
-    plt.plot(eta, solution[:,400], label = "$t=t_0+$ ")#+str(round(T,2)))
-    plt.legend()
-    plt.xlabel(r"$\eta$")
-    plt.ylabel(r"$\chi(t,\eta)$")
-    plt.grid(True)
-    plt.title(r'$\chi$ "evolution" $r > r_p$')
-    plt.show()
-    """
+    #plt.plot(eta, solution[:,0], label = "$t=t_0+$ ")#+str(0*dt))
+    #plt.plot(eta, solution[:,100], label = "$t=t_0+$ ")#+str(round(dt*Nt/10,2)))
+    #plt.plot(eta, solution[:,200], label = "$t=t_0+$ ")#+str(round(dt*Nt/6,2)))
+    #plt.plot(eta, solution[:,300], label = "$t=t_0+$ ")#+str(round(dt*Nt/3,2)))
+    #plt.plot(eta, solution[:,400], label = "$t=t_0+$ ")#+str(round(T,2)))
+    #plt.legend()
+    #plt.xlabel(r"$\eta$")
+    #plt.ylabel(r"$\chi(t,\eta)$")
+    #plt.grid(True)
+    #plt.title(r'$\chi$ "evolution" $r > r_p$')
+    #plt.show()
 
     if show_teta: # combining linear and non-linear solution and plotting
 

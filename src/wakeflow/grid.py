@@ -1,9 +1,7 @@
+# grid.py
+# Written by Thomas Hilder
+
 """
-grid.py
-
-Written by Thomas Hilder
-Last modified 11.08.2022
-
 Contains the Grid class on which all Wakeflow models are run/stored.
 """
 
@@ -37,8 +35,6 @@ class Grid:
         self.rho   = None
 
     def make_grid(self):
-
-        #print(f"Constructing {self.p.grid_type} Grid ")
 
         # define disk height (not used for mcfost grid)
         self.height = self.p.hr * (self.p.r_outer / self.p.r_ref)**(0.5 - self.p.q) * self.p.r_outer
@@ -163,8 +159,6 @@ class Grid:
         self.v_phi *= -1
 
     def make_keplerian_disk(self):
-
-        #print("Making Keplerian disk ")
 
         # get radii
         if self.info["Type"] == "cartesian":
@@ -308,13 +302,11 @@ class Grid:
         self.rho += global_lin_rho[:, np.newaxis, :] * rho_background
 
         # plot for debugging
-        """
-        _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-        myplot = ax.contourf(PHI[:,0,:], R[:,0,:], global_lin_v_r, levels=300, cmap='RdBu')
-        ax.set_ylim(0, self.p.r_outer)
-        plt.colorbar(myplot)
-        plt.show()
-        """
+        #_, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+        #myplot = ax.contourf(PHI[:,0,:], R[:,0,:], global_lin_v_r, levels=300, cmap='RdBu')
+        #ax.set_ylim(0, self.p.r_outer)
+        #plt.colorbar(myplot)
+        #plt.show()
 
         # update grid info
         self.info["Contains"] = "linear perturbations"

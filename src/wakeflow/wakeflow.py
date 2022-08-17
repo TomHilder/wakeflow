@@ -1,9 +1,7 @@
+# wakeflow.py
+# Written by Thomas Hilder
+
 """
-wakeflow.py
-
-Written by Thomas Hilder
-Last modified 11.08.2022
-
 Contains the WakeflowModel class, intended for use by users to generate, configure and run models of planet wakes.
 """
 
@@ -17,12 +15,6 @@ from .non_linear_perts    import NonLinearPerts
 class WakeflowModel():
 
     def __init__(self) -> None:
-
-        ## find default config file
-        #default_config_file = pkg_resources.resource_filename('wakeflow', 'data/default_config.yaml')
-        #
-        ## load default parameters
-        #self.default_params = load_config_file(default_config_file)
 
         print("Model initialised.")
 
@@ -103,29 +95,6 @@ class WakeflowModel():
         # confirmation message
         print(f"Model configuration read from file: {param_file}")
 
-#    def configure_old(
-#        self, 
-#        param_dict: dict = None, 
-#        param_file: str = None, 
-#    ) -> None:
-#
-#        if param_dict is not None and param_file is not None:
-#            raise Exception("Please use either dictionary or file to configure, not both")
-#
-#        # update parameters from provided dictionary
-#        if param_dict is not None:
-#            self.model_params = {**self.default_params, **param_dict}
-#            print(f"Model configuration updated from dictionary: {param_dict}")
-#
-#        # read parameters from provided file
-#        elif param_file is not None:
-#            self.model_params = load_config_file(param_file, self.default_params)
-#            print(f"Model configuration read from file: {param_file}")
-#
-#        # leave parameters unchanged
-#        else:
-#            print("Model configuration left as default.")
-
     def run(self, overwrite: bool = False) -> None:
         
         # run setup
@@ -133,12 +102,6 @@ class WakeflowModel():
             params = run_setup(self.model_params, overwrite=overwrite)
         except ArithmeticError:
             raise Exception("Model has not been configured.")
-
-        #try:
-        #    params = run_setup(self.model_params, default_param_dict=self.default_params, overwrite=overwrite)
-        #except AttributeError:
-        #    self.model_params = self.default_params
-        #    params = run_setup(self.model_params, default_param_dict=self.default_params, overwrite=overwrite)
 
         # grab list of planet masses
         if params.m_planet is not None:

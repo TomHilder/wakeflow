@@ -1,9 +1,7 @@
+# model_setup.py
+# Written by Thomas Hilder
+
 """
-model_setup.py
-
-Written by Thomas Hilder
-Last modified 11.08.2022
-
 Contains the Parameters class responsible for storing the parameters used in a Wakeflow model. Additionally, contains
 functions used read in said parameters, check their validity, and create/replace the results directory.
 """
@@ -31,11 +29,6 @@ def write_config_file(config_dict, directory, filename):
         yaml.dump(config_dict, yaml_file, default_flow_style=False)
 
 def run_setup(param_dict, overwrite=False):
-
-    #if default_param_dict is not None:
-    #    for key in param_dict.keys():
-    #        if key not in default_param_dict.keys():
-    #            raise Exception(f"{key} is not a valid parameter.")
 
     params = Parameters(param_dict)
 
@@ -104,13 +97,8 @@ class Constants:
 class Parameters(Constants):
     def __init__(self, config):
 
-        #print(f"Reading parameters from {config_file} \n ")
-
         # inherit constants
         super().__init__()
-
-        # read in config file
-        #config = yaml.load(open(config_file), Loader=yaml.FullLoader)
 
         # run_info parameters
         self.name   = str(config["name"])
@@ -243,11 +231,6 @@ class Parameters(Constants):
         else:
             print(f"M_thermal = {self.m_thermal:.3f} M_Jup")
             print(f"M_planets = {np.array2string(np.array(self.m_planet_array)/self.m_thermal, precision=3, floatmode='fixed')} M_th")
-            
-            
-            #print(f"Planet masses are: ", end='')
-            #print(np.array(self.m_planet_array)/self.m_thermal, end='')
-            #print(" thermal masses")
 
             # check that planet mass does not exceed thermal mass
             exceed = False

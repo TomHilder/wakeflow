@@ -1,10 +1,8 @@
+# __init__.py
+# Written by Thomas Hilder
+
 """
-__init__.py
-
-Written by Thomas Hilder
-Last modified 11.08.2022
-
-This file gives users access to classes/functions contained in Wakeflow, and will be modified as functionality increases.
+Wakeflow allows users to generate and manipulate semi-analytic models of planet wakes.
 """
 
 # wakeflow package versionss

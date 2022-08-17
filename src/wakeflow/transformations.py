@@ -1,9 +1,7 @@
+# transformations.py
+# Written by Thomas Hilder and Francesco Bollati
+
 """
-transformations.py
-
-Written by Thomas Hilder and Francesco Bollati
-Last modified 11.08.2022
-
 Contains functions for mapping the results between (t,eta,chi) coordinates and physical coordinates, see Bollati et al. 2021 for details.
 """
 

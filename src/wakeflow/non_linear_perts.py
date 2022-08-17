@@ -1,9 +1,7 @@
+# non_linear_perts.py
+# Written by Thomas Hilder, Daniele Fasano and Francesco Bollati
+
 """
-non_linear_perts.py
-
-Written by Thomas Hilder, Daniele Fasano and Francesco Bollati
-Last modified 11.08.2022
-
 Contains the NonLinearPerts class responsible for handling the non-linear regime of the models.
 """
 
@@ -26,8 +24,6 @@ class NonLinearPerts():
         self.g = Grid
 
     def extract_ICs(self, LinearPerts, LinearPerts2=None):
-
-        #print('  * Extracting Burgers initial conditions from linear density perturbation ...')
         
         # grab linear perturbations object
         lp = LinearPerts
@@ -223,12 +219,12 @@ class NonLinearPerts():
                     t_lin[i,j] = t(r_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
 
             # Plot Chi vs eta when using eta transformation used for IC cut out
-            """
-            for i in range(0, len(linear_eta[0,:]), 10):
-                plt.plot(linear_eta[:,i], linear_profile[:,i])
-                plt.plot(eta_lin[:,i], linear_profile[:,i])
-                plt.show()
-            """
+
+            #for i in range(0, len(linear_eta[0,:]), 10):
+            #    plt.plot(linear_eta[:,i], linear_profile[:,i])
+            #    plt.plot(eta_lin[:,i], linear_profile[:,i])
+            #    plt.show()
+
             plt.plot(eta_lin[:,-1], chi0_rho, label="chi rho")
             plt.plot(eta_lin[:,-1], chi0_v_r, label="chi vr")
             plt.plot(eta_lin[:,-1], chi0_v_phi, label="chi vphi")
@@ -351,8 +347,6 @@ class NonLinearPerts():
             self.linear_t = 0
 
     def extract_ICs_ann(self, LinearPerts):
-        
-        #print('  * Extracting Burgers initial conditions from linear density perturbation ...')
         
         # grab linear perturbations object
         lp = LinearPerts
