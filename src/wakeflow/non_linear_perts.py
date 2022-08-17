@@ -14,6 +14,8 @@ from tqdm                   import tqdm
 from .burgers               import solve_burgers
 from .transformations       import Eta, t, Lambda_fu, Lambda_fv, get_chi, get_dens_vel, plot_r_t
 
+# NOTE: contents is not intended to be called directly by the user
+
 class NonLinearPerts():
     def __init__(self, parameters, Grid):
         

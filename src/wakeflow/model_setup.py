@@ -10,6 +10,8 @@ import yaml, os
 import shutil   as sh
 import numpy    as np
 
+# NOTE: contents is not intended to be called directly by the user
+
 def load_config_file(config_file, default_config_dict=None):
 
     # read in config file as dictionary
@@ -134,7 +136,7 @@ class Parameters(Constants):
         self.PAp         = float(config["PAp"])
 
         # grid parameters
-        self.grid_type = str (config["type"])
+        self.grid_type = str (config["grid_type"])
         self.n_x       = int (config["n_x"])
         self.n_y       = int (config["n_y"])
         self.n_r       = int (config["n_r"])

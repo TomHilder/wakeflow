@@ -10,6 +10,8 @@ import matplotlib.pyplot        as plt
 from scipy.integrate        import quad
 from scipy.interpolate      import RectBivariateSpline
 
+# NOTE: contents is not intended to be called directly by the user
+
 def phi_wake(r, Rp, hr, q, cw): 
     """Eq. (4) Bollati et al. 2021
     """

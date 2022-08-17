@@ -13,6 +13,8 @@ from scipy.interpolate      import RectBivariateSpline
 #from matplotlib            import ticker, cm
 #from phantom_interface     import PhantomDump
 
+# NOTE: contents is not intended to be called directly by the user
+
 class LinearPerts():
     def __init__(self, parameters): #, ph_pixelmap_loc=None, ph_planet_loc=None):
 

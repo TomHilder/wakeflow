@@ -6,15 +6,38 @@ Contains the WakeflowModel class, intended for use by users to generate, configu
 """
 
 import subprocess, os
-from .model_setup         import load_config_file, run_setup
+from .model_setup         import load_config_file, run_setup, Parameters
 from .grid                import Grid
 from .linear_perts        import LinearPerts
 from .non_linear_perts    import NonLinearPerts
 #from phantom_interface   import PhantomDump
 
 class WakeflowModel():
+    """
+    Model object allowing you to configure, generate and save planet wake model results.
+
+    Attributes
+    ----------
+    model_params : dict
+        Dictionary containing the parameters to be used in the model as specified by the user.
+    default_params : dict
+        Dictionary containing the default WakeflowModel parameters.
+
+    Methods
+    -------
+    configure
+        Allows the user to specify the model parameters directly.
+    configure_from_file
+        Allows the user to read the model parameters from a .yaml file.
+    run
+        Generates the model results.
+    _run_wakeflow
+        Internal use, assembles model by calling other parts of Wakeflow sequentially.
+    """
 
     def __init__(self) -> None:
+        """ Instantiate model
+        """
 
         print("Model initialised.")
 
@@ -34,13 +57,13 @@ class WakeflowModel():
         hr:                 float = 0.10,
         dens_ref:           float = 1.0,
         cw_rotation:         bool = False,
-        type:               float = "cartesian",
+        grid_type:          float = "cartesian",
         n_x:                  int = 400,
         n_y:                  int = 400,
         n_r:                  int = 200,
         n_phi:                int = 160,
         n_z:                  int = 50,
-        r_log:                int = False,
+        r_log:               bool = False,
         make_midplane_plots: bool = True,
         show_midplane_plots: bool = True,
         dimensionless:       bool = False,
@@ -58,17 +81,98 @@ class WakeflowModel():
         v_max:              float = 3.2,
         n_v:                float = 40
     ) -> None:
+        """
+        Configure the model according the specifications by the user.
 
-        # developer parameters
-        adiabatic_index         = 1.6666667
-        damping_malpha          = 0.0
-        CFL                     = 0.5
-        scale_box               = 1.0
-        scale_box_ang           = 1.0
-        tf_fac                  = 1.0
-        show_teta_debug_plots   = False
-        box_warp                = True
-        use_box_IC              = False  
+        Parameters
+        ----------
+        name : str 
+            results are saved a directory called name.
+        system : str
+            name of parent directory of results.
+        m_star : float
+            central star mass in solar masses.
+        m_planet : float
+            planet mass in Jupiter masses. Can also give list(float) to run multiple planet masses.
+        r_outer : float
+            outer disk radius in au.
+        r_inner : float
+            inner disk radius in au.
+        r_planet : float
+            orbital radius of planet in au.
+        r_ref : float
+            reference radius r_ref in au.
+        r_c : float
+            critical radius r_c in au, used for exponentially tapered density profile. ignored if set to 0.
+        q : float 
+            q index for sound speed profile, defined as c_s \propto r^{-q}.
+        p : float
+            p index for density profile (NOT surface density), defined as rho \propto r^{-p} or \propto r^{-p}*\exp{-r/r_c}^{2-p}.
+        hr : float 
+            disk aspect ratio at r_ref.
+        dens_ref : float
+            density at r_ref in g/cm^3.
+        cw_rotation : bool
+            clockwise disk rotation (True) or anticlockwise disk rotation (False).
+        grid_type : float
+            grid type, either "cylindrical" or "cartesian" or "mcfost". Must choose "mcfost" to write a .FITS file.
+        n_x : int
+            number of grid points in x.
+        n_y : int
+            number of grid points in y.
+        n_r : int
+            number of grid points in radius.
+        n_phi : int
+            number of grid points in azimuth.
+        n_z : int
+            number of grid points in z.
+        r_log : bool
+            True for logarithmically spaced radii, False for linear. Ignored for "mcfost" grid type.
+        make_midplane_plots : bool
+            Create midplane plots of density and velocity perturbations?
+        show_midplane_plots : bool
+            Display midplane plots of density and velocity perturbations to user?
+        dimensionless : bool
+            True for dimensionless results otherwise False.
+        include_planet : bool
+            Include the planet-induced perturbations? Set to False to generate unperturbed disk.
+        include_linear : bool
+            Include the results from the linear regime?
+        save_perturbations : bool
+            Save the perturbations?
+        save_total : bool
+            Save the totals (perturbations + background disk)?
+        write_FITS : bool
+            Generate a .FITS file to run in MCFOST? Requires "mcfost" grid type.
+        run_mcfost : bool
+            Call MCFOST to generate line emission cubes on results, requires write_FITS=True.
+        inclination : float
+            Inclination in degrees for MCFOST.
+        PA : float
+            Position angle in degrees for MCFOST.
+        PAp : float
+            Planet position in degrees angle for MCFOST.
+        temp_star : float
+            Star temperature in Kelvin for MCFOST.
+        distance : float
+            System distance in parsecs for MCFOST.
+        v_max : float
+            maxmimum magnitude velocity for cube in MCFOST.
+        n_v : float
+            number of velocity channels for MCFOST.
+        """
+
+        # developer parameters, intentionally not easy to change as can very easily invalidate results
+        # 
+        adiabatic_index         = 1.6666667     # adiabatic index
+        damping_malpha          = 0.0           # artificial damping NOT IMPLEMENTED
+        CFL                     = 0.5           # Courant stability factor (require <0.5)
+        scale_box               = 1.0           # linear box length scale factor in radial direction
+        scale_box_ang           = 1.0           # linear box length scale factor in angular direction
+        tf_fac                  = 1.0           # scale factor for t coordinate where self-similar solution is used
+        show_teta_debug_plots   = False         # show (t,eta,chi) space developer plots
+        box_warp                = True          # interpret y coordinate of linear regime as arc length, or truly vertical? True (default) for former
+        use_box_IC              = False         # use only part of linear regime in box as initial condition for non-linear evolution
 
         # generate dictionary for model parameters by grabbing all local variables
         self.model_params = locals()
@@ -83,6 +187,14 @@ class WakeflowModel():
         self,
         param_file: str
     ) -> None:
+        """
+        Configure the model by reading in .yaml file provided by user.
+
+        Parameters
+        ----------
+        param_file : str 
+            path to .yaml file provided by user specifying run parameters.
+        """
 
         # generate default parameters
         self.configure()
@@ -96,6 +208,14 @@ class WakeflowModel():
         print(f"Model configuration read from file: {param_file}")
 
     def run(self, overwrite: bool = False) -> None:
+        """
+        Generate results for model, requires user to have called either configure or configure_from_file first.
+
+        Parameters
+        ----------
+        overwrite : bool 
+            Overwrite previous results with identical name?
+        """
         
         # run setup
         try:
@@ -130,7 +250,15 @@ class WakeflowModel():
 
         print("\n* Done!")
 
-    def _run_wakeflow(self, params):
+    def _run_wakeflow(self, params: Parameters) -> None:
+        """
+        Internal use method for generating the planet wake by calling other parts of Wakeflow.
+
+        Parameters
+        ----------
+        params : Parameters 
+            Paramaters object specfiying options for the model to be generated.
+        """
 
         print("Generating unperturbed background disk")
 

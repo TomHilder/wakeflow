@@ -19,7 +19,7 @@ dens_ref: 1                                  # rho at R0 in g/cm^3, unimportant 
 cw_rotation: False                           # clockwise (True) or anticlockwise results (False)
 
 #grid:
-type: "cartesian"                            # "cylindrical" or "cartesian" or "mcfost" -- must choose mcfost to write fits file
+grid_type: "cartesian"                       # "cylindrical" or "cartesian" or "mcfost" -- must choose mcfost to write fits file
 n_x: 400                                     # number of x grid points
 n_y: 400                                     # number of y grid points
 n_r: 200                                     # number of r grid points

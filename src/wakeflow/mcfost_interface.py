@@ -9,11 +9,12 @@ Requires pymcfost which may be found here: https://github.com/cpinte/pymcfost
 import os, sys, subprocess, pkg_resources
 
 try:
-    print("You may safely ignore these warnings:")
     from pymcfost.parameters        import Params
     from pymcfost.disc_structure    import Disc
 except ImportError:
     pass
+
+# NOTE: contents is not intended to be called directly by the user
 
 def make_mcfost_parameter_file(parameters):
     

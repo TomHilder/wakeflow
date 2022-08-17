@@ -8,6 +8,9 @@ Contains the solve_burgers function used in the wake non-linear propagation calc
 import numpy                as np
 import matplotlib.pyplot    as plt
 
+# NOTE: contents is not intended to be called directly by the user
+
+# function to solve burgers equation as part of the non-linear propagation of the planet wake
 def solve_burgers(
     eta, 
     profile, 
@@ -22,17 +25,11 @@ def solve_burgers(
     show_teta, 
     tf_fac
 ): 
-    """ Solve eq. (10) Bollati et al. 2021
-
-    used by non_linear_perts.py to solve for inner and out
-    wake propagation in the disk, using the edge of the linear regime as an initial condition.
-    solve_burgers has been written specifically for the case it is needed here, and could not
-    easily be used as a generic burgers equation solver
+    """Propagate the wake in (t,eta,chi) space by solving Eq. 10 from Bollati et al. 2021. using Godunov scheme. Internal use.
     """
 
     # Eq. (15) Bollati et al. 2021
     profile = profile * (gamma + 1) * beta_p / 2**(3 / 4)
-
     deta    = eta[1] - eta[0]
 
     # time required to develop N-wave for betap = 1
@@ -88,45 +85,7 @@ def solve_burgers(
     # define flux vector
     F = np.zeros(Neta + 1) #there is a flux at each cell edge
 
-    # define the flux function of Burgers equation
-    def flux(u):
-        return 0.5 * u**2
-
-    # define the Central difference numerical flux---> ritorna la media aritmetica dei flux sx e dx passati
-    #def CentralDifferenceFlux(uL,uR):
-    #    # compute physical fluxes at left and right state
-    #    FL = flux(uL)
-    #    FR = flux(uR)
-    #    return 0.5*(FL+FR)
-
-    def GodunovNumericalFlux(uL, uR):
-
-        # compute physical fluxes at left and right state
-        FL = flux(uL)
-        FR = flux(uR)
-
-        # compute the shock speed
-        s = 0.5 * (uL + uR)
-
-        # from Toro's book
-        if (uL >= uR):
-            if (s > 0.0):
-                return FL
-            else:
-                return FR
-        else:
-            if (uL > 0.0):
-                return FL
-            elif (uR < 0.0):
-                return FR
-            else:
-                return 0.0
-
-    def NumericalFlux(uL, uR):
-        # return CentralDifferenceFlux(uL,uR)
-        return GodunovNumericalFlux(uL, uR)
-
-
+    # calculate flux according to Godunov scheme, vectorised
     def NumericalFluxVector(uL, uR):
         FL = 0.5 * uL**2
         FR = 0.5 * uR**2
@@ -171,7 +130,7 @@ def solve_burgers(
             uL = solution[0][0]
 
         uR   = solution[-1][0]
-        F[0] = NumericalFlux(uL, uR)
+        F[0] = NumericalFluxVector(uL, uR)
 
         # compute the right boundary flux
         if solution[-1][Neta - 1] > 0.0:
@@ -180,7 +139,7 @@ def solve_burgers(
             uR = solution[0][Neta - 1]
 
         uL      = solution[-1][Neta - 1]
-        F[Neta] = NumericalFlux(uL, uR)
+        F[Neta] = NumericalFluxVector(uL, uR)
 
         solution.append(solution[-1][0:Neta] - dt / deta * (F[1:Neta+1] - F[0:Neta]))
 
@@ -219,14 +178,6 @@ def solve_burgers(
         ax.set_ylabel('$\eta$')
         #plt.savefig("teta_badjoin.pdf")
         plt.show()
-    
-    #Nt = np.shape(solution)[1]
-
-    #solution_inner = np.zeros(solution.shape) # solution for r < Rp (and disc rotating counterclockwise)
-    #eta_inner = - eta[::-1]
-    #for i in range(Neta):
-    #    for j in range(Nt):
-    #        solution_inner[i,j] = solution[int(Neta-1-i),j]
 
     # The following will put the linear solution into returned solution for Chi
     if False:
