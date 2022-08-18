@@ -9,19 +9,20 @@ import numpy                as np
 import matplotlib.pyplot    as plt
 import astropy.io.fits      as fits
 import shutil               as sh
-from typing             import Self
 from scipy.interpolate  import RectBivariateSpline
 from matplotlib.colors  import LogNorm
-from .mcfost_interface  import read_mcfost_grid_data
-from .model_setup       import Parameters
-from .linear_perts      import LinearPerts
-from .non_linear_perts  import NonLinearPerts
+from .mcfost_interface  import _read_mcfost_grid_data
+from .model_setup       import _Parameters
+from .linear_perts      import _LinearPerts
+from .non_linear_perts  import _NonLinearPerts
 
-# NOTE: contents is not intended to be called directly by the user
+# NOTE: contents are intended mostly for internal use and should not really be accessed by users, but I have still provided
+# documentation in the case that advanced users want to mess around with any of it.
 
-class Grid:
+# a class to store numpy arrays of results together, so that nothing gets confused. Also stores information and parameters
+class _Grid:
     """
-    Grid object to generate and store Wakeflow results on.
+    Grid object to generate and store Wakeflow results on. 
 
     Note that all 3D arrays in the Grid have dimensions (x,z,y) or (phi,z,r).
 
@@ -102,12 +103,13 @@ class Grid:
         Write .npy files containing results.
     """
 
-    def __init__(self, parameters : Parameters) -> None:
+    # instantiate the class
+    def __init__(self, parameters : _Parameters) -> None:
         """
         Parameters
         ----------
-        parameters : Parameters
-            Parameters object (model_setup.py) containing parameters to be used for the Grid.
+        parameters : _Parameters
+            _Parameters object (model_setup.py) containing parameters to be used for the Grid.
         """
 
         # grab parameters object
@@ -126,7 +128,8 @@ class Grid:
         self.v_phi = None 
         self.rho   = None
 
-    def make_grid(self) -> None:
+    # setup the grids with chosen geometry
+    def _make_grid(self) -> None:
         """Generates grid according to parameters in self.p and define disk scale height
         """
 
@@ -135,17 +138,18 @@ class Grid:
 
         # make cartesian grid
         if self.p.grid_type == "cartesian":
-            self.make_cartesian_grid()
+            self._make_cartesian_grid()
 
         # make cylindrical grid
         elif self.p.grid_type == "cylindrical":
-            self.make_cylindrical_grid()
+            self._make_cylindrical_grid()
 
         # make mcfost grid
         elif self.p.grid_type == "mcfost":
-            self.make_mcfost_grid()
+            self._make_mcfost_grid()
 
-    def make_cartesian_grid(self) -> None:
+    # setup Cartesian grid
+    def _make_cartesian_grid(self) -> None:
         """Generates a Cartesian grid using parameters in self.p
         """
         
@@ -162,7 +166,8 @@ class Grid:
         self.info["Size"][1] = self.z_xy.shape[0]
         self.info["Size"][2] = self.y.shape   [0]
 
-    def make_cylindrical_grid(self) -> None:
+    # setup Cylindrical grid
+    def _make_cylindrical_grid(self) -> None:
         """Generates a Cylindrical grid using parameters in self.p
         """
          
@@ -184,12 +189,13 @@ class Grid:
         self.info["Size"][2] = self.r.shape  [0]
         self.info["Log_r"]   = self.p.r_log
 
-    def make_mcfost_grid(self) -> None:
+    # setup Mcfost grid by calling Mcfost to generate the geometry, and then read in that geometry
+    def _make_mcfost_grid(self) -> None:
         """Generates an Mcfost grid using parameters in self.p
         """
 
         # generate mcfost grid data from specifications in parameter file
-        self.R, self.Z = read_mcfost_grid_data(self.p)
+        self.R, self.Z = _read_mcfost_grid_data(self.p)
         self.r         = self.R[0, 0, :]
         self.phi       = np.linspace(0, 2*np.pi, self.p.n_phi)
 
@@ -205,7 +211,8 @@ class Grid:
         self.info["Size"][2] = self.r.shape  [0]
         self.info["Log_r"]   = "mcfost"
 
-    def get_r_phi_coords(self) -> None:
+    # we need (r,phi) points for the Cartesian grid points in order to do transformations
+    def _get_r_phi_coords(self) -> None:
         """Find the (r,phi) coordinates corresponding to each (x,y) point
         """
 
@@ -216,7 +223,8 @@ class Grid:
         self.R_xy   = np.sqrt   (self.X**2 + self.Y**2)
         self.PHI_xy = np.arctan2(self.Y,     self.X)
 
-    def remove_dimensions(self, scale_dens : bool = False) -> None:
+    # if the user desires dimensionless results, needs to be used last after all grids are merged
+    def _remove_dimensions(self, scale_dens : bool = False) -> None:
         """Convert results to be dimensionless by appropriate scaling; should be used last
 
         Parameters
@@ -257,7 +265,9 @@ class Grid:
         if scale_dens:
             self.rho /= self.p.rho_ref
 
-    def flip_results(self) -> None:
+    # results for clockwise rotation are the same under a reflection about the y-axis, or phi-axis, 
+    # as well as a reverse of sign in v_phi
+    def _flip_results(self) -> None:
         """Go from counterclockwise to clockwise rotation; should be used last
         """
 
@@ -271,13 +281,14 @@ class Grid:
 
         self.v_phi *= -1
 
-    def make_keplerian_disk(self) -> None:
+    # setup the unperturbed background disk onto which the perturbations will be mapped
+    def _make_keplerian_disk(self) -> None:
         """Generate unperturbed accretion disk in vertical hydrostatic equilibrium, according to parameters in self.p
         """
 
         # get radii
         if self.info["Type"] == "cartesian":
-            self.get_r_phi_coords()
+            self._get_r_phi_coords()
             r = self.R_xy
             z = self.Z_xy
         else:
@@ -333,7 +344,8 @@ class Grid:
         # update grid info
         self.info["Contains"] = "Keplerian velocity field, unperturbed density"
 
-    def make_empty_disk(self) -> None:
+    # fill the grids with zeros, used for storing perturbations on separate grids before mapping onto background
+    def _make_empty_disk(self) -> None:
         """fill v_r, v_phi and rho with zeros
         """
 
@@ -345,7 +357,8 @@ class Grid:
         # update grid info
         self.info["Contains"] = "Zeros"
 
-    def add_linear_perturbations(self, LinearPerts : LinearPerts, rho_background : Self.rho) -> None:
+    # add results from the linear regime nearby the planet onto the grid
+    def _add_linear_perturbations(self, LinearPerts : _LinearPerts, rho_background : "_Grid.rho") -> None:
         """Add results from the linear regime, stored in LinearPerts object, to the grid
 
         Parameters
@@ -371,7 +384,7 @@ class Grid:
 
         # find (phi, r) grid for either Cartesian or Cylindrical global grid
         if self.info["Type"] == "cartesian":
-            self.get_r_phi_coords()
+            self._get_r_phi_coords()
             R, PHI = self.R_xy, self.PHI_xy
         else:
             R, PHI = self.R, self.PHI
@@ -438,7 +451,8 @@ class Grid:
         # update grid info
         self.info["Contains"] = "linear perturbations"
 
-    def add_non_linear_perturbations(self, NonLinearPerts : NonLinearPerts, rho_background : Self.rho) -> None:
+    # add results from non-linear wake propagation onto the grid
+    def _add_non_linear_perturbations(self, NonLinearPerts : _NonLinearPerts, rho_background : "_Grid.rho") -> None:
         """Add results from the non-linear regime, stored in NonLinearPerts object, to the grid
 
         Parameters
@@ -461,7 +475,7 @@ class Grid:
         # Define scale height array
         if self.info["Type"] == "cartesian":
 
-            self.get_r_phi_coords()
+            self._get_r_phi_coords()
             r = self.R_xy
             z = self.Z_xy
 
@@ -506,13 +520,14 @@ class Grid:
 #        # update grid info
 #        self.info["Contains"] = "phantom mid-plane extrapolated to 3D"
 
-    def merge_grids(self, grid_to_merge : Self):
-        """Merge v_r, v_phi and rho from two compatible Grid objects (ie. with the same Parameters)
+    # take multiple grid objects and merge them if the geometry is the same, simply by adding the components
+    def _merge_grids(self, grid_to_merge : "_Grid") -> None:
+        """Merge v_r, v_phi and rho from two compatible Grid objects (ie. with the same _Parameters)
         """
 
         g = grid_to_merge
 
-        if type(grid_to_merge) is not Grid:
+        if type(grid_to_merge) is not _Grid:
             raise Exception("merge_grids must be given a Grid object. Merging failed.")
         
         if self.p != g.p:
@@ -541,7 +556,9 @@ class Grid:
 #        # merge data arrays
 #        self.rho = g.rho
 
-    def show_disk2D(
+    # create plots of a constant z slice, mostly used for debugging but also shows midplane results to user
+    # if they set show_midplane_plots=True
+    def _show_disk2D(
         self, 
         z_slice :    int, 
         show :      bool = False, 
@@ -698,7 +715,9 @@ class Grid:
         
         plt.close("all")
     
-    def write_fits_file(self) -> None:
+    # create a fits file from the results formatted specifically for use in MCFOST in combination with
+    # the .para file written by pymcfost through wakeflow
+    def _write_fits_file(self) -> None:
         """Write a .FITS file from the results compatible with being run in MCFOST
         """
 
@@ -762,7 +781,8 @@ class Grid:
                 f"{self.p.system}/{self.p.name}/{self.p.m_planet}Mj/mcfost.para"
             )
     
-    def save_results(self, label : str, printed : str) -> None:
+    # simply saves the grid and densities/velocities to .npy files so that they may be read later
+    def _save_results(self, label : str, printed : str) -> None:
         """ Save results and grid to .npy files in results directory
 
         Parameters

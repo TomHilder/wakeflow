@@ -6,12 +6,13 @@ Contains the WakeflowModel class, intended for use by users to generate, configu
 """
 
 import subprocess, os
-from .model_setup         import load_config_file, run_setup, Parameters
-from .grid                import Grid
-from .linear_perts        import LinearPerts
-from .non_linear_perts    import NonLinearPerts
+from .model_setup         import _load_config_file, _run_setup, _Parameters
+from .grid                import _Grid
+from .linear_perts        import _LinearPerts
+from .non_linear_perts    import _NonLinearPerts
 #from phantom_interface   import PhantomDump
 
+# class for use by the user to interact with Wakeflow
 class WakeflowModel():
     """
     Model object allowing you to configure, generate and save planet wake model results.
@@ -35,12 +36,14 @@ class WakeflowModel():
         Internal use, assembles model by calling other parts of Wakeflow sequentially.
     """
 
+    # instantiate class
     def __init__(self) -> None:
         """ Instantiate model
         """
 
         print("Model initialised.")
 
+    # set the parameters for the model
     def configure(
         self,
         name:                 str = "default_results_dir",
@@ -164,15 +167,15 @@ class WakeflowModel():
 
         # developer parameters, intentionally not easy to change as can very easily invalidate results
         # 
-        adiabatic_index         = 1.6666667     # adiabatic index
-        damping_malpha          = 0.0           # artificial damping NOT IMPLEMENTED
-        CFL                     = 0.5           # Courant stability factor (require <0.5)
-        scale_box               = 1.0           # linear box length scale factor in radial direction
-        scale_box_ang           = 1.0           # linear box length scale factor in angular direction
-        tf_fac                  = 1.0           # scale factor for t coordinate where self-similar solution is used
-        show_teta_debug_plots   = False         # show (t,eta,chi) space developer plots
-        box_warp                = True          # interpret y coordinate of linear regime as arc length, or truly vertical? True (default) for former
-        use_box_IC              = False         # use only part of linear regime in box as initial condition for non-linear evolution
+        adiabatic_index       = 1.6666667     # adiabatic index
+        damping_malpha        = 0.0           # artificial damping NOT IMPLEMENTED
+        CFL                   = 0.5           # Courant stability factor (require <0.5)
+        scale_box             = 1.0           # linear box length scale factor in radial direction
+        scale_box_ang         = 1.0           # linear box length scale factor in angular direction
+        tf_fac                = 1.0           # scale factor for t coordinate where self-similar solution is used
+        show_teta_debug_plots = False         # show (t,eta,chi) space developer plots
+        box_warp              = True          # interpret y coordinate of linear regime as arc length, or truly vertical? True (default) for former
+        use_box_IC            = False         # use only part of linear regime in box as initial condition for non-linear evolution
 
         # generate dictionary for model parameters by grabbing all local variables
         self.model_params = locals()
@@ -183,6 +186,7 @@ class WakeflowModel():
         # confirmation message
         print("Model configured.")
 
+    # set the parameters for the model by handing a .yaml file
     def configure_from_file(
         self,
         param_file: str
@@ -202,11 +206,12 @@ class WakeflowModel():
         del self.model_params
 
         # read in file to dictionary
-        self.model_params = load_config_file(param_file, self.default_params)
+        self.model_params = _load_config_file(param_file, self.default_params)
 
         # confirmation message
         print(f"Model configuration read from file: {param_file}")
 
+    # generate the model using the configuration specified by the user
     def run(self, overwrite: bool = False) -> None:
         """
         Generate results for model, requires user to have called either configure or configure_from_file first.
@@ -219,7 +224,7 @@ class WakeflowModel():
         
         # run setup
         try:
-            params = run_setup(self.model_params, overwrite=overwrite)
+            params = _run_setup(self.model_params, overwrite=overwrite)
         except ArithmeticError:
             raise Exception("Model has not been configured.")
 
@@ -250,7 +255,9 @@ class WakeflowModel():
 
         print("\n* Done!")
 
-    def _run_wakeflow(self, params: Parameters) -> None:
+    # internal method that is called by self.run to generate the results for a specific set of parameters
+    # may be called more than once if the user has specified multiple planet masses
+    def _run_wakeflow(self, params: _Parameters) -> None:
         """
         Internal use method for generating the planet wake by calling other parts of Wakeflow.
 
@@ -263,75 +270,75 @@ class WakeflowModel():
         print("Generating unperturbed background disk")
 
         # make empty grid for unperturbed disk
-        grid_background = Grid(params)
-        grid_background.make_grid()
+        grid_background = _Grid(params)
+        grid_background._make_grid()
 
         # fill grid with Keplerian, power law disk
-        grid_background.make_keplerian_disk()
+        grid_background._make_keplerian_disk()
 
         if params.use_planet:
 
             print("Extracting linear perturbations nearby planet")
 
             # make empty grid for linear perturbations
-            grid_lin_perts = Grid(params)
-            grid_lin_perts.make_grid()
-            grid_lin_perts.make_empty_disk()
+            grid_lin_perts = _Grid(params)
+            grid_lin_perts._make_grid()
+            grid_lin_perts._make_empty_disk()
 
             # extract linear perturbations from file
-            lin_perts = LinearPerts(params)
-            lin_perts.cut_box_annulus_segment()
+            lin_perts = _LinearPerts(params)
+            lin_perts._cut_box_annulus_segment()
 
             # add the linear perturbations onto grid
-            grid_lin_perts.add_linear_perturbations(lin_perts, grid_background.rho)
+            grid_lin_perts._add_linear_perturbations(lin_perts, grid_background.rho)
 
             # make empty grid for non-linear perturbations
-            grid_nonlin_perts = Grid(params)
-            grid_nonlin_perts.make_grid()
-            grid_nonlin_perts.make_empty_disk()
+            grid_nonlin_perts = _Grid(params)
+            grid_nonlin_perts._make_grid()
+            grid_nonlin_perts._make_empty_disk()
 
             # initialise non-linear perturbations
-            nonlin_perts = NonLinearPerts(params, grid_nonlin_perts)
+            nonlin_perts = _NonLinearPerts(params, grid_nonlin_perts)
 
             # extract initial condition from the linear perturbations
-            nonlin_perts.extract_ICs(lin_perts)
+            nonlin_perts._extract_ICs(lin_perts)
             if params.use_box_IC:
-                nonlin_perts.extract_ICs_ann(lin_perts)
+                nonlin_perts._extract_ICs_ann(lin_perts)
 
             # solve for non-linear perturbations
-            nonlin_perts.get_non_linear_perts()
+            nonlin_perts._get_non_linear_perts()
 
             # add non-linear perturbations to grid
-            grid_nonlin_perts.add_non_linear_perturbations(nonlin_perts, grid_background.rho)
+            grid_nonlin_perts._add_non_linear_perturbations(nonlin_perts, grid_background.rho)
 
             # merge grids for result
             if params.include_linear:
-                grid_background.merge_grids(grid_lin_perts)
+                grid_background._merge_grids(grid_lin_perts)
 
             # merge grids for results
-            grid_background.merge_grids(grid_nonlin_perts)
+            grid_background._merge_grids(grid_nonlin_perts)
 
             # flip results if desired
             if params.user_cw_rotation:
-                grid_background.flip_results()
+                grid_background._flip_results()
 
             # merge grids to save or plot perturbations
             if params.make_midplane_plots or params.save_perturbations:
 
                 if params.include_linear:
-                    grid_nonlin_perts.merge_grids(grid_lin_perts)
+                    grid_nonlin_perts._merge_grids(grid_lin_perts)
 
                 # flip results if desired
                 if params.user_cw_rotation:
-                    grid_nonlin_perts.flip_results()
+                    grid_nonlin_perts._flip_results()
 
                 if params.dimensionless:
-                    grid_nonlin_perts.remove_dimensions()
+                    grid_nonlin_perts._remove_dimensions()
 
                 if params.make_midplane_plots:
                     if params.show_midplane_plots:
                         print('\n* Displaying results:')
-                    grid_nonlin_perts.show_disk2D(0, show=params.show_midplane_plots, save=True, dimless=params.dimensionless)
+                    grid_nonlin_perts._show_disk2D(0, show=params.show_midplane_plots, save=True, dimless=params.dimensionless)
 
         if params.save_perturbations or params.save_total:
             print("\n* Saving results:")
@@ -339,16 +346,16 @@ class WakeflowModel():
         # save perturbations
         if params.save_perturbations:
             #print("Saving perturbations to file")
-            grid_nonlin_perts.save_results("delta", "Perturbations")
+            grid_nonlin_perts._save_results("delta", "Perturbations")
 
         if params.dimensionless:
-            grid_background.remove_dimensions(scale_dens=True)
+            grid_background._remove_dimensions(scale_dens=True)
 
         # save perts + background
         if params.save_total:
             #print("Saving background + perturbations to file")
-            grid_background.save_results("total", "Total        ")
+            grid_background._save_results("total", "Total        ")
 
         # write fits file
         if params.write_FITS:
-            grid_background.write_fits_file()
+            grid_background._write_fits_file()

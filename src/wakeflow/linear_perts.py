@@ -13,9 +13,9 @@ from scipy.interpolate      import RectBivariateSpline
 #from matplotlib            import ticker, cm
 #from phantom_interface     import PhantomDump
 
-# NOTE: contents is not intended to be called directly by the user
+# NOTE: contents are intended for internal use and should not be directly accessed by users
 
-class LinearPerts():
+class _LinearPerts():
     def __init__(self, parameters): #, ph_pixelmap_loc=None, ph_planet_loc=None):
 
         #if ph_pixelmap_loc is None:
@@ -161,7 +161,7 @@ class LinearPerts():
 #            plt.show()
 
 
-    def cut_box_square(self):
+    def _cut_box_square(self):
         """This is only used in the case where you want to plot the linear solution in t,eta space"""
 
         # box size (in units of Hill radius), with default scale_box = 1. (note for conversions that self.p.l = 1 Hill radius in cgs)
@@ -211,7 +211,7 @@ class LinearPerts():
         self.y_sq  = self.p.l * y_cut
         
 
-    def cut_box_annulus_segment(self):
+    def _cut_box_annulus_segment(self):
 
         # box size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs
         x_box_size = 2*self.p.scale_box

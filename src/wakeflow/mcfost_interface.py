@@ -14,9 +14,9 @@ try:
 except ImportError:
     pass
 
-# NOTE: contents is not intended to be called directly by the user
+# NOTE: contents are intended for internal use and should not be directly accessed by users
 
-def make_mcfost_parameter_file(parameters):
+def _make_mcfost_parameter_file(parameters):
     
     # grab run parameters
     p = parameters
@@ -81,7 +81,7 @@ def make_mcfost_parameter_file(parameters):
     # write mcfost parameter file
     mp.writeto(f"{p.system}/{p.name}/mcfost/mcfost_{p.name}.para")
 
-def make_mcfost_grid_data(parameters):
+def _make_mcfost_grid_data(parameters):
 
     print("Generating MCFOST grid data...")
 
@@ -97,7 +97,7 @@ def make_mcfost_grid_data(parameters):
 
     print("Done")
 
-def read_mcfost_grid_data(parameters):
+def _read_mcfost_grid_data(parameters):
 
     # grab run parameters
     p = parameters
@@ -112,11 +112,11 @@ def read_mcfost_grid_data(parameters):
 
     return r, z
 
-class HiddenPrints:
-    def __enter__(self):
-        self._original_stdout = sys.stdout
-        sys.stdout = open(os.devnull, 'w')
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        sys.stdout.close()
-        sys.stdout = self._original_stdout
+#class HiddenPrints:
+#    def __enter__(self):
+#        self._original_stdout = sys.stdout
+#        sys.stdout = open(os.devnull, 'w')
+#
+#    def __exit__(self, exc_type, exc_val, exc_tb):
+#        sys.stdout.close()
+#        sys.stdout = self._original_stdout

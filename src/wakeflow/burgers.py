@@ -8,10 +8,10 @@ Contains the solve_burgers function used in the wake non-linear propagation calc
 import numpy                as np
 import matplotlib.pyplot    as plt
 
-# NOTE: contents is not intended to be called directly by the user
+# NOTE: contents are intended for internal use and should not be directly accessed by users
 
 # function to solve burgers equation as part of the non-linear propagation of the planet wake
-def solve_burgers(
+def _solve_burgers(
     eta, 
     profile, 
     gamma, 
@@ -86,7 +86,10 @@ def solve_burgers(
     F = np.zeros(Neta + 1) #there is a flux at each cell edge
 
     # calculate flux according to Godunov scheme, vectorised
-    def NumericalFluxVector(uL, uR):
+    def _NumericalFluxVector(uL, uR):
+        """Calculate flux according to the Godunov scheme.
+        """
+
         FL = 0.5 * uL**2
         FR = 0.5 * uR**2
 
@@ -121,7 +124,7 @@ def solve_burgers(
         lapsed_time += dt
 
         # compute the interior fluxes
-        F[1:Neta] = NumericalFluxVector(solution[-1][0:-1], solution[-1][1:])
+        F[1:Neta] = _NumericalFluxVector(solution[-1][0:-1], solution[-1][1:])
 
         # compute the left boundary flux
         if solution[-1][0] < 0.0:
@@ -130,7 +133,7 @@ def solve_burgers(
             uL = solution[0][0]
 
         uR   = solution[-1][0]
-        F[0] = NumericalFluxVector(uL, uR)
+        F[0] = _NumericalFluxVector(uL, uR)
 
         # compute the right boundary flux
         if solution[-1][Neta - 1] > 0.0:
@@ -139,7 +142,7 @@ def solve_burgers(
             uR = solution[0][Neta - 1]
 
         uL      = solution[-1][Neta - 1]
-        F[Neta] = NumericalFluxVector(uL, uR)
+        F[Neta] = _NumericalFluxVector(uL, uR)
 
         solution.append(solution[-1][0:Neta] - dt / deta * (F[1:Neta+1] - F[0:Neta]))
 

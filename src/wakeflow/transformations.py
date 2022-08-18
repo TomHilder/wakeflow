@@ -10,19 +10,19 @@ import matplotlib.pyplot        as plt
 from scipy.integrate        import quad
 from scipy.interpolate      import RectBivariateSpline
 
-# NOTE: contents is not intended to be called directly by the user
+# NOTE: contents are intended for internal use and should not be directly accessed by users
 
-def phi_wake(r, Rp, hr, q, cw): 
+def _phi_wake(r, Rp, hr, q, cw): 
     """Eq. (4) Bollati et al. 2021
     """
     rr = r / Rp
     return -cw * np.sign(r - Rp) * (1 / hr) * (rr**(q - 0.5) / (q - 0.5) - rr**(q + 1) / (q + 1) - 3 / ((2 * q - 1) * (q + 1)))
 
-def Eta(r, phi, Rp, hr, q, cw):
+def _Eta(r, phi, Rp, hr, q, cw):
     """Eq. (14) Bollati et al. 2021
     """
     coeff    = 1.5 / hr
-    phi_w    = mod2pi(phi_wake(r, Rp, hr, q, cw))
+    phi_w    = _mod2pi(_phi_wake(r, Rp, hr, q, cw))
     deltaphi = phi - phi_w
 
     if deltaphi > np.pi:
@@ -33,7 +33,7 @@ def Eta(r, phi, Rp, hr, q, cw):
 
     return coeff * deltaphi
 
-def mod2pi(phi):
+def _mod2pi(phi):
 
     if phi >= 0:
         return phi % (2 * np.pi) 
@@ -48,22 +48,22 @@ def mod2pi(phi):
             
         return -resto + 2 * np.pi
 
-def t_integrand(x, q, p):
+def _t_integrand(x, q, p):
     rho = 5 * q + p
     w   = rho / 2 - 11 / 4
     return np.abs(1 - x**(1.5))**(1.5) * x**w
 
-def t_integral(up, q, p):
-    return  quad(t_integrand, 1, up, args=(q,p))[0]
+def _t_integral(up, q, p):
+    return  quad(_t_integrand, 1, up, args=(q,p))[0]
 
-def t(r, Rp, hr, q, p):
+def _t(r, Rp, hr, q, p):
     """Equation (43) Rafikov 2002    (Eq. 13 Bollati et al. 2021)
     """
-    module_integral = np.abs(t_integral(r / Rp, q, p))
+    module_integral = np.abs(_t_integral(r / Rp, q, p))
     coeff = 3 * hr**(-5 / 2) / (2**(5 / 4))
     return coeff * module_integral
 
-def g(r, Rp, hr, q, p):
+def _g(r, Rp, hr, q, p):
     """Equation (12) Bollati et al. 2021
     """
     coeff = 2**0.25 * hr**0.5
@@ -71,7 +71,7 @@ def g(r, Rp, hr, q, p):
     term2 = np.abs((r / Rp)**(-1.5) - 1)**(-0.5)
     return coeff * term1 * term2
 
-def Lambda_fu(r, Rp, csp, hr, gamma, q, p):
+def _Lambda_fu(r, Rp, csp, hr, gamma, q, p):
     """Eq. (28) Bollati et al. 2021
     """
     coeff = 2**0.75 * csp * hr**(-0.5) / (gamma + 1)
@@ -79,7 +79,7 @@ def Lambda_fu(r, Rp, csp, hr, gamma, q, p):
     term2 = (r / Rp)**(0.5 * (p + q - 1))
     return coeff * term1 * term2
 
-def Lambda_fv(r, Rp, csp, hr, gamma, q, p):
+def _Lambda_fv(r, Rp, csp, hr, gamma, q, p):
     """Eq. (29) Bollati et al. 2021
     """
     coeff = 2**0.75 * csp * hr**0.5 / (gamma + 1)
@@ -87,7 +87,7 @@ def Lambda_fv(r, Rp, csp, hr, gamma, q, p):
     term2 = (r / Rp)**(0.5 * (p - q - 3))
     return coeff * term1 * term2
 
-def get_chi(
+def _get_chi(
     pphi, 
     rr, 
     time_outer,
@@ -118,8 +118,8 @@ def get_chi(
         return 0.
 
     # change coordinates of the grid point (rr,pphi) to (t1,eta1)
-    t1 = t(rr, Rp, hr, q, p)
-    eta1 = Eta(rr, pphi, Rp, hr, q, cw)
+    t1 = _t(rr, Rp, hr, q, p)
+    eta1 = _Eta(rr, pphi, Rp, hr, q, cw)
 
     # If the point is in the outer disk, use the outer wake solution
     if (rr - Rp) > 0:
@@ -187,22 +187,22 @@ def get_chi(
     
     return Chi
 
-def get_dens_vel(rr, Chi, gamma ,Rp, cw, csp, hr, q, p):
-    g1  = g(rr, Rp, hr, q, p)
+def _get_dens_vel(rr, Chi, gamma ,Rp, cw, csp, hr, q, p):
+    g1  = _g(rr, Rp, hr, q, p)
     dnl = Chi * 2 / (g1 * (gamma + 1))     # Eq. (11) Bollati et al. 2021
 
-    Lfu = Lambda_fu(rr, Rp, csp, hr, gamma, q, p)
-    Lfv = Lambda_fv(rr, Rp, csp, hr, gamma, q, p)
+    Lfu = _Lambda_fu(rr, Rp, csp, hr, gamma, q, p)
+    Lfv = _Lambda_fv(rr, Rp, csp, hr, gamma, q, p)
     unl = np.sign(rr - Rp) * Lfu * Chi           # Eq. (23) Bollati et al. 2021
     vnl = np.sign(rr - Rp) * Lfv * Chi * (-cw) # Eq. (24) Bollati et al. 2021 (the sign of v is reversed if we change cw)
 
     return dnl, unl, vnl
 
-def plot_r_t(params):
+def _plot_r_t(params):
     r = np.linspace(params.r_planet, params.r_outer, 1000)
     times = []
     for rad in r:
-        times.append(t(rad, params.r_planet, params.hr_planet, params.q, params.p))
+        times.append(_t(rad, params.r_planet, params.hr_planet, params.q, params.p))
 
     plt.plot(r, times)
     plt.xlabel("r")

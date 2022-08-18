@@ -11,12 +11,12 @@ import matplotlib.pyplot        as plt
 from scipy.interpolate      import griddata
 from copy                   import copy
 from tqdm                   import tqdm
-from .burgers               import solve_burgers
-from .transformations       import Eta, t, Lambda_fu, Lambda_fv, get_chi, get_dens_vel, plot_r_t
+from .burgers               import _solve_burgers
+from .transformations       import _Eta, _t, _Lambda_fu, _Lambda_fv, _get_chi, _get_dens_vel, _plot_r_t
 
-# NOTE: contents is not intended to be called directly by the user
+# NOTE: contents are intended for internal use and should not be directly accessed by users
 
-class NonLinearPerts():
+class _NonLinearPerts():
     def __init__(self, parameters, Grid):
         
         # grab parameters object
@@ -25,7 +25,7 @@ class NonLinearPerts():
         # should be handed an empty grid with the correct dimensions and grid setup used in the run
         self.g = Grid
 
-    def extract_ICs(self, LinearPerts, LinearPerts2=None):
+    def _extract_ICs(self, LinearPerts, LinearPerts2=None):
         
         # grab linear perturbations object
         lp = LinearPerts
@@ -86,12 +86,12 @@ class NonLinearPerts():
         for i in range(len(y_rest)):
 
             # eta for outer and inner
-            eta_IC_outer[i] = Eta(r_IC_outer[i], phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
-            eta_IC_inner[i] = Eta(r_IC_inner[i], phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
+            eta_IC_outer[i] = _Eta(r_IC_outer[i], phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
+            eta_IC_inner[i] = _Eta(r_IC_inner[i], phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
 
             # t for outer and inner
-            t_IC_outer[i] = t(r_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
-            t_IC_inner[i] = t(r_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
+            t_IC_outer[i] = _t(r_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
+            t_IC_inner[i] = _t(r_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
 
         # restrict eta range using eta_max
         self.eta_outer = eta_IC_outer[(eta_IC_outer > -eta_max) & (eta_IC_outer < eta_max)]
@@ -109,7 +109,7 @@ class NonLinearPerts():
             y_cut = y[(y - y_match > -eta_max) & (y - y_match < eta_max)]
             self.profile = profile[(y - y_match > -eta_max) & (y - y_match < eta_max)]
             self.eta = y_cut - y_match*np.ones(len(y_cut))
-            self.t0 = t(self.p.r_planet + self.p.l * lp.x_box, self.p.r_planet, self.p.hr, self.p.q, self.p.p)
+            self.t0 = _t(self.p.r_planet + self.p.l * lp.x_box, self.p.r_planet, self.p.hr, self.p.q, self.p.p)
 
         # set eta_tilde for outer wake:
         for i in range(len(self.eta_outer)):
@@ -160,10 +160,10 @@ class NonLinearPerts():
         if self.p.show_teta_debug_plots:
 
             # run square box cut
-            lp.cut_box_square()
+            lp._cut_box_square()
 
             # plot r, t
-            plot_r_t(self.p)
+            _plot_r_t(self.p)
 
             # Local Cartesian grid which the linear solution was calculated on, meshgrid version
             X, Y = np.meshgrid(lp.x_cut,lp.y_cut)
@@ -197,8 +197,8 @@ class NonLinearPerts():
             linear_profile_v_r   = v_unit * (lp.cut_v_r[:,x_len:index]   / np.sqrt(np.abs(X_rest))) ###
             linear_profile_v_phi = v_unit * (lp.cut_v_phi[:,x_len:index] / np.sqrt(np.abs(X_rest))) ###
             R0  = np.sqrt((Rp + l*X_rest[:,-1])**2 + (l*Y_rest[:,-1])**2)
-            Lfu = Lambda_fu(R0, Rp, csp, hr, gamma, q, p)
-            Lfv = Lambda_fv(R0, Rp, csp, hr, gamma, q, p)
+            Lfu = _Lambda_fu(R0, Rp, csp, hr, gamma, q, p)
+            Lfv = _Lambda_fv(R0, Rp, csp, hr, gamma, q, p)
             chi0_v_r = linear_profile_v_r[:,-1] / (np.sign(R0 - Rp) * Lfu)
             chi0_v_phi = linear_profile_v_phi[:,-1] / (np.sign(R0 - Rp) * Lfv * (-cw))
 
@@ -217,8 +217,8 @@ class NonLinearPerts():
             for i in range(eta_lin.shape[0]):
                 #print(str(i))
                 for j in range(eta_lin.shape[1]):
-                    eta_lin[i,j] = Eta(r_glob[i,j], phi_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, -self.p.a_cw)
-                    t_lin[i,j] = t(r_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
+                    eta_lin[i,j] = _Eta(r_glob[i,j], phi_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, -self.p.a_cw)
+                    t_lin[i,j] = _t(r_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
 
             # Plot Chi vs eta when using eta transformation used for IC cut out
 
@@ -282,8 +282,8 @@ class NonLinearPerts():
 
                 # perform transformation
                 for i in range(len(y_rest)):
-                    eta_IC[i] = Eta(r_IC[i], phi_IC[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
-                    t_IC[i] = t(r_IC[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
+                    eta_IC[i] = _Eta(r_IC[i], phi_IC[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
+                    t_IC[i] = _t(r_IC[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
 
                 # restrict eta range using eta_max
                 self.eta2 = eta_IC[(eta_IC > -eta_max) & (eta_IC < eta_max)]
@@ -348,7 +348,7 @@ class NonLinearPerts():
             self.linear_solution = 0
             self.linear_t = 0
 
-    def extract_ICs_ann(self, LinearPerts):
+    def _extract_ICs_ann(self, LinearPerts):
         
         # grab linear perturbations object
         lp = LinearPerts
@@ -376,8 +376,8 @@ class NonLinearPerts():
          plt.show()
 
         # find t points
-        t_IC_outer = t(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
-        t_IC_inner = t(r_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
+        t_IC_outer = _t(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
+        t_IC_inner = _t(r_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
 
         # initialise arrays for corresponding eta points
         self.eta_outer = np.zeros(len(phi_IC_outer))
@@ -385,8 +385,8 @@ class NonLinearPerts():
 
         # perform transformation
         for i in range(len(phi_IC_outer)):
-            self.eta_outer[i] = Eta(r_IC_outer, phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
-            self.eta_inner[i] = Eta(r_IC_inner, phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
+            self.eta_outer[i] = _Eta(r_IC_outer, phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
+            self.eta_inner[i] = _Eta(r_IC_inner, phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
 
         # set t0
         self.t0_outer = t_IC_outer
@@ -433,7 +433,7 @@ class NonLinearPerts():
         self.linear_solution = 0
         self.linear_t = 0
 
-    def get_non_linear_perts(self):
+    def _get_non_linear_perts(self):
 
         beta_p = self.p.m_planet / self.p.m_thermal
 
@@ -441,7 +441,7 @@ class NonLinearPerts():
 
         timer_0 = time.perf_counter()
 
-        time_outer, eta_outer, solution_outer = solve_burgers(
+        time_outer, eta_outer, solution_outer = _solve_burgers(
             self.eta_outer, 
             self.profile_outer, 
             self.p.gamma, 
@@ -464,7 +464,7 @@ class NonLinearPerts():
 
         timer_0 = time.perf_counter()
 
-        time_inner, eta_inner, solution_inner = solve_burgers(
+        time_inner, eta_inner, solution_inner = _solve_burgers(
             self.eta_inner, 
             -self.profile_inner,     # this minus sign is intended
             self.p.gamma, 
@@ -528,7 +528,7 @@ class NonLinearPerts():
                     rr = np.sqrt(xx**2 + yy**2)
                     pphi = np.arctan2(yy,xx)
 
-                    Chi = get_chi(
+                    Chi = _get_chi(
                         pphi, 
                         rr, 
                         time_outer,
@@ -555,7 +555,7 @@ class NonLinearPerts():
                     )
 
                     # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
-                    dnl[i,j], unl[i,j], vnl[i,j] = get_dens_vel(
+                    dnl[i,j], unl[i,j], vnl[i,j] = _get_dens_vel(
                         rr, 
                         Chi, 
                         gamma, 
@@ -583,7 +583,7 @@ class NonLinearPerts():
 
                     pphi = phi[j]
 
-                    Chi = get_chi(
+                    Chi = _get_chi(
                         pphi, 
                         rr, 
                         time_outer,
@@ -610,7 +610,7 @@ class NonLinearPerts():
                     )
 
                     # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
-                    dnl[j,i], unl[j,i], vnl[j,i] = get_dens_vel(
+                    dnl[j,i], unl[j,i], vnl[j,i] = _get_dens_vel(
                         rr, 
                         Chi, 
                         gamma, 

@@ -10,9 +10,9 @@ import yaml, os
 import shutil   as sh
 import numpy    as np
 
-# NOTE: contents is not intended to be called directly by the user
+# NOTE: contents are intended for internal use and should not be directly accessed by users
 
-def load_config_file(config_file, default_config_dict=None):
+def _load_config_file(config_file, default_config_dict=None):
 
     # read in config file as dictionary
     config_dict = yaml.load(open(config_file), Loader=yaml.FullLoader)
@@ -25,17 +25,17 @@ def load_config_file(config_file, default_config_dict=None):
 
     return config_dict
 
-def write_config_file(config_dict, directory, filename):
+def _write_config_file(config_dict, directory, filename):
 
     with open(f'{directory}{filename}', 'w') as yaml_file:
         yaml.dump(config_dict, yaml_file, default_flow_style=False)
 
-def run_setup(param_dict, overwrite=False):
+def _run_setup(param_dict, overwrite=False):
 
-    params = Parameters(param_dict)
+    params = _Parameters(param_dict)
 
     # do sanity checks and exit if not passed
-    params.do_sanity_checks()
+    params._do_sanity_checks()
 
     # check if directory for system exists, if not create it
     system_path = f"{params.system}/"
@@ -64,27 +64,27 @@ def run_setup(param_dict, overwrite=False):
         os.makedirs(individual_result_path, exist_ok=True)
 
     # write parameters used to a file in the results directory
-    write_config_file(param_dict, results_path, f"{params.name}_config.yaml")
+    _write_config_file(param_dict, results_path, f"{params.name}_config.yaml")
 
     # run mcfost grid setup if needed
     if params.run_mcfost or params.grid_type == "mcfost":
 
-        from .mcfost_interface import make_mcfost_parameter_file, make_mcfost_grid_data
+        from .mcfost_interface import _make_mcfost_parameter_file, _make_mcfost_grid_data
 
         # make directory for mcfost outputs
         mcfost_path = f"{params.system}/{params.name}/mcfost/"
         os.makedirs(mcfost_path, exist_ok=True)
 
         # generate mcfost parameter file
-        make_mcfost_parameter_file(params)
+        _make_mcfost_parameter_file(params)
 
         # generate mcfost grid data to run analytics on
-        make_mcfost_grid_data(params)
+        _make_mcfost_grid_data(params)
 
     return params
 
 
-class Constants:
+class _Constants:
     def __init__(self):
 
         from astropy import constants as c
@@ -96,7 +96,7 @@ class Constants:
         self.au         = c.au.cgs.value
 
 
-class Parameters(Constants):
+class _Parameters(_Constants):
     def __init__(self, config):
 
         # inherit constants
@@ -218,7 +218,7 @@ class Parameters(Constants):
             self.U_time = np.sqrt(self.U_len**3 / (self.G_const * self.U_mass)) 
             self.U_vel  = self.U_len / self.U_time / 1E5
 
-    def do_sanity_checks(self):
+    def _do_sanity_checks(self):
 
         print("\n* Performing checks on model parameters:")
 
