@@ -173,6 +173,8 @@ class _NonLinearPerts():
 
         if self.p.show_teta_debug_plots:
 
+            index = index_outer
+
             # run square box cut
             lp._cut_box_square()
 
