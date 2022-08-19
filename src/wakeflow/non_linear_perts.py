@@ -13,11 +13,22 @@ from copy                   import copy
 from tqdm                   import tqdm
 from .burgers               import _solve_burgers
 from .transformations       import _Eta, _t, _Lambda_fu, _Lambda_fv, _get_chi, _get_dens_vel, _plot_r_t
+from .model_setup           import _Parameters
+from .grid                  import _Grid
+from .linear_perts          import _LinearPerts
 
 # NOTE: contents are intended for internal use and should not be directly accessed by users
 
+# class for non-linear regime results
 class _NonLinearPerts():
-    def __init__(self, parameters, Grid):
+    """
+    Class to store the results from the non-linear wake propagation away from the planet.
+    """
+
+    # intialise object, give params and grid
+    def __init__(self, parameters: _Parameters, Grid: _Grid) -> None:
+        """Setup _NonLinearPerts object by grabbing _Parameters and _Grid objects.
+        """
         
         # grab parameters object
         self.p = parameters
@@ -25,7 +36,10 @@ class _NonLinearPerts():
         # should be handed an empty grid with the correct dimensions and grid setup used in the run
         self.g = Grid
 
-    def _extract_ICs(self, LinearPerts, LinearPerts2=None):
+    # get initial conditions for burgers eqn
+    def _extract_ICs(self, LinearPerts: _LinearPerts) -> None:
+        """Extract the initial conditions for the non-linear evolution from the linear regime.
+        """
         
         # grab linear perturbations object
         lp = LinearPerts
@@ -244,59 +258,6 @@ class _NonLinearPerts():
                 np.save(f"{name}_eta.npy", eta_save)
                 np.save(f"{name}_chi.npy", chi_save)
 
-            if LinearPerts2 is not None: # for plotting analytics vs Phantom ICs
-
-                # grab linear perturbations object
-                lpa = LinearPerts2
-
-                # grid
-                x = lpa.X[0,:]
-                y = lpa.Y[:,0]
-
-                # set maximum eta - semi-width of the support of the azimuthal profile of the linear density perturbation
-                eta_max = 25 
-
-                # find the index in the x grid corresponding to the edge of the box
-                index = np.argmin(np.abs(x - lpa.x_box))
-
-                # extract profile of constant x along edge of box for initial condition
-                profile = lpa.pert_rho[:,index] / np.sqrt(np.abs(lpa.x_box))
-
-                # restrict y range --- I'm not sure why this is necessary but it is. Larger values will cause issues
-                y_max = 30
-                profile_rest = profile[(y > -y_max) & (y < y_max)]
-                y_rest = y[(y > -y_max) & (y < y_max)]
-
-                # ## find eta points for IC profile using full transformation
-                # find local cart. coords in real units
-                x_IC = self.p.l * np.repeat(lpa.x_box, len(y_rest))
-                y_IC = self.p.l * y_rest
-
-                # find corresponding global polar coords
-                r_IC = x_IC + self.p.r_planet
-                phi_IC = y_IC / self.p.r_planet
-
-                # initialise arrays for corresponding t,eta points
-                eta_IC = np.zeros(len(y_rest))
-                t_IC = np.zeros(len(y_rest))
-
-                # perform transformation
-                for i in range(len(y_rest)):
-                    eta_IC[i] = _Eta(r_IC[i], phi_IC[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
-                    t_IC[i] = _t(r_IC[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
-
-                # restrict eta range using eta_max
-                self.eta2 = eta_IC[(eta_IC > -eta_max) & (eta_IC < eta_max)]
-                self.profile2 = profile_rest[(eta_IC > -eta_max) & (eta_IC < eta_max)]
-
-                plt.plot(self.eta, self.profile, ls='--', label="simulation")
-                plt.plot(self.eta2, self.profile2, ls='--', label="analytics")
-                plt.legend(loc="lower left")
-                plt.xlim(-10,10)
-                plt.xlabel('$\eta$')
-                plt.ylabel('$\chi$')
-                plt.show()
-
             plt.plot(linear_eta[:,-1], linear_profile[:,-1], label="Approximate $\eta$ transformation")
             plt.plot(eta_lin[:,-1], linear_profile[:,-1], label="Full $\eta$ transformation")
             plt.plot(self.eta, self.profile, ls='--', label="Actual IC used")
@@ -348,7 +309,12 @@ class _NonLinearPerts():
             self.linear_solution = 0
             self.linear_t = 0
 
-    def _extract_ICs_ann(self, LinearPerts):
+    # alternative IC extraction using edge of box
+    def _extract_ICs_ann(self, LinearPerts: _LinearPerts) -> None:
+        """Alternate initial condition extraction where the IC is read from the edges of the box as included in the final
+        solution. Usually, far more y-extent of the linear regime is used than this. Using this method will invalidate the
+        solution and is meant for developer use only.
+        """
         
         # grab linear perturbations object
         lp = LinearPerts
@@ -433,7 +399,11 @@ class _NonLinearPerts():
         self.linear_solution = 0
         self.linear_t = 0
 
-    def _get_non_linear_perts(self):
+    # propagate the wake using IC
+    def _get_non_linear_perts(self) -> None:
+        """Calculate the perturbations in the non-linear regime by propagating the wake away from the planet
+        by solving Burger's eqn and then transforming the results to physical coordinates.
+        """
 
         beta_p = self.p.m_planet / self.p.m_thermal
 

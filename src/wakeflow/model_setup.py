@@ -12,79 +12,12 @@ import numpy    as np
 
 # NOTE: contents are intended for internal use and should not be directly accessed by users
 
-def _load_config_file(config_file, default_config_dict=None):
-
-    # read in config file as dictionary
-    config_dict = yaml.load(open(config_file), Loader=yaml.FullLoader)
-
-    # check that config is valid
-    if default_config_dict is not None:
-        for key in config_dict.keys():
-            if key not in default_config_dict.keys():
-                raise Exception(f"{key} is not a valid parameter.")
-
-    return config_dict
-
-def _write_config_file(config_dict, directory, filename):
-
-    with open(f'{directory}{filename}', 'w') as yaml_file:
-        yaml.dump(config_dict, yaml_file, default_flow_style=False)
-
-def _run_setup(param_dict, overwrite=False):
-
-    params = _Parameters(param_dict)
-
-    # do sanity checks and exit if not passed
-    params._do_sanity_checks()
-
-    # check if directory for system exists, if not create it
-    system_path = f"{params.system}/"
-    os.makedirs(system_path, exist_ok=True)
-
-    # create results directory path
-    results_path = f"{params.system}/{params.name}/"
-
-    # check if results directory already exists, ask to overwrite if yes
-    results_exist = os.path.isdir(results_path)
-    if results_exist is True:
-        if overwrite:
-            print("Overwriting previous results")
-            sh.rmtree(results_path)
-            os.makedirs(results_path)
-        else:
-            raise Exception("Results already exist for run name. Either choose a different name, or run with overwrite=True")
-
-    # create individual directories for each planet mass result
-    if params.m_planet_array is not None:
-        for mass in params.m_planet_array:
-            individual_result_path = f"{params.system}/{params.name}/{mass}Mj"
-            os.makedirs(individual_result_path, exist_ok=True)
-    else:
-        individual_result_path = f"{params.system}/{params.name}/{params.m_planet}Mj"
-        os.makedirs(individual_result_path, exist_ok=True)
-
-    # write parameters used to a file in the results directory
-    _write_config_file(param_dict, results_path, f"{params.name}_config.yaml")
-
-    # run mcfost grid setup if needed
-    if params.run_mcfost or params.grid_type == "mcfost":
-
-        from .mcfost_interface import _make_mcfost_parameter_file, _make_mcfost_grid_data
-
-        # make directory for mcfost outputs
-        mcfost_path = f"{params.system}/{params.name}/mcfost/"
-        os.makedirs(mcfost_path, exist_ok=True)
-
-        # generate mcfost parameter file
-        _make_mcfost_parameter_file(params)
-
-        # generate mcfost grid data to run analytics on
-        _make_mcfost_grid_data(params)
-
-    return params
-
-
+# class for storing physical constants, will be inherited by _Parameters class
 class _Constants:
+    """
+    Constants class for storing physical constants needed by Wakeflow. Inherited by _Parameters.
+    """
+
     def __init__(self):
 
         from astropy import constants as c
@@ -95,9 +28,16 @@ class _Constants:
         self.G_const    = c.G.cgs.value
         self.au         = c.au.cgs.value
 
-
+# class for storing parameters to be used in a Wakeflow model
 class _Parameters(_Constants):
-    def __init__(self, config):
+    """
+    Class for storing Wakeflow model parameters to be easily handed around by various parts of Wakeflow.
+    """
+
+    # read in parameters from dictionary to class attributes, calculate some needed quantities
+    def __init__(self, config: dict) -> None:
+        """Inherit constants, read in parameters to dictionary, calculate quantities like thermal mass and scale height.
+        """
 
         # inherit constants
         super().__init__()
@@ -109,6 +49,7 @@ class _Parameters(_Constants):
         # disk parameters
         self.m_star = float(config["m_star"])
 
+        # user can provide either single planet mass or list of planet masses
         try:
             self.m_planet       = float(config["m_planet"])
             self.m_planet_array = None
@@ -164,14 +105,6 @@ class _Parameters(_Constants):
         self.v_max      = float(config["v_max"])
         self.n_v        = int  (config["n_v"])
 
-        # pymcfost parameters
-        #self.pymcfost_plots = bool(config["pymcfost"]["pymcfost_plots"])
-        #self.velocity_channels = list(config["pymcfost"]["velocity_channels"])
-        #self.beam = float(config["pymcfost"]["beam"])
-        #self.obs_dir = str(config["pymcfost"]["obs_dir"])
-        #self.sim_dir = str(config["pymcfost"]["sim_dir"])
-        #self.v_system = float(config["pymcfost"]["v_system"])
-
         # physical parameters
         self.gamma  = float(config["adiabatic_index"])
         self.malpha = float(config["damping_malpha"])
@@ -218,7 +151,10 @@ class _Parameters(_Constants):
             self.U_time = np.sqrt(self.U_len**3 / (self.G_const * self.U_mass)) 
             self.U_vel  = self.U_len / self.U_time / 1E5
 
-    def _do_sanity_checks(self):
+    # checks that the combination of parameters the user has provided is sensical
+    def _do_sanity_checks(self) -> bool:
+        """Called to check that the parameters specified by the user will not break the results/run. Some parameter combinations are incompatible.
+        """
 
         print("\n* Performing checks on model parameters:")
 
@@ -275,3 +211,85 @@ class _Parameters(_Constants):
 
         print("Parameters Ok - continuing")
         return True
+
+# read in .yaml file, check keys correspond to parameters and return dictionary of parameters
+def _load_config_file(config_file: str, default_config_dict: dict = None) -> dict:
+    """Reads .yaml parameter file into a dictionary so that Wakeflow may parse it.
+    """
+
+    # read in config file as dictionary
+    config_dict = yaml.load(open(config_file), Loader=yaml.FullLoader)
+
+    # check that keys in config_dict correspond to actual Wakeflow parameters
+    if default_config_dict is not None:
+        for key in config_dict.keys():
+            if key not in default_config_dict.keys():
+                raise Exception(f"{key} is not a valid parameter.")
+
+    return config_dict
+
+# write dict to .yaml file
+def _write_config_file(config_dict: dict, directory: str, filename: str) -> None:
+    """Writes parameters dictionary to .yaml file.
+    """
+
+    with open(f'{directory}{filename}', 'w') as yaml_file:
+        yaml.dump(config_dict, yaml_file, default_flow_style=False)
+
+def _run_setup(param_dict: dict, overwrite: bool = False) -> _Parameters:
+    """Perform setup by generating parameters object, checking the parameters are okay, creating results directory,
+    writing .yaml file with parameters used to results dir, and calling MCFOST to generate grid data if needed.
+    """
+
+    params = _Parameters(param_dict)
+
+    # do sanity checks and exit if not passed
+    params._do_sanity_checks()
+
+    # check if directory for system exists, if not create it
+    system_path = f"{params.system}/"
+    os.makedirs(system_path, exist_ok=True)
+
+    # create results directory path
+    results_path = f"{params.system}/{params.name}/"
+
+    # check if results directory already exists, ask to overwrite if yes
+    results_exist = os.path.isdir(results_path)
+    if results_exist is True:
+        if overwrite:
+            print("Overwriting previous results")
+            sh.rmtree(results_path)
+            os.makedirs(results_path)
+        else:
+            raise Exception("Results already exist for run name. Either choose a different name, or run with overwrite=True")
+
+    # create individual directories for each planet mass result
+    if params.m_planet_array is not None:
+        for mass in params.m_planet_array:
+            individual_result_path = f"{params.system}/{params.name}/{mass}Mj"
+            os.makedirs(individual_result_path, exist_ok=True)
+    else:
+        individual_result_path = f"{params.system}/{params.name}/{params.m_planet}Mj"
+        os.makedirs(individual_result_path, exist_ok=True)
+
+    # write parameters used to a file in the results directory
+    _write_config_file(param_dict, results_path, f"{params.name}_config.yaml")
+
+    # run mcfost grid setup if needed
+    if params.run_mcfost or params.grid_type == "mcfost":
+
+        from .mcfost_interface import _make_mcfost_parameter_file, _make_mcfost_grid_data
+
+        # make directory for mcfost outputs
+        mcfost_path = f"{params.system}/{params.name}/mcfost/"
+        os.makedirs(mcfost_path, exist_ok=True)
+
+        # generate mcfost parameter file
+        _make_mcfost_parameter_file(params)
+
+        # generate mcfost grid data to run analytics on
+        _make_mcfost_grid_data(params)
+
+    return params
+
+

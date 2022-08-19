@@ -25,7 +25,7 @@ def _solve_burgers(
     show_teta, 
     tf_fac
 ): 
-    """Propagate the wake in (t,eta,chi) space by solving Eq. 10 from Bollati et al. 2021. using Godunov scheme. Internal use.
+    """Propagate the wake in (t,eta,chi) space by solving Eq. 10 from Bollati et al. 2021 using Godunov scheme.
     """
 
     # Eq. (15) Bollati et al. 2021

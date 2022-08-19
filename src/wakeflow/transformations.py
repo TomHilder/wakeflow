@@ -12,12 +12,16 @@ from scipy.interpolate      import RectBivariateSpline
 
 # NOTE: contents are intended for internal use and should not be directly accessed by users
 
+# TODO: update code to be faster and more efficient, most of the code in this file is still leftover from the old version (Analytical Kinks)
+
+# wake shape
 def _phi_wake(r, Rp, hr, q, cw): 
     """Eq. (4) Bollati et al. 2021
     """
     rr = r / Rp
     return -cw * np.sign(r - Rp) * (1 / hr) * (rr**(q - 0.5) / (q - 0.5) - rr**(q + 1) / (q + 1) - 3 / ((2 * q - 1) * (q + 1)))
 
+# eta coordinate transformation
 def _Eta(r, phi, Rp, hr, q, cw):
     """Eq. (14) Bollati et al. 2021
     """
@@ -33,6 +37,7 @@ def _Eta(r, phi, Rp, hr, q, cw):
 
     return coeff * deltaphi
 
+# modulo 2pi
 def _mod2pi(phi):
 
     if phi >= 0:
@@ -48,14 +53,17 @@ def _mod2pi(phi):
             
         return -resto + 2 * np.pi
 
+# integrand of the t coordinate transformation
 def _t_integrand(x, q, p):
     rho = 5 * q + p
     w   = rho / 2 - 11 / 4
     return np.abs(1 - x**(1.5))**(1.5) * x**w
 
+# integral for t coordinate transformation
 def _t_integral(up, q, p):
     return  quad(_t_integrand, 1, up, args=(q,p))[0]
 
+# t coordinate transformation
 def _t(r, Rp, hr, q, p):
     """Equation (43) Rafikov 2002    (Eq. 13 Bollati et al. 2021)
     """
@@ -63,6 +71,7 @@ def _t(r, Rp, hr, q, p):
     coeff = 3 * hr**(-5 / 2) / (2**(5 / 4))
     return coeff * module_integral
 
+# g(r) quantity calculation
 def _g(r, Rp, hr, q, p):
     """Equation (12) Bollati et al. 2021
     """
@@ -71,6 +80,7 @@ def _g(r, Rp, hr, q, p):
     term2 = np.abs((r / Rp)**(-1.5) - 1)**(-0.5)
     return coeff * term1 * term2
 
+# needed to get radial velocities
 def _Lambda_fu(r, Rp, csp, hr, gamma, q, p):
     """Eq. (28) Bollati et al. 2021
     """
@@ -79,6 +89,7 @@ def _Lambda_fu(r, Rp, csp, hr, gamma, q, p):
     term2 = (r / Rp)**(0.5 * (p + q - 1))
     return coeff * term1 * term2
 
+# needed to get azimuthal velocities
 def _Lambda_fv(r, Rp, csp, hr, gamma, q, p):
     """Eq. (29) Bollati et al. 2021
     """
@@ -87,6 +98,7 @@ def _Lambda_fv(r, Rp, csp, hr, gamma, q, p):
     term2 = (r / Rp)**(0.5 * (p - q - 3))
     return coeff * term1 * term2
 
+# find chi for a particular grid point, either from Burger's eqn solution or self-similar solution
 def _get_chi(
     pphi, 
     rr, 
@@ -187,6 +199,7 @@ def _get_chi(
     
     return Chi
 
+# get the density and velocity perturbations at the grid point from chi
 def _get_dens_vel(rr, Chi, gamma ,Rp, cw, csp, hr, q, p):
     g1  = _g(rr, Rp, hr, q, p)
     dnl = Chi * 2 / (g1 * (gamma + 1))     # Eq. (11) Bollati et al. 2021
@@ -198,6 +211,7 @@ def _get_dens_vel(rr, Chi, gamma ,Rp, cw, csp, hr, q, p):
 
     return dnl, unl, vnl
 
+# plot the t coordinate as a function of radius
 def _plot_r_t(params):
     r = np.linspace(params.r_planet, params.r_outer, 1000)
     times = []

@@ -12,157 +12,84 @@ from scipy.interpolate      import RectBivariateSpline
 #from mpl_toolkits.mplot3d  import Axes3D
 #from matplotlib            import ticker, cm
 #from phantom_interface     import PhantomDump
+from .model_setup           import _Parameters
 
 # NOTE: contents are intended for internal use and should not be directly accessed by users
 
+# class for storing the results from the linear regime
 class _LinearPerts():
-    def __init__(self, parameters): #, ph_pixelmap_loc=None, ph_planet_loc=None):
+    """
+    Class to store the results from the linear regime nearby the planet.
+    """
 
-        #if ph_pixelmap_loc is None:
-        if True:
+    # intitalise object given parameters. locate linear results data and read in
+    def __init__(self, parameters : _Parameters) -> None:
 
-            # grab parameters object
-            self.p = parameters
+        # grab parameters object
+        self.p = parameters
 
-            # get location of linear perturbations data files
-            pert_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations.npy')
-            mesh_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations_mesh.npy')
+        # get location of linear perturbations data files
+        pert_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations.npy')
+        mesh_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations_mesh.npy')
+
+        # read perturbations from files
+        try:
+            perts = np.load(pert_loc)
+            mesh  = np.load(mesh_loc)
+
+        # in the case files have not been extracted from tarballs yet, extract them
+        except FileNotFoundError:
+
+            # open tarballs
+            pert_tar = tarfile.open(f"{pert_loc}.tar.gz")
+            mesh_tar = tarfile.open(f"{mesh_loc}.tar.gz")
+
+            # extract npy files
+            loc = pkg_resources.resource_filename('wakeflow', 'data')
+            pert_tar.extractall(loc)
+            mesh_tar.extractall(loc)
+
+            # close tarballs
+            pert_tar.close()
+            mesh_tar.close()
 
             # read perturbations from files
-            try:
-                perts = np.load(pert_loc)
-                mesh  = np.load(mesh_loc)
+            perts = np.load(pert_loc)
+            mesh  = np.load(mesh_loc)
 
-            # in the case files have not been extracted from tarballs yet, extract them
-            except FileNotFoundError:
+        # get perturbation arrays
+        self.pert_v_r   = perts[0]
+        self.pert_v_phi = perts[1]
+        self.pert_rho   = perts[2]
 
-                # open tarballs
-                pert_tar = tarfile.open(f"{pert_loc}.tar.gz")
-                mesh_tar = tarfile.open(f"{mesh_loc}.tar.gz")
+        # grid
+        self.X = mesh[0]
+        self.Y = mesh[1]
 
-                # extract npy files
-                loc = pkg_resources.resource_filename('wakeflow', 'data')
-                pert_tar.extractall(loc)
-                mesh_tar.extractall(loc)
+        # linear perturbations read in grid
+        x = self.X[0,:]
+        y = self.Y[:,0]
 
-                # close tarballs
-                pert_tar.close()
-                mesh_tar.close()
+        # define constants for linear perts
+        self.x_box = 2 * self.p.scale_box
+        
+        # cut square box grid in linear regime
+        self.x_cut = x[np.argmin(x < -self.x_box) : np.argmin(x < self.x_box) + 1]
+        self.y_cut = y[np.argmin(y < -self.x_box) : np.argmin(y < self.x_box) + 1]
 
-                # read perturbations from files
-                perts = np.load(pert_loc)
-                mesh  = np.load(mesh_loc)
+        # test plot
+        if False:
+            plt.figure()
+            plt.contourf(x, y, self.pert_rho, levels=100, cmap='RdBu')
+            plt.xlim(self.x_cut[0],self.x_cut[-1])
+            plt.ylim(self.y_cut[0],self.y_cut[-1])
+            plt.colorbar()
+            plt.show()
 
-            # get perturbation arrays
-            self.pert_v_r   = perts[0]
-            self.pert_v_phi = perts[1]
-            self.pert_rho   = perts[2]
-
-            # grid
-            self.X = mesh[0]
-            self.Y = mesh[1]
-
-            # linear perturbations read in grid
-            x = self.X[0,:]
-            y = self.Y[:,0]
-
-            # define constants for linear perts
-            self.x_box = 2 * self.p.scale_box
-            
-            # cut square box grid in linear regime
-            self.x_cut = x[np.argmin(x < -self.x_box) : np.argmin(x < self.x_box) + 1]
-            self.y_cut = y[np.argmin(y < -self.x_box) : np.argmin(y < self.x_box) + 1]
-
-            # test plot
-            if False:
-                plt.figure()
-                plt.contourf(x, y, self.pert_rho, levels=100, cmap='RdBu')
-                plt.xlim(self.x_cut[0],self.x_cut[-1])
-                plt.ylim(self.y_cut[0],self.y_cut[-1])
-                plt.colorbar()
-                plt.show()
-
-#        else:
-#
-#            print("Reading in Perturbations from Phantom pixelmap")
-#
-#            # grab parameters object
-#            self.p = parameters
-#
-#            # create PhantomDump object
-#            ph_dump = PhantomDump(
-#                parameters = self.p, 
-#                vr   = f"{ph_pixelmap_loc}/vr.pix", 
-#                vphi = f"{ph_pixelmap_loc}/vphi.pix", 
-#                rho  = f"{ph_pixelmap_loc}/rho.pix"
-#            )
-#
-#            # subtract azimuthal average
-#            ph_dump.extract_dens_perts()
-#
-#            # get perturbation arrays, in local units
-#            self.pert_v_r   = ph_dump.vr_xy        / (self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)) * 1e5 # account for units in km/s not cgs
-#            self.pert_v_phi = ph_dump.vphi_xy_pert / (self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)) * 1e5
-#            self.pert_rho   = ph_dump.rho_xy_pert  /                    (self.p.m_planet/self.p.m_thermal)
-#
-#            print('planet is at R = ', ph_planet_loc, ' au')
-#
-#            print('vr min max = '  , self.pert_v_r.min(),   self.pert_v_r.max())
-#            print('vphi min max = ', self.pert_v_phi.min(), self.pert_v_phi.max())
-#
-#            # save grid in local units
-#            self.X = (ph_dump.X_ph - ph_planet_loc) / self.p.l
-#            self.Y = ph_dump.Y_ph / self.p.l
-#
-#            # linear perturbations read in grid
-#            x = (ph_dump.x_ph - ph_planet_loc) / self.p.l
-#            y = ph_dump.y_ph / self.p.l
-#
-#            # define constants for linear perts
-#            self.x_box = 2*self.p.scale_box
-#
-#            # cut square box grid in linear regime
-#            self.x_cut = x[np.argmin(x < -self.x_box) : np.argmin(x < self.x_box) + 1]
-#            self.y_cut = y[np.argmin(y < -3*self.x_box) : np.argmin(y < 3*self.x_box) + 1] ###
-#
-#            # grid size in box
-#            print("BOX GRID SIZE IS:")
-#            print(len(self.x_cut),len(self.y_cut))
-#
-#            print("median value is: ", np.median(self.pert_rho))
-#            print("upper and lower bounds are: ", self.pert_rho.min(), self.pert_rho.max())
-#
-#            # test plot
-#            plt.figure()
-#            #plt.contourf(x, y, self.pert_v_r, cmap='RdBu', levels=200)
-#            #plt.contourf(x, y, self.pert_rho, vmin=-2, vmax=10, levels=2000, cmap='RdBu', extend='both')
-#            plt.imshow(self.pert_rho, vmin=-3, vmax=3, cmap='RdBu', extent=[x.min(), x.max(), y.min(), y.max()])
-#            plt.xlim(self.x_cut[0],self.x_cut[-1])
-#            plt.ylim(self.y_cut[0],self.y_cut[-1])
-#            plt.colorbar(extend='both')
-#            plt.show()
-#
-#            plt.figure()
-#            #plt.contourf(x, y, self.pert_v_r, cmap='RdBu', levels=200)
-#            #plt.contourf(x, y, self.pert_rho, vmin=-2, vmax=10, levels=2000, cmap='RdBu', extend='both')
-#            plt.imshow(self.pert_v_r, vmin=-3, vmax=3, cmap='RdBu', extent=[x.min(), x.max(), y.min(), y.max()])
-#            plt.xlim(self.x_cut[0],self.x_cut[-1])
-#            plt.ylim(self.y_cut[0],self.y_cut[-1])
-#            plt.colorbar(extend='both')
-#            plt.show()
-#
-#            plt.figure()
-#            #plt.contourf(x, y, self.pert_v_r, cmap='RdBu', levels=200)
-#            #plt.contourf(x, y, self.pert_rho, vmin=-2, vmax=10, levels=2000, cmap='RdBu', extend='both')
-#            plt.imshow(self.pert_v_phi, vmin=-3, vmax=3, cmap='RdBu', extent=[x.min(), x.max(), y.min(), y.max()])
-#            plt.xlim(self.x_cut[0],self.x_cut[-1])
-#            plt.ylim(self.y_cut[0],self.y_cut[-1])
-#            plt.colorbar(extend='both')
-#            plt.show()
-
-
-    def _cut_box_square(self):
-        """This is only used in the case where you want to plot the linear solution in t,eta space"""
+    # old method of extracting linear perturbations 
+    def _cut_box_square(self) -> None:
+        """Deprecated. This is only used in the case where you want to plot the linear solution in t, eta space
+        """
 
         # box size (in units of Hill radius), with default scale_box = 1. (note for conversions that self.p.l = 1 Hill radius in cgs)
         box_size = 2*self.p.scale_box
@@ -210,8 +137,10 @@ class _LinearPerts():
         self.x_sq  = self.p.l * x_cut + self.p.r_planet
         self.y_sq  = self.p.l * y_cut
         
-
-    def _cut_box_annulus_segment(self):
+    # extract linear perturbations and interpolate onto annulus segment grid for global results
+    def _cut_box_annulus_segment(self) -> None:
+        """Extract the part of the linear solution needed for the model, and interpolate onto appropriate grid
+        """
 
         # box size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs
         x_box_size = 2*self.p.scale_box
@@ -294,7 +223,6 @@ class _LinearPerts():
             cut_rho   =  np.flipud(cut_rho)
 
         # interpolation over cut (cartesian) grid
-        #print('CUT STATS = ', len(y_int_cut), len(x_int_cut), cut_v_r.shape)
         interp_v_r   = RectBivariateSpline(y_int_cut, x_int_cut, cut_v_r)
         interp_v_phi = RectBivariateSpline(y_int_cut, x_int_cut, cut_v_phi)
         interp_v_rho = RectBivariateSpline(y_int_cut, x_int_cut, cut_rho)
