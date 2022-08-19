@@ -5,6 +5,10 @@
 Contains the NonLinearPerts class responsible for handling the non-linear regime of the models.
 """
 
+# type hinting without circular imports
+from __future__             import annotations
+from typing                 import TYPE_CHECKING
+
 import time
 import numpy                    as np
 import matplotlib.pyplot        as plt
@@ -13,9 +17,11 @@ from copy                   import copy
 from tqdm                   import tqdm
 from .burgers               import _solve_burgers
 from .transformations       import _Eta, _t, _Lambda_fu, _Lambda_fv, _get_chi, _get_dens_vel, _plot_r_t
-from .model_setup           import _Parameters
-from .grid                  import _Grid
-from .linear_perts          import _LinearPerts
+
+if TYPE_CHECKING:
+    from .model_setup       import _Parameters
+    from .grid              import _Grid
+    from .linear_perts      import _LinearPerts
 
 # NOTE: contents are intended for internal use and should not be directly accessed by users
 

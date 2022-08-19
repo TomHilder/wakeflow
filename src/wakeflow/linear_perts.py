@@ -5,14 +5,17 @@
 Contains the LinearPerts class responsible for handling the linear regime of the models.
 """
 
+# type hinting without circular imports
+from __future__             import annotations
+from typing                 import TYPE_CHECKING
+
 import sys, pkg_resources, tarfile
 import numpy                    as np
 import matplotlib.pyplot        as plt
 from scipy.interpolate      import RectBivariateSpline
-#from mpl_toolkits.mplot3d  import Axes3D
-#from matplotlib            import ticker, cm
-#from phantom_interface     import PhantomDump
-from .model_setup           import _Parameters
+
+if TYPE_CHECKING:
+    from .model_setup       import _Parameters
 
 # NOTE: contents are intended for internal use and should not be directly accessed by users
 
