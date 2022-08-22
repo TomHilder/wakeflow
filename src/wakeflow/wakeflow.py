@@ -53,7 +53,7 @@ class WakeflowModel():
         r_outer:            float = 500,
         r_inner:            float = 100,
         r_planet:           float = 250,
-        r_ref:              float = 250,
+        r_ref:              float = None,
         r_c:                float = 0,
         q:                  float = 0.25,
         p:                  float = 1.0,

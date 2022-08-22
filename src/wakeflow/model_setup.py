@@ -60,7 +60,10 @@ class _Parameters(_Constants):
         self.r_outer  = float(config["r_outer"])
         self.r_inner  = float(config["r_inner"])
         self.r_planet = float(config["r_planet"])
-        self.r_ref    = float(config["r_ref"])
+        try:
+            self.r_ref = float(config["r_ref"])
+        except:
+            self.r_ref = self.r_planet
         self.r_c      = float(config["r_c"])
         self.q        = float(config["q"])
         self.p        = float(config["p"])
