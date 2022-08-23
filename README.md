@@ -31,9 +31,8 @@
 </div>
 
 
-
 <!-- ABOUT THE PROJECT -->
-## About
+# Overview
 
 `wakeflow` is a Python package primarily for calculating tidally-induced perturbations resulting from a planet embedded in a gas disk. It is an implementation of both the linear theory for planet wake generation ([Goldreich and Tremaine 1979](https://ui.adsabs.harvard.edu/abs/1979ApJ...233..857G)) and the non-linear theory of wake propagation ([Rafikov 2002](https://ui.adsabs.harvard.edu/abs/2002ApJ...569..997R/abstract)) in 2D. `wakeflow` lets you generate these models by specifying disk and system properties as typically parameterised in the planet formation literature. It also contains additional tools allowing you to:
 * Visualise your results
@@ -84,6 +83,10 @@ that's it!
 If you want to contribute to, or modify `wakeflow`, you should install it from the [GitHub repository](https://github.com/TomHilder/wakeflow). Simply fork the repo using the button in the top right, and then clone it:
 ```sh
 git clone https://github.com/<replace-by-your-username>/wakeflow.git
+```
+Alternatively, you may install from source even if you do not with to edit `wakeflow`, in which case I would recommend skipping the fork and simply cloning the repo directly:
+```sh
+git clone https://github.com/TomHilder/wakeflow.git
 ```
 Navigate to the directory it is installed in:
 ```sh

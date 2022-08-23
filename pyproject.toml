@@ -46,5 +46,6 @@ push = true
 
 [tool.bumpver.file_patterns]
 "pyproject.toml" = ['current_version = "{version}"', 'version = "{version}"']
+"docs/conf.py" = ['release = "{version}"']
 "src/wakeflow/__init__.py" = ["{version}"]
 "README.md" = ["{version}"]
