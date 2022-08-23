@@ -7,6 +7,10 @@
 # Numpy files
 *.npy
 
+# yaml files
+*.yaml
+!default_config.yaml
+
 # Mac OS
 .DS_Store
 
