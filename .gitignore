@@ -11,6 +11,12 @@
 *.yaml
 !default_config.yaml
 
+# mcfost output
+*.fits
+*.para
+*.fits.gz
+*.tmp
+
 # Mac OS
 .DS_Store
 
