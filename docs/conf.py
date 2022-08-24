@@ -14,7 +14,7 @@ release = '1.0.4'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc','sphinx_rtd_theme','myst_parser','nbsphinx']
+extensions = ['sphinx.ext.autodoc','sphinx_rtd_theme','myst_parser','nbsphinx','numpydoc']
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
@@ -25,7 +25,15 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_rtd_theme'
-#html_static_path = ['_static']
+
+# These folders are copied to the documentation's HTML output
+html_static_path = ['_static']
+
+# These paths are either relative to html_static_path
+# or fully qualified paths (eg. https://...)
+html_css_files = [
+    'custom.css',
+]
 
 
 autodoc_default_options = {"members": True, "undoc-members": True, "private-members": True}
