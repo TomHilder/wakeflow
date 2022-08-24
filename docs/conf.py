@@ -14,7 +14,7 @@ release = '1.0.4'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc','sphinx_rtd_theme','myst_parser','nbsphinx','numpydoc']
+extensions = ['sphinx.ext.autodoc','sphinx_rtd_theme','myst_parser','nbsphinx','sphinx.ext.napoleon']
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']

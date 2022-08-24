@@ -23,17 +23,6 @@ class WakeflowModel():
         Dictionary containing the parameters to be used in the model as specified by the user.
     default_params : dict
         Dictionary containing the default WakeflowModel parameters.
-
-    Methods
-    -------
-    configure
-        Allows the user to specify the model parameters directly.
-    configure_from_file
-        Allows the user to read the model parameters from a .yaml file.
-    run
-        Generates the model results.
-    _run_wakeflow
-        Internal use, assembles model by calling other parts of Wakeflow sequentially.
     """
 
     # instantiate class

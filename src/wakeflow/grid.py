@@ -68,39 +68,6 @@ class _Grid:
         3D. Contains azimuthal coordinates of Cylindrical or Mcfost grid points.
     Z : ndarray
         3D. Contains z coordinates of Cylindrical or Mcfost grid points.
-
-    Methods
-    -------
-    make_grid
-        Defines disk scale height and calls method to generate grid specified by Parameters in self.p.
-    make_cartesian_grid
-        Generates coordinates for a Cartesian grid according to Parameters in self.p.
-    make_cylindrical_grid
-        Generates coordinates for a Cylindrical grid according to Parameters in self.p.
-    make_mcfost_grid
-        Generates coordinates for a Mcfost grid according to Parameters in self.p.
-    get_r_phi_coords
-        Get (r,phi) coordinates for each grid point for a Cartesian grid.
-    remove_dimensions
-        Make results dimensionless.
-    flip_results
-        Switch from results on a counterclockwise rotating disk to a clockwise rotating disk by appropriate transformations.
-    make_keplerian_disk
-        Generate velocities and densities for an unperturbed disk in hydrostatic equilibrium according to Parameters in self.p.
-    make_empty_disk
-        Fill velocities and densities with zeros.
-    add_linear_perturbations
-        Add results from linear regime to grid.
-    add_nonlinear_perturbations
-        Add results from non-linear regime to grid.
-    merge_grids
-        Merge two Grid objects.
-    show_disk2D
-        Plot a z-slice of the results in the grid.
-    write_fits_file
-        Write a fits file from the results stored in the grid.
-    save_results
-        Write .npy files containing results.
     """
 
     # instantiate the class
