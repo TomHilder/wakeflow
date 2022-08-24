@@ -189,5 +189,5 @@ Additional acknowledgements:
 [license-url]: https://opensource.org/licenses/MIT
 [JOSS-shield]: https://img.shields.io/badge/JOSS-coming%20soon-green?style=for-the-badge&logo=opensourceinitiative
 [JOSS-url]: https://example.com
-[docs-shield-url]: https://readthedocs.org/projects/wakeflow/badge/?version=latest&style=for-the-badge&logo=readthedocs
+[docs-shield-url]: https://readthedocs.org/projects/wakeflow/badge/?version=latest&style=for-the-badge
 [docs-status-url]: https://wakeflow.readthedocs.io/en/latest/?badge=latest
