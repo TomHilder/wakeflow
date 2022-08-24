@@ -181,13 +181,13 @@ Additional acknowledgements:
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[pypi-shield]: https://img.shields.io/badge/PyPI-1.0.4-brightgreen?style=flat-square&logo=pypi
+[pypi-shield]: https://img.shields.io/badge/PyPI-1.0.4-green?style=flat-square
 [pypi-url]: https://pypi.org/project/wakeflow/
-[python-shield]: https://img.shields.io/badge/Python-3.6%2B-orange?style=flat-square&logo=python
+[python-shield]: https://img.shields.io/badge/Python-3.6%2B-orange?style=flat-square
 [python-url]: https://www.python.org
-[license-shield]: https://img.shields.io/badge/License-MIT-blue?style=flat-square&logo=opensourceinitiative
+[license-shield]: https://img.shields.io/badge/License-MIT-blue?style=flat-square
 [license-url]: https://opensource.org/licenses/MIT
-[JOSS-shield]: https://img.shields.io/badge/JOSS-coming%20soon-green?style=flat-square&logo=opensourceinitiative
+[JOSS-shield]: https://img.shields.io/badge/JOSS-coming%20soon-blueviolet?style=flat-square
 [JOSS-url]: https://example.com
 [docs-status-shield]: https://readthedocs.org/projects/wakeflow/badge/?version=latest&style=flat-square
 [docs-status-url]: https://wakeflow.readthedocs.io/en/latest/?badge=latest
