@@ -6,20 +6,13 @@
 Welcome to Wakeflow's documentation!
 ====================================
 
-README
-------
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
 
    overview.md
-
-Tutorials
----------
-
-.. toctree::
-   :maxdepth: 2
-
    tutorials/quickstart.ipynb
    tutorials/mcfost.ipynb
    tutorials/advanced_config.ipynb
