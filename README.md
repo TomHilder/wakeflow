@@ -23,9 +23,9 @@
     Generate and manipulate semi-analytic models of planet wakes
     <br />
     <br />
-    <a href="https://github.com/TomHilder/wakeflow"><strong>Quickstart tutorial »</strong></a>
+    <a href="https://wakeflow.readthedocs.io/en/latest/tutorials/quickstart.html"><strong>Quickstart tutorial »</strong></a>
     <br />
-    <a href="https://github.com/TomHilder/wakeflow"><strong>Documentation »</strong></a>
+    <a href="https://wakeflow.readthedocs.io/en/latest/index.html"><strong>Documentation »</strong></a>
     <br />
   </p>
 </div>
@@ -109,7 +109,7 @@ Do not forget the dot (.) in the above command, as it tells `pip` to look in the
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Please refer to the [Quickstart tutorial](https://example.com) for the most typical usage of `wakeflow` including generating models and reading the results. Additional examples of more advanced usage can be found in the [Documentation](https://example.com).
+Please refer to the [Quickstart tutorial](https://wakeflow.readthedocs.io/en/latest/tutorials/quickstart.html) for the most typical usage of `wakeflow` including generating models and reading the results. Additional examples of more advanced usage can be found in the [Documentation](https://wakeflow.readthedocs.io/en/latest/index.html).
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
