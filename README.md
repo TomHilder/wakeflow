@@ -5,6 +5,7 @@
 [![Python][python-shield]][python-url]
 [![License][license-shield]][license-url]
 [![JOSS][JOSS-shield]][JOSS-url]
+[![Documentation Status][docs-status-shield]][docs-status-url]
 
 
 
@@ -180,11 +181,13 @@ Additional acknowledgements:
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[pypi-shield]: https://img.shields.io/badge/PyPI-1.0.4-brightgreen?style=for-the-badge&logo=appveyor
+[pypi-shield]: https://img.shields.io/badge/PyPI-1.0.4-brightgreen?style=for-the-badge&logo=pypi
 [pypi-url]: https://pypi.org/project/wakeflow/
-[python-shield]: https://img.shields.io/badge/Python-3.6%2B-orange?style=for-the-badge&logo=appveyor
+[python-shield]: https://img.shields.io/badge/Python-3.6%2B-orange?style=for-the-badge&logo=python
 [python-url]: https://www.python.org
-[license-shield]: https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=appveyor
+[license-shield]: https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=opensourceinitiative
 [license-url]: https://opensource.org/licenses/MIT
-[JOSS-shield]: https://img.shields.io/badge/JOSS-coming%20soon-green?style=for-the-badge&logo=appveyor
+[JOSS-shield]: https://img.shields.io/badge/JOSS-coming%20soon-green?style=for-the-badge&logo=opensourceinitiative
 [JOSS-url]: https://example.com
+[docs-shield-url]: https://readthedocs.org/projects/wakeflow/badge/?version=latest&style=for-the-badge&logo=readthedocs
+[docs-status-url]: https://wakeflow.readthedocs.io/en/latest/?badge=latest
