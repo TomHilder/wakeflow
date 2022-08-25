@@ -66,7 +66,8 @@ class _Parameters(_Constants):
             self.r_ref = self.r_planet
         self.r_c      = float(config["r_c"])
         self.q        = float(config["q"])
-        self.p        = float(config["p"])
+        self.dens_p   = float(config["p"])
+        self.p        = self.dens_p + self.q - 1.5
         self.hr       = float(config["hr"])
         self.rho_ref  = float(config["dens_ref"])
 

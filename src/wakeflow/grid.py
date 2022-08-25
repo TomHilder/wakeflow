@@ -263,7 +263,7 @@ class _Grid:
             z = self.Z
 
         # rename for readability in long equations
-        p       = self.p.p
+        p       = self.p.dens_p
         q       = self.p.q
         hr      = self.p.hr
         r_ref   = self.p.r_ref
@@ -277,12 +277,16 @@ class _Grid:
 
         # Keplerian velocities
         self.v_r   = np.zeros((self.info["Size"][0], self.info["Size"][1], self.info["Size"][2]))
-        self.v_kep = 1e-5 * np.sqrt(self.p.G_const * self.p.m_star * self.p.m_solar / (r * self.p.au))
+        self.v_kep = 1e-5 * np.sqrt(G * m_star * m_sol / (r * au))
         self.v_phi = np.copy(self.v_kep) * self.p.a_cw
 
+        # get h/r(r)
+        hrf = hr * (r / r_ref) ** (0.5 - q)
+
         # pressure and gravity height dependent correction
+        tau  = 2*q
         corr = np.sqrt(
-            -1* (p + q) * hr**2 * (r / r_ref)**(1 - 2*q) + (1 - q) + q*r / np.sqrt(r**2 + z**2)
+            -1* (p + tau) * hrf**2 + (1 - tau) + tau*r / np.sqrt(r**2 + z**2)
         )
 
         # perform correction

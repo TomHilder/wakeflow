@@ -45,7 +45,7 @@ The velocities are derived assuming radial force balance (eg. Nelson et al. 2013
 
 .. math::
 
-   \Omega(R,z) = \Omega_\mathrm{K} \left[ -(p+q) \left( \frac{H}{R} \right)^2 + (1-q) + \frac{qR}{\sqrt{R^2 + z^2}}  \right]^{1/2},
+   \Omega(R,z) = \Omega_\mathrm{K} \left[ -(p+2q) \left( \frac{H}{R} \right)^2 + (1-2q) + \frac{2qR}{\sqrt{R^2 + z^2}}  \right]^{1/2},
 
 where :math:`\Omega_\mathrm{K}=\sqrt{\frac{GM_*}{R^3}}` is Keplerian rotation and :math:`H=c_s/\Omega_\mathrm{K}` is the disk scale height.
 
