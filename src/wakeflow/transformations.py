@@ -201,13 +201,24 @@ def _get_chi(
 
 # get the density and velocity perturbations at the grid point from chi
 def _get_dens_vel(rr, Chi, gamma ,Rp, cw, csp, hr, q, p):
+
     g1  = _g(rr, Rp, hr, q, p)
     dnl = Chi * 2 / (g1 * (gamma + 1))     # Eq. (11) Bollati et al. 2021
 
-    Lfu = _Lambda_fu(rr, Rp, csp, hr, gamma, q, p)
-    Lfv = _Lambda_fv(rr, Rp, csp, hr, gamma, q, p)
-    unl = np.sign(rr - Rp) * Lfu * Chi           # Eq. (23) Bollati et al. 2021
-    vnl = np.sign(rr - Rp) * Lfv * Chi * (-cw) # Eq. (24) Bollati et al. 2021 (the sign of v is reversed if we change cw)
+    # Lfu = _Lambda_fu(rr, Rp, csp, hr, gamma, q, p)
+    # Lfv = _Lambda_fv(rr, Rp, csp, hr, gamma, q, p)
+    # unl = np.sign(rr - Rp) * Lfu * Chi           # Eq. (23) Bollati et al. 2021
+    # vnl = np.sign(rr - Rp) * Lfv * Chi * (-cw) # Eq. (24) Bollati et al. 2021 (the sign of v is reversed if we change cw)
+
+    psi = (np.power(dnl + 1, (gamma-1)/2) - 1) * (gamma+1) / (gamma-1)
+
+    # get constants
+    dOmega_r = np.abs(csp * Rp**-1 * hr**-1 * ((rr / Rp)**(-3 / 2) - 1)) * rr
+    c0 = csp * (rr / Rp)**(-q)
+    
+    # get perturbations
+    unl = np.sign(rr - Rp) * (2 * c0) / (gamma+1) * psi
+    vnl = (-cw) * c0 * unl / dOmega_r
 
     return dnl, unl, vnl
 
