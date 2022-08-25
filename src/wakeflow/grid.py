@@ -284,9 +284,8 @@ class _Grid:
         hrf = hr * (r / r_ref) ** (0.5 - q)
 
         # pressure and gravity height dependent correction
-        tau  = 2*q
         corr = np.sqrt(
-            -1* (p + tau) * hrf**2 + (1 - tau) + tau*r / np.sqrt(r**2 + z**2)
+            (-1* (p + 2 * q) * hrf**2) + (1 - 2 * q) + (2 * q * r / np.sqrt(r**2 + z**2))
         )
 
         # perform correction
