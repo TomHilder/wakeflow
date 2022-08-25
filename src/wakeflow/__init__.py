@@ -6,7 +6,7 @@ Wakeflow allows users to generate and manipulate semi-analytic models of planet 
 """
 
 # wakeflow package versionss
-__version__ = "1.0.4"
+__version__ = "1.1.0"
 
 # give users access to the WakeflowModel class
 from .wakeflow import WakeflowModel
