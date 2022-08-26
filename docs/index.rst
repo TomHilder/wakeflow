@@ -3,8 +3,6 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-<meta name="google-site-verification" content="uENN42__tBhVZZYQPUeAjanU0vS-1DYWKUr3GrdKFEE" />
-
 Welcome to Wakeflow's documentation!
 ====================================
 
