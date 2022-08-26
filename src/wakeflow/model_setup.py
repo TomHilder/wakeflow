@@ -250,34 +250,41 @@ def _run_setup(param_dict: dict, overwrite: bool = False) -> _Parameters:
     # do sanity checks and exit if not passed
     params._do_sanity_checks()
 
-    # check if directory for system exists, if not create it
-    system_path = f"{params.system}/"
-    os.makedirs(system_path, exist_ok=True)
+    # check if anything is being saved, if yes create directory
+    if params.save_perturbations or params.save_total or params.make_midplane_plots:
 
-    # create results directory path
-    results_path = f"{params.system}/{params.name}/"
+        # check if directory for system exists, if not create it
+        system_path = f"{params.system}/"
+        os.makedirs(system_path, exist_ok=True)
 
-    # check if results directory already exists, ask to overwrite if yes
-    results_exist = os.path.isdir(results_path)
-    if results_exist is True:
-        if overwrite:
-            print("Overwriting previous results")
-            sh.rmtree(results_path)
-            os.makedirs(results_path)
+        # create results directory path
+        results_path = f"{params.system}/{params.name}/"
+
+        # check if results directory already exists, ask to overwrite if yes
+        results_exist = os.path.isdir(results_path)
+        if results_exist is True:
+            if overwrite:
+                print("Overwriting previous results")
+                sh.rmtree(results_path)
+                os.makedirs(results_path)
+            else:
+                raise Exception("Results already exist for run name. Either choose a different name, or run with overwrite=True")
+
+        # create individual directories for each planet mass result
+        if params.m_planet_array is not None:
+            for mass in params.m_planet_array:
+                individual_result_path = f"{params.system}/{params.name}/{mass}Mj"
+                os.makedirs(individual_result_path, exist_ok=True)
         else:
-            raise Exception("Results already exist for run name. Either choose a different name, or run with overwrite=True")
-
-    # create individual directories for each planet mass result
-    if params.m_planet_array is not None:
-        for mass in params.m_planet_array:
-            individual_result_path = f"{params.system}/{params.name}/{mass}Mj"
+            individual_result_path = f"{params.system}/{params.name}/{params.m_planet}Mj"
             os.makedirs(individual_result_path, exist_ok=True)
-    else:
-        individual_result_path = f"{params.system}/{params.name}/{params.m_planet}Mj"
-        os.makedirs(individual_result_path, exist_ok=True)
 
-    # write parameters used to a file in the results directory
-    _write_config_file(param_dict, results_path, f"{params.name}_config.yaml")
+        # write parameters used to a file in the results directory
+        _write_config_file(param_dict, results_path, f"{params.name}_config.yaml")
+
+    else:
+
+        pass
 
     # run mcfost grid setup if needed
     if params.run_mcfost or params.grid_type == "mcfost":

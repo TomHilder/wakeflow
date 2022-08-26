@@ -17,6 +17,9 @@
 *.fits.gz
 *.tmp
 
+# pytest-cov
+*.coverage*
+
 # Mac OS
 .DS_Store
 

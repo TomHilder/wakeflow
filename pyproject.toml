@@ -29,12 +29,19 @@ dependencies = [
     "setuptools",
     "pyyaml",
     "tqdm",
-    "pytest"
+    "pytest",
+    "pytest-cov"
 ]
 requires-python = ">=3.6"
 
 [project.urls]
 Homepage = "https://github.com/TomHilder/wakeflow"
+
+[tool.pytest.ini_options]
+addopts = "--cov=wakeflow"
+testpaths = [
+    "tests",
+]
 
 [tool.bumpver]
 current_version = "1.1.1"
