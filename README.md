@@ -13,7 +13,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/TomHilder/wakeflow">
-    <img src="https://github.com/TomHilder/wakeflow/blob/main/logo.png?raw=true" alt="Logo" width="500" height="500">
+    <img src="https://github.com/TomHilder/wakeflow/blob/master/logo.png?raw=true" alt="Logo" width="500" height="500">
   </a>
 
 
