@@ -131,8 +131,8 @@ def test_file_config():
     assert model.model_params["n_v"]                 == 40
 
 # check that running the default model works
-def test_run_default():
-    model = WakeflowModel()
-    # turn saving off and don't show plots
-    model.configure(show_midplane_plots=False, make_midplane_plots=False, save_perturbations=False, save_total=False)
-    model.run()
+#def test_run_default():
+#    model = WakeflowModel()
+#    # turn saving off and don't show plots
+#    model.configure(show_midplane_plots=False, make_midplane_plots=False, save_perturbations=False, save_total=False)
+#    model.run()

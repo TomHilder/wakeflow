@@ -134,10 +134,10 @@ class _Parameters(_Constants):
         self.c_s_0      = v_kep_ref*self.hr 
 
         # clockwise rotation factor
-        if self.cw_rotation == True:
-            self.a_cw = -1
-        else:
-            self.a_cw = 1
+        #if self.cw_rotation == True:
+        #    self.a_cw = -1
+        #else:
+        self.a_cw = 1
 
         # get height scale at reference radius
         self.h_ref = self.hr * self.r_ref
@@ -180,7 +180,7 @@ class _Parameters(_Constants):
                 if mass > self.m_thermal:
                     exceed = True
             if exceed ==  True:
-                print("At least one planet mass exceeds thermal mass. This may break the solution. ")
+                print("WARNING: At least one planet mass exceeds thermal mass. This may break the solution. ")
 
         # check grid type
         if self.grid_type != "cartesian" and self.grid_type != "cylindrical" and self.grid_type != "mcfost":

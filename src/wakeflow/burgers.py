@@ -52,8 +52,8 @@ def _solve_burgers(
         profile = np.append(profile, 0)
         extr    = eta[-1]
 
-        if show_teta:
-            linear_solution = np.append(profile, 0, axis=0)
+        #if show_teta:
+        #    linear_solution = np.append(profile, 0, axis=0)
 
     extr = eta[0]
 
@@ -63,8 +63,8 @@ def _solve_burgers(
         profile = np.insert(profile, 0, 0)
         extr    = eta[0]
 
-        if show_teta:
-            linear_solution = np.insert(linear_solution, 0, 0, axis=0)
+        #if show_teta:
+        #    linear_solution = np.insert(linear_solution, 0, 0, axis=0)
 
     # number of centers
     Neta = len(eta)
@@ -162,37 +162,37 @@ def _solve_burgers(
     #plt.title(r'$\chi$ "evolution" $r > r_p$')
     #plt.show()
 
-    if show_teta: # combining linear and non-linear solution and plotting
-
-        # scale linear solution
-        linear_solution = linear_solution * (gamma + 1) * beta_p / 2**(3 / 4)
-
-        # add linear solution in (t,eta) to non-linear solution array
-        total_solution = np.concatenate((linear_solution, solution), axis=1)
-        total_time     = np.concatenate((linear_t,        time + t0))
-
-        fig, ax = plt.subplots(1)
-        cont = ax.contourf(total_time, eta, total_solution, levels=np.arange(-4, 4, 0.05), cmap='RdBu')
-        for c in cont.collections:
-            c.set_rasterized(True)
-        plt.colorbar(cont, label='$\chi$')
-        ax.set_xlim(0,10)
-        ax.set_xlabel('$t$')
-        ax.set_ylabel('$\eta$')
-        #plt.savefig("teta_badjoin.pdf")
-        plt.show()
+    #if show_teta: # combining linear and non-linear solution and plotting
+    #    
+    #    # scale linear solution
+    #    linear_solution = linear_solution * (gamma + 1) * beta_p / 2**(3 / 4)
+    #
+    #    # add linear solution in (t,eta) to non-linear solution array
+    #    total_solution = np.concatenate((linear_solution, solution), axis=1)
+    #    total_time     = np.concatenate((linear_t,        time + t0))
+    #
+    #    fig, ax = plt.subplots(1)
+    #    cont = ax.contourf(total_time, eta, total_solution, levels=np.arange(-4, 4, 0.05), cmap='RdBu')
+    #    for c in cont.collections:
+    #        c.set_rasterized(True)
+    #    plt.colorbar(cont, label='$\chi$')
+    #    ax.set_xlim(0,10)
+    #    ax.set_xlabel('$t$')
+    #    ax.set_ylabel('$\eta$')
+    #    #plt.savefig("teta_badjoin.pdf")
+    #    plt.show()
 
     # The following will put the linear solution into returned solution for Chi
-    if False:
-        Nt = np.shape(total_solution)[1]
-
-        solution_inner = np.zeros(total_solution.shape) # solution for r < Rp (and disc rotating counterclockwise)
-        for i in range(Neta):
-            for j in range(Nt):
-                solution_inner[i,j] = total_solution[int(Neta-1-i),j]
-
-        eta_inner = - eta[::-1]
-        return total_time, eta, total_solution, eta_inner, solution_inner
+    #if False:
+    #    Nt = np.shape(total_solution)[1]
+    #
+    #    solution_inner = np.zeros(total_solution.shape) # solution for r < Rp (and disc rotating counterclockwise)
+    #    for i in range(Neta):
+    #        for j in range(Nt):
+    #            solution_inner[i,j] = total_solution[int(Neta-1-i),j]
+    #
+    #    eta_inner = - eta[::-1]
+    #    return total_time, eta, total_solution, eta_inner, solution_inner
 
     return time, eta, solution
     

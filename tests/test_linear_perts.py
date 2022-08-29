@@ -26,7 +26,7 @@ def test_cut_square():
     assert lp.x_cut.min() == -1.987
     assert lp.x_cut.max() ==  2.001
     assert lp.y_cut.min() == -11.928
-    assert lp.y_cut.max() == 12.026
+    assert lp.y_cut.max() ==  12.026
 
 def test_cut_annulus():
 

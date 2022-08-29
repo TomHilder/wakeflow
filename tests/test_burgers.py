@@ -1,10 +1,11 @@
 from wakeflow.burgers import _solve_burgers
 import numpy as np
+import matplotlib.pyplot as plt
 
 def test_burgers_area_conservation():
 
     eta       = np.linspace(-20, 20, 100)
-    profile   = np.sin(2*np.pi*eta / 40)
+    profile   = -np.sin(np.pi*eta / 40)
     gamma     = 1
     beta_p    = 1
     C         = 50
@@ -31,6 +32,14 @@ def test_burgers_area_conservation():
     # take every 100th solution
     sol_restr  = sol [:,::100]
     time_restr = time[::100]
+
+    #plt.imshow(sol_restr)
+    #plt.show()
+
+    #plt.plot(eta, sol_restr[:,0])
+    #plt.plot(eta, sol_restr[:,10])
+    #plt.plot(eta, sol_restr[:,-1])
+    #plt.show()
 
     # calculate area under curve with trapezoidal rule
     areas = np.trapz(sol_restr, eta, axis=0)
