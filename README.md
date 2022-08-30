@@ -40,9 +40,12 @@
 `wakeflow` is a Python package primarily for calculating tidally-induced perturbations resulting from a planet embedded in a gas disk. It is an implementation of both the linear theory for planet wake generation ([Goldreich and Tremaine 1979](https://ui.adsabs.harvard.edu/abs/1979ApJ...233..857G)) and the non-linear theory of wake propagation ([Rafikov 2002](https://ui.adsabs.harvard.edu/abs/2002ApJ...569..997R/abstract)) in 2D. `wakeflow` lets you generate these models by specifying disk and system properties as typically parameterised in the planet formation literature. It also contains additional tools allowing you to:
 * Visualise your results
 * Create 3D models under some assumptions
-* Interface directly with the radiative transfer code [MCFOST](https://github.com/cpinte/mcfost) to generate synthetic images of these models
+* Interface directly with the radiative transfer code [`MCFOST`](https://github.com/cpinte/mcfost) to generate synthetic images of these models
 * (Planned) Rotate and project your models to create line-of-sight maps of velocity perturbations at some emitting layer
 * (Planned) Create analytic predictions for peak velocity maps as found in [Calcino et al. 2022](https://ui.adsabs.harvard.edu/abs/2022ApJ...929L..25C/abstract)
+
+
+`wakeflow` is intended to allow both theorists and observers to easily generate models of the interaction between disks and embedded planets, instead of having to run expensive fluid simulations. In particular, `wakeflow` allows researchers to easily test whether a planet can explain kinematic perturbations observed in some set of disk observations, so-called _velocity kinks_ (see for example [Pinte et al. 2018](https://ui.adsabs.harvard.edu/abs/2018ApJ...860L..13P/abstract)). `wakeflow` therefore also allows for a fast exploration of disk and planet parameters in order to determine those most likely to recreate observations, before resources are spent on 3D simulations. In addition, `wakeflow` models may be used with [`MCFOST`](https://github.com/cpinte/mcfost) to create synthetic images that may be compared directly with observations. 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -66,10 +69,10 @@ Python packages:
 * `setuptools`
 * `pyyaml`
 * `tqdm`
-* `pytest`
-* [`pymcfost`](https://github.com/cpinte/pymcfost) (if interfacing with [MCFOST](https://github.com/cpinte/mcfost))
+* `pytest` (optional)
+* [`pymcfost`](https://github.com/cpinte/pymcfost) (optional, only if interfacing with [MCFOST](https://github.com/cpinte/mcfost))
 
-
+If you install `wakeflow` using `pip` then the required dependencies will be automatically installed.
 
 ### PyPI (pip)
 
@@ -164,6 +167,16 @@ Please cite [Hilder et al. (in prep)](https://example.com) in any work where `wa
 
 
 <!-- CONTACT -->
+## Getting Help
+
+If you are experiencing issues with `wakeflow`, please try the following:
+
+1. Check the [documentation](https://wakeflow.readthedocs.io/en/latest/index.html) to see if it may be easily resolved
+2. Open an [issue](https://github.com/TomHilder/wakeflow/issues) on the [repository](https://github.com/TomHilder/wakeflow)
+3. Feel free to contact us directly using the details below
+
+
+<!-- CONTACT -->
 ## Contact
 
 If you are having difficulties installing or using `wakeflow`, please let us know! We are happy to answer any questions or provide assistance. 
@@ -193,11 +206,11 @@ Additional acknowledgements:
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[pypi-shield]: https://img.shields.io/badge/PyPI-1.1.2-green?style=flat-square
+[pypi-shield]: https://img.shields.io/badge/pypi-1.1.2-green?style=flat-square
 [pypi-url]: https://pypi.org/project/wakeflow/
-[python-shield]: https://img.shields.io/badge/Python-3.6%2B-orange?style=flat-square
+[python-shield]: https://img.shields.io/badge/python-3.6%2B-orange?style=flat-square
 [python-url]: https://www.python.org
-[license-shield]: https://img.shields.io/badge/License-MIT-blue?style=flat-square
+[license-shield]: https://img.shields.io/badge/license-MIT-blue?style=flat-square
 [license-url]: https://opensource.org/licenses/MIT
 [JOSS-shield]: https://img.shields.io/badge/JOSS-coming%20soon-blueviolet?style=flat-square
 [JOSS-url]: https://example.com
