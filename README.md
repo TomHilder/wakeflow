@@ -9,7 +9,7 @@
 
 
 
-[![Tests](test-status-shield)](test-status-url)
+[![Tests](test-status-shield)][test-status-url]
 [![Docs][docs-status-shield]][docs-status-url]
 
 
