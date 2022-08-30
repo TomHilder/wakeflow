@@ -6,8 +6,7 @@ Contains the NonLinearPerts class responsible for handling the non-linear regime
 """
 
 # type hinting without circular imports
-from __future__             import annotations
-from typing                 import TYPE_CHECKING
+from typing import          TYPE_CHECKING
 
 import time
 import numpy                    as np
@@ -32,7 +31,7 @@ class _NonLinearPerts():
     """
 
     # intialise object, give params and grid
-    def __init__(self, parameters: _Parameters, Grid: _Grid) -> None:
+    def __init__(self, parameters: '_Parameters', Grid: '_Grid') -> None:
         """Setup _NonLinearPerts object by grabbing _Parameters and _Grid objects.
         """
         
@@ -43,7 +42,7 @@ class _NonLinearPerts():
         self.g = Grid
 
     # get initial conditions for burgers eqn
-    def _extract_ICs(self, LinearPerts: _LinearPerts) -> None:
+    def _extract_ICs(self, LinearPerts: '_LinearPerts') -> None:
         """Extract the initial conditions for the non-linear evolution from the linear regime.
         """
         
@@ -318,7 +317,7 @@ class _NonLinearPerts():
         self.linear_t = 0
 
     # alternative IC extraction using edge of box
-    def _extract_ICs_ann(self, LinearPerts: _LinearPerts) -> None:
+    def _extract_ICs_ann(self, LinearPerts: '_LinearPerts') -> None:
         """Alternate initial condition extraction where the IC is read from the edges of the box as included in the final
         solution. Usually, far more y-extent of the linear regime is used than this. Using this method will invalidate the
         solution and is meant for developer use only.

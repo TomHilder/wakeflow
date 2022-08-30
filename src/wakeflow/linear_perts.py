@@ -6,7 +6,6 @@ Contains the LinearPerts class responsible for handling the linear regime of the
 """
 
 # type hinting without circular imports
-from __future__             import annotations
 from typing                 import TYPE_CHECKING
 
 import sys, pkg_resources, tarfile
@@ -26,7 +25,7 @@ class _LinearPerts():
     """
 
     # intitalise object given parameters. locate linear results data and read in
-    def __init__(self, parameters : _Parameters) -> None:
+    def __init__(self, parameters : '_Parameters') -> None:
 
         # grab parameters object
         self.p = parameters
