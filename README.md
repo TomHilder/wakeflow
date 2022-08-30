@@ -5,11 +5,9 @@
 [![Python][python-shield]][python-url]
 [![License][license-shield]][license-url]
 [![JOSS][JOSS-shield]][JOSS-url]
-<!--- ![Tests](https://github.com/TomHilder/wakeflow/actions/workflows/Tests.yml/badge.svg) --->
 
 
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/TomHilder/wakeflow/Tests?label=tests&style=flat-square)
-[![Tests](test-status-shield)][test-status-url]
 [![Docs][docs-status-shield]][docs-status-url]
 
 
