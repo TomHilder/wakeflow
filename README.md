@@ -5,8 +5,8 @@
 [![Python][python-shield]][python-url]
 [![License][license-shield]][license-url]
 [![JOSS][JOSS-shield]][JOSS-url]
+![Tests](https://github.com/TomHilder/wakeflow/actions/workflows/Tests.yml/badge.svg)
 [![Docs][docs-status-shield]][docs-status-url]
-
 
 
 <!-- PROJECT LOGO -->
