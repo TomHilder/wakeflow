@@ -1,6 +1,6 @@
 from wakeflow.burgers import _solve_burgers
-import numpy as np
-import matplotlib.pyplot as plt
+import numpy              as np
+import matplotlib.pyplot  as plt
 
 def test_burgers_area_conservation():
 

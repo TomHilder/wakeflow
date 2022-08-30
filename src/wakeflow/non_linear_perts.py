@@ -16,7 +16,7 @@ from scipy.interpolate      import griddata
 from copy                   import copy
 from tqdm                   import tqdm
 from .burgers               import _solve_burgers
-from .transformations       import _Eta, _t, _Lambda_fu, _Lambda_fv, _get_chi, _get_dens_vel, _plot_r_t
+from .transformations       import _Eta, _t, _get_chi, _get_dens_vel, _plot_r_t
 
 if TYPE_CHECKING:
     from .model_setup       import _Parameters
@@ -177,145 +177,145 @@ class _NonLinearPerts():
         beta_p = self.p.m_planet / self.p.m_thermal
         gamma  = self.p.gamma
 
-        if self.p.show_teta_debug_plots:
-
-            index = index_outer
-
-            # run square box cut
-            lp._cut_box_square()
-
-            # plot r, t
-            _plot_r_t(self.p)
-
-            # Local Cartesian grid which the linear solution was calculated on, meshgrid version
-            X, Y = np.meshgrid(lp.x_cut,lp.y_cut)
-
-            print("Y MIN MAX", np.min(Y),np.max(Y))
-
-            # grab positive x side of linear solution
-            x_len = len(lp.x_cut) // 2
-
-            # restrict box to area considered
-            X_rest = X[:,x_len:index]
-            Y_rest = Y[:,x_len:index]
-
-            print("Y MIN MAX", np.min(Y_rest),np.max(Y_rest))
-
-            # Find chi for linear solution, only taking positive values of x
-            # The "index" value also makes it so we do not go outside the linear box
-            linear_profile = lp.cut_rho[:,x_len:index] / np.sqrt(np.abs(X_rest)) ###
-            chi0_rho = linear_profile[:,-1]  * (gamma+1) * beta_p / 2**(3/4) 
-
-            # extract chi from velocity perturbations
-            v_unit = (self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal))
-            Rp     = self.p.r_planet
-            cw     = -self.p.a_cw
-            hr     = self.p.hr_planet
-            q      = self.p.q
-            gamma  = self.p.gamma
-            csp    = self.p.c_s_planet
-            p      = self.p.p
-            l      = self.p.l
-            linear_profile_v_r   = v_unit * (lp.cut_v_r[:,x_len:index]   / np.sqrt(np.abs(X_rest))) ###
-            linear_profile_v_phi = v_unit * (lp.cut_v_phi[:,x_len:index] / np.sqrt(np.abs(X_rest))) ###
-            R0  = np.sqrt((Rp + l*X_rest[:,-1])**2 + (l*Y_rest[:,-1])**2)
-            Lfu = _Lambda_fu(R0, Rp, csp, hr, gamma, q, p)
-            Lfv = _Lambda_fv(R0, Rp, csp, hr, gamma, q, p)
-            chi0_v_r = linear_profile_v_r[:,-1] / (np.sign(R0 - Rp) * Lfu)
-            chi0_v_phi = linear_profile_v_phi[:,-1] / (np.sign(R0 - Rp) * Lfv * (-cw))
-
-            # Find etas for the box using IC method
-            linear_eta = Y_rest + np.sign(X_rest) * 0.5 * X_rest**2
-
-            # Find etas using proper transformations
-            #hp = self.p.hr * self.p.r_planet
-            hp = self.p.hr_planet * self.p.r_planet
-            x_glob = 2 * hp * X_rest / 3.
-            y_glob = 2 * hp * Y_rest / 3.
-            r_glob = x_glob + self.p.r_planet
-            phi_glob = y_glob / self.p.r_planet
-            eta_lin = np.zeros(linear_profile.shape)
-            t_lin = np.zeros(linear_profile.shape)
-            for i in range(eta_lin.shape[0]):
-                #print(str(i))
-                for j in range(eta_lin.shape[1]):
-                    eta_lin[i,j] = _Eta(r_glob[i,j], phi_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, -self.p.a_cw)
-                    t_lin[i,j] = _t(r_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
-
-            # Plot Chi vs eta when using eta transformation used for IC cut out
-
-            #for i in range(0, len(linear_eta[0,:]), 10):
-            #    plt.plot(linear_eta[:,i], linear_profile[:,i])
-            #    plt.plot(eta_lin[:,i], linear_profile[:,i])
-            #    plt.show()
-
-            plt.plot(eta_lin[:,-1], chi0_rho, label="chi rho")
-            plt.plot(eta_lin[:,-1], chi0_v_r, label="chi vr")
-            plt.plot(eta_lin[:,-1], chi0_v_phi, label="chi vphi")
-            plt.legend(loc="lower left")
-            plt.xlim(-10,10)
-            plt.xlabel('$\eta$')
-            plt.ylabel('$\chi$')
-            plt.show()
-
-            if True: # save results to file for plotting
-
-                name = "sim_further"
-                eta_save = eta_lin[:,-1]
-                chi_save = np.array([chi0_rho, chi0_v_r, chi0_v_phi])
-                np.save(f"{name}_eta.npy", eta_save)
-                np.save(f"{name}_chi.npy", chi_save)
-
-            plt.plot(linear_eta[:,-1], linear_profile[:,-1], label="Approximate $\eta$ transformation")
-            plt.plot(eta_lin[:,-1], linear_profile[:,-1], label="Full $\eta$ transformation")
-            plt.plot(self.eta, self.profile, ls='--', label="Actual IC used")
-            plt.legend(loc="lower left")
-            plt.xlim(-10,10)
-            plt.xlabel('$\eta$')
-            plt.ylabel('$\chi$')
-            plt.show()
-
-            plt.scatter(t_lin, eta_lin)
-            plt.show()
-
-            #eta_lin = linear_eta    ### TURN THIS ON AND OFF TO CHANGE ETA TRANSFORMATION --> COMMENT OUT TO USE INTEGRAL TRANSFORM
-
-            # get grid regular in (t,eta) to interpolate onto
-            dt_lin = np.diff(np.sort(t_lin.flatten())).mean()       # find time step interval to use on regular grid from t_lin
-                                                                    # takes minimum separation between points in original t_lin grid
-            t_lin_reg = np.arange(0, self.t0, dt_lin)
-            eta_lin_reg = copy(self.eta)
-            T_lin_reg, ETA_lin_reg = np.meshgrid(t_lin_reg, eta_lin_reg)
-
-            # interpolate solution over irregular grid onto regular grid
-            print("Interpolating Linear solution into (t, eta) space")
-            lin_solution = griddata(
-                (t_lin.flatten(), eta_lin.flatten()), 
-                linear_profile.flatten(),
-                (T_lin_reg, ETA_lin_reg),
-                method='linear'
-            )
-
-            #plt.plot(linear_eta[:,-1], linear_profile[:,-1])       # approx
-            plt.plot(eta_lin[:,-1], linear_profile[:,-1])           # integral trans
-            plt.plot(eta_lin_reg, lin_solution[:,-1])               # interpolated integral trans
-            #plt.plot(self.eta, self.profile, c='k')                # IC
-            plt.show()
-
-            # plotting (for debugging)
-            _, ax = plt.subplots()
-            myplot = ax.contourf(t_lin_reg, eta_lin_reg, np.nan_to_num(lin_solution), levels=np.arange(-4,4,0.1), cmap='RdBu', extend='both')
-            plt.colorbar(myplot)
-            plt.show()
-
-            # stick this into the solutions array, update later code so that solutions array builds on this one
-            self.linear_solution = np.nan_to_num(lin_solution)
-            self.linear_t = t_lin_reg
-
-        else:
+#        if self.p.show_teta_debug_plots:
+#
+#            index = index_outer
+#
+#            # run square box cut
+#            lp._cut_box_square()
+#
+#            # plot r, t
+#            _plot_r_t(self.p)
+#
+#            # Local Cartesian grid which the linear solution was calculated on, meshgrid version
+#            X, Y = np.meshgrid(lp.x_cut,lp.y_cut)
+#
+#            print("Y MIN MAX", np.min(Y),np.max(Y))
+#
+#            # grab positive x side of linear solution
+#            x_len = len(lp.x_cut) // 2
+#
+#            # restrict box to area considered
+#            X_rest = X[:,x_len:index]
+#            Y_rest = Y[:,x_len:index]
+#
+#            print("Y MIN MAX", np.min(Y_rest),np.max(Y_rest))
+#
+#            # Find chi for linear solution, only taking positive values of x
+#            # The "index" value also makes it so we do not go outside the linear box
+#            linear_profile = lp.cut_rho[:,x_len:index] / np.sqrt(np.abs(X_rest)) ###
+#            chi0_rho = linear_profile[:,-1]  * (gamma+1) * beta_p / 2**(3/4) 
+#
+#            # extract chi from velocity perturbations
+#            v_unit = (self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal))
+#            Rp     = self.p.r_planet
+#            cw     = -self.p.a_cw
+#            hr     = self.p.hr_planet
+#            q      = self.p.q
+#            gamma  = self.p.gamma
+#            csp    = self.p.c_s_planet
+#            p      = self.p.p
+#            l      = self.p.l
+#            linear_profile_v_r   = v_unit * (lp.cut_v_r[:,x_len:index]   / np.sqrt(np.abs(X_rest))) ###
+#            linear_profile_v_phi = v_unit * (lp.cut_v_phi[:,x_len:index] / np.sqrt(np.abs(X_rest))) ###
+#            R0  = np.sqrt((Rp + l*X_rest[:,-1])**2 + (l*Y_rest[:,-1])**2)
+#            Lfu = _Lambda_fu(R0, Rp, csp, hr, gamma, q, p)
+#            Lfv = _Lambda_fv(R0, Rp, csp, hr, gamma, q, p)
+#            chi0_v_r = linear_profile_v_r[:,-1] / (np.sign(R0 - Rp) * Lfu)
+#            chi0_v_phi = linear_profile_v_phi[:,-1] / (np.sign(R0 - Rp) * Lfv * (-cw))
+#
+#            # Find etas for the box using IC method
+#            linear_eta = Y_rest + np.sign(X_rest) * 0.5 * X_rest**2
+#
+#            # Find etas using proper transformations
+#            #hp = self.p.hr * self.p.r_planet
+#            hp = self.p.hr_planet * self.p.r_planet
+#            x_glob = 2 * hp * X_rest / 3.
+#            y_glob = 2 * hp * Y_rest / 3.
+#            r_glob = x_glob + self.p.r_planet
+#            phi_glob = y_glob / self.p.r_planet
+#            eta_lin = np.zeros(linear_profile.shape)
+#            t_lin = np.zeros(linear_profile.shape)
+#            for i in range(eta_lin.shape[0]):
+#                #print(str(i))
+#                for j in range(eta_lin.shape[1]):
+#                    eta_lin[i,j] = _Eta(r_glob[i,j], phi_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, -self.p.a_cw)
+#                    t_lin[i,j] = _t(r_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
+#
+#            # Plot Chi vs eta when using eta transformation used for IC cut out
+#
+#            #for i in range(0, len(linear_eta[0,:]), 10):
+#            #    plt.plot(linear_eta[:,i], linear_profile[:,i])
+#            #    plt.plot(eta_lin[:,i], linear_profile[:,i])
+#            #    plt.show()
+#
+#            plt.plot(eta_lin[:,-1], chi0_rho, label="chi rho")
+#            plt.plot(eta_lin[:,-1], chi0_v_r, label="chi vr")
+#            plt.plot(eta_lin[:,-1], chi0_v_phi, label="chi vphi")
+#            plt.legend(loc="lower left")
+#            plt.xlim(-10,10)
+#            plt.xlabel('$\eta$')
+#            plt.ylabel('$\chi$')
+#            plt.show()
+#
+#            if True: # save results to file for plotting
+#
+#                name = "sim_further"
+#                eta_save = eta_lin[:,-1]
+#                chi_save = np.array([chi0_rho, chi0_v_r, chi0_v_phi])
+#                np.save(f"{name}_eta.npy", eta_save)
+#                np.save(f"{name}_chi.npy", chi_save)
+#
+#            plt.plot(linear_eta[:,-1], linear_profile[:,-1], label="Approximate $\eta$ transformation")
+#            plt.plot(eta_lin[:,-1], linear_profile[:,-1], label="Full $\eta$ transformation")
+#            plt.plot(self.eta, self.profile, ls='--', label="Actual IC used")
+#            plt.legend(loc="lower left")
+#            plt.xlim(-10,10)
+#            plt.xlabel('$\eta$')
+#            plt.ylabel('$\chi$')
+#            plt.show()
+#
+#            plt.scatter(t_lin, eta_lin)
+#            plt.show()
+#
+#            #eta_lin = linear_eta    ### TURN THIS ON AND OFF TO CHANGE ETA TRANSFORMATION --> COMMENT OUT TO USE INTEGRAL TRANSFORM
+#
+#            # get grid regular in (t,eta) to interpolate onto
+#            dt_lin = np.diff(np.sort(t_lin.flatten())).mean()       # find time step interval to use on regular grid from t_lin
+#                                                                    # takes minimum separation between points in original t_lin grid
+#            t_lin_reg = np.arange(0, self.t0, dt_lin)
+#            eta_lin_reg = copy(self.eta)
+#            T_lin_reg, ETA_lin_reg = np.meshgrid(t_lin_reg, eta_lin_reg)
+#
+#            # interpolate solution over irregular grid onto regular grid
+#            print("Interpolating Linear solution into (t, eta) space")
+#            lin_solution = griddata(
+#                (t_lin.flatten(), eta_lin.flatten()), 
+#                linear_profile.flatten(),
+#                (T_lin_reg, ETA_lin_reg),
+#                method='linear'
+#            )
+#
+#            #plt.plot(linear_eta[:,-1], linear_profile[:,-1])       # approx
+#            plt.plot(eta_lin[:,-1], linear_profile[:,-1])           # integral trans
+#            plt.plot(eta_lin_reg, lin_solution[:,-1])               # interpolated integral trans
+#            #plt.plot(self.eta, self.profile, c='k')                # IC
+#            plt.show()
+#
+#            # plotting (for debugging)
+#            _, ax = plt.subplots()
+#            myplot = ax.contourf(t_lin_reg, eta_lin_reg, np.nan_to_num(lin_solution), levels=np.arange(-4,4,0.1), cmap='RdBu', extend='both')
+#            plt.colorbar(myplot)
+#            plt.show()
+#
+#            # stick this into the solutions array, update later code so that solutions array builds on this one
+#            self.linear_solution = np.nan_to_num(lin_solution)
+#            self.linear_t = t_lin_reg
+#
+#        else:
             
-            self.linear_solution = 0
-            self.linear_t = 0
+        self.linear_solution = 0
+        self.linear_t = 0
 
     # alternative IC extraction using edge of box
     def _extract_ICs_ann(self, LinearPerts: _LinearPerts) -> None:

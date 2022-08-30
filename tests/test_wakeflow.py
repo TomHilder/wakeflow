@@ -131,8 +131,45 @@ def test_file_config():
     assert model.model_params["n_v"]                 == 40
 
 # check that running the default model works
-#def test_run_default():
-#    model = WakeflowModel()
-#    # turn saving off and don't show plots
-#    model.configure(show_midplane_plots=False, make_midplane_plots=False, save_perturbations=False, save_total=False)
-#    model.run()
+def test_run_default():
+    model = WakeflowModel()
+    # turn saving off and don't show plots
+    model.configure(
+        n_x=100,
+        n_y=100,
+        show_midplane_plots=False, 
+        make_midplane_plots=False, 
+        save_perturbations=False, 
+        save_total=False
+    )
+    model.run()
+
+def test_run_cylindrical():
+    model = WakeflowModel()
+    # turn saving off and don't show plots
+    model.configure(
+        grid_type="cylindrical",
+        n_r=100,
+        n_phi=100,
+        show_midplane_plots=False, 
+        make_midplane_plots=False, 
+        save_perturbations=False, 
+        save_total=False
+    )
+    model.run()
+
+def test_run_cylindrica_dev_option():
+    model = WakeflowModel()
+    # turn saving off and don't show plots
+    model.configure(
+        grid_type="cylindrical",
+        n_r=100,
+        n_phi=100,
+        r_log=True,
+        show_midplane_plots=False, 
+        make_midplane_plots=False, 
+        save_perturbations=False, 
+        save_total=False
+    )
+    model.model_params["box_warp"] = False
+    model.run()

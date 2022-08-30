@@ -1,7 +1,7 @@
 from wakeflow               import WakeflowModel
 from wakeflow.linear_perts  import _LinearPerts
 from wakeflow.model_setup   import _Parameters
-import numpy                as np
+import numpy                    as np
 
 def default_Params():
     # create dictionary of parameters

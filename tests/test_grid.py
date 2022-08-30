@@ -1,8 +1,8 @@
 from wakeflow               import WakeflowModel
 from wakeflow.grid          import _Grid
 from wakeflow.model_setup   import _Parameters
-from copy                   import copy
-import numpy                as np
+from copy                   import copy, deepcopy
+import numpy                    as np
 import pytest
 
 def cart_grid(dimless=False):
@@ -33,6 +33,29 @@ def cyli_grid(dimless=False):
     # create dictionary of parameters
     model = WakeflowModel()
     model.configure(grid_type="cylindrical", dimensionless=dimless)
+    param_dict = model.model_params
+
+    # intialise grid with parameters object
+    grid = _Grid(_Parameters(param_dict))
+
+    # check initial properties
+    assert grid.info == {
+        'Type': None, 
+        'Log_r': None, 
+        'Size': [0, 0, 0], 
+        'Contains': 'Empty'
+    }
+
+    # setup grid geometry
+    grid._make_grid()
+
+    return grid
+
+def cyli_grid_log_r(dimless=False):
+
+    # create dictionary of parameters
+    model = WakeflowModel()
+    model.configure(grid_type="cylindrical", r_log=True, dimensionless=dimless)
     param_dict = model.model_params
 
     # intialise grid with parameters object
@@ -89,6 +112,29 @@ def test_cylindrical():
         'Size': [160, 50, 200], 
         'Contains': 'Empty'
     }
+
+def test_cylindrical_log_r():
+
+    grid = cyli_grid_log_r()
+
+    # check grid geometry
+    assert grid.r.min() == 100
+    assert grid.r.max() == 500
+    assert -grid.phi.min() == grid.phi.max() == np.pi
+
+    # check grid properties
+    assert grid.info == {
+        'Type': 'cylindrical', 
+        'Log_r': True, 
+        'Size': [160, 50, 200], 
+        'Contains': 'Empty'
+    }
+
+def test_get_rphi_cylindrical():
+
+    grid = cyli_grid()
+    with pytest.raises(Exception):
+        grid._get_r_phi_coords()
 
 def test_dimless():
 
@@ -160,3 +206,28 @@ def test_merge():
     assert np.array_equal(ca_g_2.v_r,   ca_g.v_r)
     assert np.array_equal(ca_g_2.v_phi, ca_g.v_phi)
     assert np.array_equal(ca_g_2.rho,   ca_g.rho)
+
+def test_flip():
+
+    # setup grids
+    ca_g = cart_grid(dimless=True)
+    cy_g = cyli_grid(dimless=True)
+
+    # fill fields keplerian rotation
+    cy_g._make_keplerian_disk()
+    ca_g._make_keplerian_disk()
+
+    # copy grids
+    ca_g2, cy_g2 = deepcopy(ca_g), deepcopy(cy_g)
+
+    # flip copies
+    ca_g2._flip_results()
+    cy_g2._flip_results()
+
+    # check flipping has worked properly
+    assert np.array_equal(ca_g.v_phi[0,0,0], -ca_g2.v_phi[0,0,0])
+    assert np.array_equal(cy_g.v_phi, -cy_g2.v_phi)
+    assert np.array_equal(ca_g.y[0], -ca_g2.y[0])
+    assert np.array_equal(ca_g.Y, -ca_g2.Y)
+    assert np.array_equal(cy_g.phi, -cy_g2.phi)
+    assert np.array_equal(cy_g.PHI, -cy_g2.PHI)
