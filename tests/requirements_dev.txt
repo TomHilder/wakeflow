@@ -1,0 +1,9 @@
+numpy
+matplotlib
+astropy
+scipy
+setuptools
+pyyaml
+tqdm
+pytest
+pytest-cov
