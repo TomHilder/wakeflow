@@ -5,7 +5,11 @@
 [![Python][python-shield]][python-url]
 [![License][license-shield]][license-url]
 [![JOSS][JOSS-shield]][JOSS-url]
-![Tests](https://github.com/TomHilder/wakeflow/actions/workflows/Tests.yml/badge.svg)
+<!--- ![Tests](https://github.com/TomHilder/wakeflow/actions/workflows/Tests.yml/badge.svg) --->
+
+
+
+[![Tests](test-status-shield)](test-status-url)
 [![Docs][docs-status-shield]][docs-status-url]
 
 
@@ -189,5 +193,7 @@ Additional acknowledgements:
 [license-url]: https://opensource.org/licenses/MIT
 [JOSS-shield]: https://img.shields.io/badge/JOSS-coming%20soon-blueviolet?style=flat-square
 [JOSS-url]: https://example.com
+[test-status-shield]: https://github.com/TomHilder/wakeflow/actions/workflows/Tests.yml/badge.svg?style=flat-square
+[test-status-url]: https://github.com/TomHilder/wakeflow/actions/workflows/Tests.yml
 [docs-status-shield]: https://readthedocs.org/projects/wakeflow/badge/?version=latest&style=flat-square
 [docs-status-url]: https://wakeflow.readthedocs.io/en/latest/?badge=latest
