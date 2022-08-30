@@ -7,3 +7,4 @@ pyyaml
 tqdm
 pytest
 pytest-cov
+tox
