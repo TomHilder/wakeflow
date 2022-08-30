@@ -1,6 +1,7 @@
 from wakeflow               import WakeflowModel
 from wakeflow.linear_perts  import _LinearPerts
 from wakeflow.model_setup   import _Parameters
+from pytest                 import approx
 import numpy                    as np
 
 def default_Params():
@@ -23,10 +24,10 @@ def test_cut_square():
     lp._cut_box_square()
 
     # check edges of cut
-    assert lp.x_cut.min() == -1.987
-    assert lp.x_cut.max() ==  2.001
-    assert lp.y_cut.min() == -11.928
-    assert lp.y_cut.max() ==  12.026
+    assert lp.x_cut.min() == approx(-1.987 )
+    assert lp.x_cut.max() == approx( 2.001 )
+    assert lp.y_cut.min() == approx(-11.928)
+    assert lp.y_cut.max() == approx( 12.026)
 
 def test_cut_annulus():
 

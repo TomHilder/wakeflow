@@ -3,6 +3,7 @@ from wakeflow.grid              import _Grid
 from wakeflow.linear_perts      import _LinearPerts
 from wakeflow.non_linear_perts  import _NonLinearPerts
 from wakeflow.model_setup       import _Parameters
+from pytest                     import approx
 import numpy                        as np
 import pytest
 
@@ -52,12 +53,12 @@ def test_extract_ICs_default():
     nlp._extract_ICs(lp)
 
     # check ICs
-    assert nlp.eta_tilde_inner == 1.707850734468749
-    assert nlp.eta_tilde_outer == 3.1189508931861276
-    assert nlp.C_inner         == 0.1406077053627964
-    assert nlp.C_outer         == 0.08439583277062648
-    assert nlp.t0_inner        == 2.3034788704426026
-    assert nlp.t0_outer        == 1.608427450463994
+    assert nlp.eta_tilde_inner == approx(1.707850734468749)
+    assert nlp.eta_tilde_outer == approx(3.1189508931861276)
+    assert nlp.C_inner         == approx(0.1406077053627964)
+    assert nlp.C_outer         == approx(0.08439583277062648)
+    assert nlp.t0_inner        == approx(2.3034788704426026)
+    assert nlp.t0_outer        == approx(1.608427450463994)
 
 def test_alternate_extract_ICs_default():
     # this should not work
@@ -101,9 +102,9 @@ def test_alternate_extract_ICs_works():
     nlp._extract_ICs_ann(lp)
 
     # check ICs
-    assert nlp.eta_tilde_inner == 1.6859265632683058
-    assert nlp.eta_tilde_outer == 2.627559133795374
-    assert nlp.C_inner         == 0.19149042489930776
-    assert nlp.C_outer         == 0.02144357556464586
-    assert nlp.t0_inner        == 2.3034788704426026
-    assert nlp.t0_outer        == 1.608427450463994
+    assert nlp.eta_tilde_inner == approx(1.6859265632683058)
+    assert nlp.eta_tilde_outer == approx(2.627559133795374)
+    assert nlp.C_inner         == approx(0.19149042489930776)
+    assert nlp.C_outer         == approx(0.02144357556464586)
+    assert nlp.t0_inner        == approx(2.3034788704426026)
+    assert nlp.t0_outer        == approx(1.608427450463994)

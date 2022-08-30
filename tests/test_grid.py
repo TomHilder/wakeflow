@@ -2,6 +2,7 @@ from wakeflow               import WakeflowModel
 from wakeflow.grid          import _Grid
 from wakeflow.model_setup   import _Parameters
 from copy                   import copy, deepcopy
+from pytest                 import approx
 import numpy                    as np
 import pytest
 
@@ -79,8 +80,8 @@ def test_cartesian():
     grid = cart_grid()
 
     # check grid geometry
-    assert grid.x.min() == grid.y.min() == -500
-    assert grid.x.max() == grid.y.max() ==  500
+    assert grid.x.min() == grid.y.min() == approx(-500)
+    assert grid.x.max() == grid.y.max() == approx( 500)
 
     # check grid properties
     assert grid.info == {
@@ -92,8 +93,8 @@ def test_cartesian():
 
     grid._get_r_phi_coords()
 
-    assert grid.R_xy.max() == np.sqrt(2 * 500**2)
-    assert grid.PHI_xy.max() == -grid.PHI_xy.min()
+    assert grid.R_xy.max()   == approx( np.sqrt(2 * 500**2) )
+    assert grid.PHI_xy.max() == approx( -grid.PHI_xy.min()  )
     assert (np.pi - grid.PHI_xy.max()) / np.pi < 1e-3
 
 def test_cylindrical():
@@ -101,9 +102,9 @@ def test_cylindrical():
     grid = cyli_grid()
 
     # check grid geometry
-    assert grid.r.min() == 100
-    assert grid.r.max() == 500
-    assert -grid.phi.min() == grid.phi.max() == np.pi
+    assert grid.r.min() == approx(100)
+    assert grid.r.max() == approx(500)
+    assert -grid.phi.min() == grid.phi.max() == approx(np.pi)
 
     # check grid properties
     assert grid.info == {
@@ -118,9 +119,9 @@ def test_cylindrical_log_r():
     grid = cyli_grid_log_r()
 
     # check grid geometry
-    assert grid.r.min() == 100
-    assert grid.r.max() == 500
-    assert -grid.phi.min() == grid.phi.max() == np.pi
+    assert grid.r.min() == approx(100)
+    assert grid.r.max() == approx(500)
+    assert -grid.phi.min() == grid.phi.max() == approx(np.pi)
 
     # check grid properties
     assert grid.info == {
@@ -178,13 +179,13 @@ def test_dimless():
     assert np.array_equal(cy_g.rho, np.ones(cy_g.rho.shape))
 
     # check lengths cartesian
-    assert ca_g.x.min() == ca_g.y.min() == -2
-    assert ca_g.x.max() == ca_g.y.max() ==  2
+    assert ca_g.x.min() == ca_g.y.min() == approx(-2)
+    assert ca_g.x.max() == ca_g.y.max() == approx( 2)
 
     # check lengths cylindrical
-    assert cy_g.r.min() == 0.4
-    assert cy_g.r.max() == 2
-    assert -cy_g.phi.min() == cy_g.phi.max() == np.pi
+    assert cy_g.r.min() == approx(0.4)
+    assert cy_g.r.max() == approx(  2)
+    assert -cy_g.phi.min() == cy_g.phi.max() == approx(np.pi)
 
 def test_merge():
 
