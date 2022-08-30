@@ -28,9 +28,7 @@ dependencies = [
     "scipy",
     "setuptools",
     "pyyaml",
-    "tqdm",
-    "pytest",
-    "pytest-cov"
+    "tqdm"
 ]
 requires-python = ">=3.6"
 

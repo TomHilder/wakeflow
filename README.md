@@ -117,6 +117,14 @@ Please refer to the [Quickstart tutorial](https://wakeflow.readthedocs.io/en/lat
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
+<!-- USAGE EXAMPLES -->
+## Testing
+
+`wakeflow` is automatically unit-tested on Github using Actions and [`tox`](https://github.com/tox-dev/tox). If you have installed `wakeflow` from source, you may run a local test on your machine provided that you have `pytest` installed. Simply navigate to your installation directory and run
+```sh
+pytest
+```
+
 
 <!-- CONTRIBUTING -->
 ## Contributing
