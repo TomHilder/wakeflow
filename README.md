@@ -176,6 +176,8 @@ Project Link: [https://github.com/TomHilder/wakeflow](https://github.com/TomHild
 Additional acknowledgements:
 * [Img Shields](https://shields.io)
 * [Best-README-Template](https://github.com/othneildrew/Best-README-Template)
+* [Tox](https://github.com/tox-dev/tox)
+* [Tox GH Actions](https://github.com/ymyzk/tox-gh-actions)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
