@@ -211,6 +211,10 @@ class WakeflowModel():
             Overwrite previous results with identical name?
         """
         
+        print(
+            "                 __        ______             \n _      ______ _/ /_____  / __/ /___ _      __\n| | /| / / __ `/ //_/ _ \/ /_/ / __ \ | /| / /\n| |/ |/ / /_/ / ,< /  __/ __/ / /_/ / |/ |/ / \n|__/|__/\__,_/_/|_|\___/_/ /_/\____/|__/|__/  "
+        )
+        
         # run setup
         try:
             params = _run_setup(self.model_params, overwrite=overwrite)
