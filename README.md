@@ -58,21 +58,6 @@
 
 
 
-### Dependencies
-
-Python packages:
-
-* `numpy`
-* `matplotlib`
-* `astropy`
-* `scipy`
-* `setuptools`
-* `pyyaml`
-* `tqdm`
-* `pytest` (optional)
-* [`pymcfost`](https://github.com/cpinte/pymcfost) (optional, only if interfacing with [MCFOST](https://github.com/cpinte/mcfost))
-
-If you install `wakeflow` using `pip` then the required dependencies will be automatically installed.
 
 ### PyPI (pip)
 
@@ -86,7 +71,7 @@ that's it!
 
 ### From source (GitHub)
 
-If you want to contribute to, or modify `wakeflow`, you should install it from the [GitHub repository](https://github.com/TomHilder/wakeflow). Simply fork the repo using the button in the top right, and then clone it:
+If you want to contribute to, or modify `wakeflow`, you should install it from the [GitHub repository](https://github.com/TomHilder/wakeflow). After installing the dependencies (see below), simply fork the repo using the button in the top right, and then clone it:
 ```sh
 git clone https://github.com/<replace-by-your-username>/wakeflow.git
 ```
@@ -109,6 +94,24 @@ python -m pip install -e .
 Do not forget the dot (.) in the above command, as it tells `pip` to look in the current working directory (where `wakeflow` is). The advantage of installing this way is that it places a _link_ to `wakeflow` in your `site-packages` folder instead of _moving_ it there. Now when you edit the code in `wakeflow/src/wakeflow/` it will edit your installation!
 
 <p align="right">(<a href="#top">back to top</a>)</p>
+
+
+
+### Dependencies
+
+Python packages:
+
+* `numpy`
+* `matplotlib`
+* `astropy`
+* `scipy`
+* `setuptools`
+* `pyyaml`
+* `tqdm`
+* `pytest` (optional)
+* [`pymcfost`](https://github.com/cpinte/pymcfost) (optional, only if interfacing with [MCFOST](https://github.com/cpinte/mcfost))
+
+If you install `wakeflow` using `pip` then the required dependencies will be automatically installed.
 
 
 
