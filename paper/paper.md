@@ -39,7 +39,7 @@ Detecting newly formed planets embedded in their disk is a challenging problem
 in the field of planet formation. A major area of progress in recent years is
 the detection of planets by the gravitationally induced disturbance in their
 host disks. This disturbance manifests as a deviation in velocity from the bulk
-flow which may be measured through the Doppler shift of molecular lines [e.g. @Perez:2015; @Pinte2018]. 
+flow which may be measured through the Doppler shift of molecular lines [e.g. @Perez:2015; @Pinte:2018]. 
 Such kinematic observations have been accurately reproduced through 3D fluid simulations
 of the planet-disk interaction, allowing for the inference of planet and disk
 properties [@Pinte:2018; @Pinte:2019]. However, such studies are computationally 
