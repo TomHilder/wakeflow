@@ -30,57 +30,53 @@ bibliography: paper.bib
 
 # Summary
 
-`wakeflow` is a Python package for generating models of the perturbations 
-induced by planets embedded in their natal gas disks. These perturbations
-take the form of a spiral shock wave (cite Ogilvie), and are often called 
+`Wakeflow` is a Python package for generating models of the perturbations 
+induced by planets embedded in gaseous circumstellar disks. These perturbations
+take the form of a spiral shock wave [@Ogilvie:2002], and are often called 
 a "planet wake" in analogy with that produced by a boat in a lake.
 
 Detecting newly formed planets embedded in their disk is a challenging problem 
 in the field of planet formation. A major area of progress in recent years is
 the detection of planets by the gravitationally induced disturbance in their
 host disks. This disturbance manifests as a deviation in velocity from the bulk
-flow which may be measured through the Doppler shift of molecular lines (citations). 
+flow which may be measured through the Doppler shift of molecular lines [e.g. @Perez:2015; @Pinte2018]. 
 Such kinematic observations have been accurately reproduced through 3D fluid simulations
 of the planet-disk interaction, allowing for the inference of planet and disk
-properties (citations). However, such studies are computationally very expensive.
+properties [@Pinte:2018; @Pinte:2019]. However, such studies are computationally 
+very expensive.
 
-`wakeflow` eases this computational cost by applying the theory of planet wake 
-generation and propagation (goodman, rafikov, bollati) to create semi-analytic 
-models of planet wakes. `wakeflow` models are readily created in less than a 
-minute on a modern laptop, as opposed to the often hours of supercomputer time needed 
-for 3D hydrodynamical simulations. The relatively low computational cost of `wakeflow`
+`Wakeflow` eases this computational cost by applying the theory of planet wake 
+generation and propagation [@Goldreich:1979; @Goodman:2001; @Rafikov:2002; @Bollati:2021]
+to create semi-analytic models of planet wakes. `Wakeflow` models are readily created in 
+less than a minute on a modern laptop, as opposed to the hours of supercomputer time needed 
+for 3D hydrodynamical simulations. The relatively low computational cost of `Wakeflow`
 means that researchers can get an idea of whether planet-disk interactions
 can explain their observations, and the disk and planet parameters needed, before
-spending computer time on more detailed simulations. In addition, `wakeflow`
+spending computer time on more detailed simulations. In addition, `Wakeflow`
 allows researchers to create these models without needing detailed theoretical 
 knowledge. 
 
 Synthetic observations of disk models are common in the literature, produced
-through radiation transfer codes such as `MCFOST` (pinte). `wakeflow` is capable of 
-interfacing with `MCFOST` in order to create synthetic observations of the
+through radiation transfer codes such as `MCFOST` [@Pinte:2006; @Pinte:2009]. `Wakeflow` 
+is capable of interfacing with `MCFOST` in order to create synthetic observations of the
 semi-analytic models for direct comparison with real continuum or line emission
 observations.
 
-# Statement of need
+`Wakeflow` is partially adapted from a previous Python code also written by us called
+`Analytical_Kinks` [@Analytical_Kinks]. `Wakeflow` is intended to be a more complete, versatile 
+and easy to use version of that code, and it obeys standard Python packaging conventions.
+In addition, `Wakeflow` can directly interface with `MCFOST` while `Analytical_Kinks` cannot.
+At the time of writing, no other open source software packages exist to generate the perturbations
+induced by an embedded planet in a circumstellar disk using the semi-analytic theory
+of planet wakes.
 
-
-
-# Citations
-
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
+Existing scientific publications focusing on detecting the kinematic signatures of
+planets that have used `Wakeflow` or its predecessor `Analytical_Kinks` include
+@Bollati:2021, @Calcino:2022 and @Teague:2022.
 
 # Acknowledgements
 
-
+`Wakeflow` relies on the following scientific Python packages: `NumPy` [@Harris:2020], 
+`Matplotlib` [@Hunter:2007], `SciPy` [@Virtanen:2020] and `Astropy` [@Astropy:2022].
 
 # References
