@@ -71,7 +71,7 @@ induced by an embedded planet in a circumstellar disk using the semi-analytic th
 of planet wakes.
 
 Existing scientific publications focusing on detecting the kinematic signatures of
-planets that have used `Wakeflow' or its predecessor `Analytical_Kinks` include
+planets that have used `Wakeflow` or its predecessor `Analytical_Kinks` include
 @Bollati:2021, @Calcino:2022 and @Teague:2022.
 
 # Acknowledgements
