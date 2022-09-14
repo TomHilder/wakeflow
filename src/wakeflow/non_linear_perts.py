@@ -544,58 +544,52 @@ class _NonLinearPerts():
 
         # if using a cylindrical grid
         else:
-            print()
-            dnl = np.zeros((self.p.n_phi, self.p.n_r))
-            unl = np.zeros((self.p.n_phi, self.p.n_r))
-            vnl = np.zeros((self.p.n_phi, self.p.n_r))
-
             r = self.g.r
             phi = self.g.phi
 
-            for i in tqdm(range(self.p.n_r), desc="* Mapping to physical coords"):
-                rr = r[i]
-                for j in range(self.p.n_phi):
+            r_grid, pphi_grid = np.meshgrid(r, phi)
 
-                    pphi = phi[j]
+            tt = _t_vector(r_grid, Rp, hr, q, p)
 
-                    Chi = _get_chi(
-                        pphi, 
-                        rr, 
-                        time_outer,
-                        time_inner, 
-                        eta_outer, 
-                        eta_inner, 
-                        eta_tilde_outer,
-                        eta_tilde_inner, 
-                        C_outer,
-                        C_inner, 
-                        solution_outer, 
-                        solution_inner, 
-                        t0_outer,
-                        t0_inner, 
-                        tf_outer,
-                        tf_inner, 
-                        Rp, 
-                        x_match, 
-                        l, 
-                        cw, 
-                        hr, 
-                        q, 
-                        p
-                    )
+            Chi = _get_chi_vector(
+                pphi_grid, 
+                r_grid, 
+                tt,
+                time_outer,
+                time_inner, 
+                eta_outer, 
+                eta_inner, 
+                eta_tilde_outer,
+                eta_tilde_inner, 
+                C_outer,
+                C_inner, 
+                solution_outer, 
+                solution_inner, 
+                t0_outer,
+                t0_inner, 
+                tf_outer,
+                tf_inner, 
+                Rp, 
+                x_match, 
+                l, 
+                cw, 
+                hr, 
+                q, 
+                p
+            )
 
-                    # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
-                    dnl[j,i], unl[j,i], vnl[j,i] = _get_dens_vel(
-                        rr, 
-                        Chi, 
-                        gamma, 
-                        Rp, 
-                        cw, 
-                        csp, 
-                        hr, 
-                        q, 
-                        p
-                    ) 
+            # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
+            dnl, unl, vnl = _get_dens_vel(
+                r_grid, 
+                Chi, 
+                gamma, 
+                Rp, 
+                cw, 
+                csp, 
+                hr, 
+                q, 
+                p
+            )
         
         timer_1 = time.perf_counter()
         print(f'Completed in {timer_1-timer_0:0.2f} s')
