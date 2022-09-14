@@ -7,7 +7,7 @@ Contains functions for mapping the results between (t,eta,chi) coordinates and p
 
 import numpy                    as np
 import matplotlib.pyplot        as plt
-from scipy.integrate        import quad
+from scipy.integrate        import quad, odeint
 from scipy.interpolate      import RectBivariateSpline
 
 # NOTE: contents are intended for internal use and should not be directly accessed by users
@@ -37,9 +37,17 @@ def _Eta(r, phi, Rp, hr, q, cw):
 
     return coeff * deltaphi
 
+def _Eta_vector(r, phi, Rp, hr, q, cw):
+    """Eq. (14) Bollati et al. 2021
+    """
+    coeff    = 1.5 / hr
+    phi_w    = _phi_wake(r, Rp, hr, q, cw) % (2*np.pi)
+    deltaphi = (phi - phi_w + np.pi) % (2*np.pi) - np.pi
+
+    return coeff * deltaphi
+
 # modulo 2pi
 def _mod2pi(phi):
-
     if phi >= 0:
         return phi % (2 * np.pi) 
 
@@ -53,6 +61,7 @@ def _mod2pi(phi):
             
         return -resto + 2 * np.pi
 
+
 # integrand of the t coordinate transformation
 def _t_integrand(x, q, p):
     rho = 5 * q + p
@@ -62,6 +71,47 @@ def _t_integrand(x, q, p):
 # integral for t coordinate transformation
 def _t_integral(up, q, p):
     return  quad(_t_integrand, 1, up, args=(q,p))[0]
+
+def _t_vector(rr, Rp, hr, q, p):
+    """Equation (43) Rafikov 2002    (Eq. 13 Bollati et al. 2021)
+    """
+    shape = rr.shape
+
+    integral_bounds = (rr / Rp).flatten()
+    integral_bounds_sorted_indices = np.argsort(integral_bounds)
+    integral_bounds_mask  = integral_bounds >= 1.0
+    num_larger = np.sum(integral_bounds_mask)
+
+    larger_vals = np.zeros( (num_larger + 1,) , dtype = integral_bounds.dtype)
+    larger_vals[0] = 1.0
+    larger_vals[1:] = integral_bounds[integral_bounds_mask]
+    larger_vals.sort()
+
+    smaller_vals = np.zeros( (integral_bounds.size - num_larger + 1,),
+        dtype = integral_bounds.dtype)
+    smaller_vals[0] = 1.0
+    smaller_vals[1:] = integral_bounds[~integral_bounds_mask]
+    smaller_vals.sort()
+    smaller_vals = np.flip(smaller_vals)
+
+    rho = 5 * q + p
+    w   = rho / 2 - 11 / 4
+
+    odefun = lambda _,x: np.abs(1 - x**(1.5))**(1.5) * x**w
+    larger_t = odeint(odefun, np.array([0]), larger_vals)
+
+    odefun = lambda _,x: np.abs(1 - (1-x)**(1.5))**(1.5) * (1-x)**w
+    smaller_t = odeint(odefun, np.array([0]), 1-smaller_vals)
+    sorted_results = np.concatenate((
+        np.flip(smaller_t.flatten()[1:]), 
+        larger_t.flatten()[1:]
+    ))
+    module_integral = np.zeros_like(sorted_results)
+    module_integral[integral_bounds_sorted_indices] = np.abs(sorted_results)
+
+    coeff = 3 * hr**(-5 / 2) / (2**(5 / 4))
+    return np.reshape(coeff * module_integral, shape)
+
 
 # t coordinate transformation
 def _t(r, Rp, hr, q, p):
@@ -122,7 +172,8 @@ def _get_chi(
     cw, 
     hr, 
     q, 
-    p
+    p,
+    t1
 ):
     # COMPUTATION OF Chi
 
@@ -130,7 +181,12 @@ def _get_chi(
         return 0.
 
     # change coordinates of the grid point (rr,pphi) to (t1,eta1)
-    t1 = _t(rr, Rp, hr, q, p)
+    #t1_orig = _t(rr, Rp, hr, q, p)
+
+    #if np.abs(t1-t1_orig) / t1_orig > 1e-2:
+    #    print(t1-t1_orig)
+
+
     eta1 = _Eta(rr, pphi, Rp, hr, q, cw)
 
     # If the point is in the outer disk, use the outer wake solution
@@ -197,6 +253,91 @@ def _get_chi(
             else:
                 Chi = 0
     
+    return Chi
+
+
+def _get_chi_vector(
+    pphi, 
+    rr,
+    tt,
+    time_outer,
+    time_inner, 
+    eta_outer, 
+    eta_inner, 
+    eta_tilde_outer, 
+    eta_tilde_inner,
+    C_outer, 
+    C_inner,
+    solution_outer, 
+    solution_inner, 
+    t0_outer, 
+    t0_inner,
+    tf_outer,
+    tf_inner, 
+    Rp, 
+    x_match, 
+    l, 
+    cw, 
+    hr, 
+    q, 
+    p,
+): 
+ # COMPUTATION OF Chi
+
+    Chi = np.zeros_like(rr)
+
+    # change coordinates of the grid point (rr,pphi) to (t1,eta1)
+    #t1_orig = _t(rr, Rp, hr, q, p)
+
+    eta_array = _Eta_vector(rr, pphi, Rp, hr, q, cw)
+
+    outer_mask = rr - Rp >= x_match * l
+    inner_mask = rr - Rp <= -x_match * l
+
+    before_N_wave_mask = np.logical_or(
+        tt < (tf_outer + t0_outer),
+        tt < (tf_inner + t0_inner)
+        )
+
+    m = np.logical_and(outer_mask,
+        np.logical_and(~before_N_wave_mask,
+        np.abs( eta_array - cw * np.sign(rr - Rp) * eta_tilde_outer) < np.sqrt(2 * C_outer * np.abs(tt - t0_outer))
+        ))
+    Chi[m] = (-cw * np.sign(rr[m] - Rp) * eta_array[m] + eta_tilde_outer) / (tt[m] - t0_outer)
+
+    m = np.logical_and(outer_mask,
+        np.logical_and(~before_N_wave_mask,
+        np.abs( eta_array - cw * np.sign(rr - Rp) * eta_tilde_outer) >= np.sqrt(2 * C_outer * np.abs(tt - t0_outer))
+        ))
+    Chi[m] = 0.0
+
+
+    interp_outer = RectBivariateSpline(eta_outer, t0_outer + time_outer, solution_outer, kx=1, ky=1)
+    m = np.logical_and(outer_mask, 
+        np.logical_and(before_N_wave_mask,
+        np.logical_and(eta_outer[0] < eta_array,
+            eta_array < eta_outer[-1]
+        )))
+    Chi[m] = interp_outer(eta_array[m], tt[m], grid=False)
+
+
+
+    interp_inner = RectBivariateSpline(eta_inner, t0_inner + time_inner, solution_inner, kx=1, ky=1)
+
+    m = np.logical_and(inner_mask, 
+        np.logical_and(before_N_wave_mask,
+        np.logical_and(eta_inner[0] < eta_array,
+            eta_array < eta_inner[-1]
+        )))
+    Chi[m] = -interp_inner(eta_array[m], tt[m], grid=False)
+
+    
+    m = np.logical_and(inner_mask,
+        np.logical_and(~before_N_wave_mask,
+        np.abs( eta_array - cw * np.sign(rr - Rp) * eta_tilde_inner) < np.sqrt(2 * C_inner * np.abs(tt - t0_inner))
+        ))
+    Chi[m] = (-cw * np.sign(rr[m] - Rp) * eta_array[m] + eta_tilde_inner) / (tt[m] - t0_inner)
+
     return Chi
 
 # get the density and velocity perturbations at the grid point from chi
