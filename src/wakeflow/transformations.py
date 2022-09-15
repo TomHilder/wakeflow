@@ -351,7 +351,8 @@ def _get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p):
     # unl = np.sign(rr - Rp) * Lfu * Chi           # Eq. (23) Bollati et al. 2021
     # vnl = np.sign(rr - Rp) * Lfv * Chi * (-cw) # Eq. (24) Bollati et al. 2021 (the sign of v is reversed if we change cw)
 
-    psi = (np.power(dnl + 1, (gamma-1)/2) - 1) * (gamma+1) / (gamma-1)
+    #psi = (np.power(dnl + 1, (gamma-1)/2) - 1) * (gamma+1) / (gamma-1)
+    psi = ((gamma+1) / (gamma-1)) * np.sign(dnl + 1) * ((np.abs(dnl + 1)) ** ((gamma - 1) / 2) - 1)
 
     # get constants
     dOmega_r = np.abs(csp * Rp**-1 * hr**-1 * ((rr / Rp)**(-3 / 2) - 1)) * rr
