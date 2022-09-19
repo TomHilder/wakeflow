@@ -60,7 +60,7 @@ means that researchers can get an idea of whether planet-disk interactions
 can explain their observations, and the disk and planet parameters needed, before
 spending computer time on more detailed simulations.
 
-`Wakeflow` can interface with the radiative transfer `MCFOST` [@Pinte:2006; @Pinte:2009] in order to create synthetic observations of the
+`Wakeflow` can interface with the radiative transfer code `MCFOST` [@Pinte:2006; @Pinte:2009] in order to create synthetic observations of the
 semi-analytic models for direct comparison with observed continuum or line emission.
 
 `Wakeflow` is partially adapted from a previous Python code also written by us called
