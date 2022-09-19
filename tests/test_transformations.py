@@ -1,4 +1,4 @@
-from wakeflow.transformations import _mod2pi, _phi_wake, _Eta, _t, _g, _get_dens_vel
+from wakeflow.transformations import _mod2pi, _phi_wake, _Eta, _t, _g, _get_dens_vel, _Eta_vector, _t_vector
 from pytest                   import approx
 import numpy as np
 
@@ -15,6 +15,13 @@ def test_Eta():
     assert _Eta(0.2, 0.2, 1, 0.1, 0.2,  1) == approx( 17.95223072293599)
     assert _Eta(1.5,   5, 1, 0.1, 0.2,  1) == approx(-40.31998335504028)
 
+def test_Eta_vector():
+    rad = np.array([0.2, 1.5])
+    assert _Eta_vector(rad, 0.2, 1, 0.1, 0.2, -1)[0] == approx(-11.952230722935989)
+    assert _Eta_vector(rad, 0.2, 1, 0.1, 0.2, -1)[1] == approx( 24.07220374734649)
+    assert _Eta_vector(rad, 0.2, 1, 0.1, 0.2,  1)[0] == approx( 17.95223072293599)
+    assert _Eta_vector(rad, 0.2, 1, 0.1, 0.2,  1)[1] == approx(-18.072203747346485)
+
 def test_mod2pi():
     assert _mod2pi(      np.pi) == approx(np.pi)
     assert _mod2pi(     -np.pi) == approx(np.pi)
@@ -28,6 +35,13 @@ def test_t():
     assert _t(0.2, 1, 0.1, 0.2,   1) == approx(761.9720999691256)
     assert _t(1.5, 1, 0.1, 0.2, 0.5) == approx(32.23043221899377)
     assert _t(0.2, 1, 0.1, 0.2, 0.5) == approx(1016.399602991283)
+
+def test_t_vector():
+    rad = np.array([0.2, 1.5])
+    assert _t_vector(rad, 1, 0.1, 0.2,   1)[0] == approx(761.9720999691256)
+    assert _t_vector(rad, 1, 0.1, 0.2,   1)[1] == approx(34.671246598896204)
+    assert _t_vector(rad, 1, 0.1, 0.2, 0.5)[0] == approx(1016.399602991283)
+    assert _t_vector(rad, 1, 0.1, 0.2, 0.5)[1] == approx(32.23043221899377)
 
 def test_g(): # r, Rp, hr, q, p
     assert _g(1.5, 1, 0.1, 0.2,   1) == approx(0.49329351377521874)
