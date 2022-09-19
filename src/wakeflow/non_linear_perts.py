@@ -15,7 +15,7 @@ from scipy.interpolate      import griddata
 from copy                   import copy
 from tqdm                   import tqdm
 from .burgers               import _solve_burgers
-from .transformations       import _Eta, _t, _get_chi, _get_dens_vel, _plot_r_t
+from .transformations       import _Eta, _t, _get_chi, _get_dens_vel, _plot_r_t, _t_vector, _get_chi_vector
 
 if TYPE_CHECKING:
     from .model_setup       import _Parameters
@@ -485,119 +485,114 @@ class _NonLinearPerts():
         # physical parameters
         gamma = self.p.gamma
 
-        print()
 
         # if using a Cartesian grid
+
+        timer_0 = time.perf_counter()
+
         if self.g.info["Type"] == "cartesian":
+            print("Mapping to Physical Coords")
 
             x = self.g.x 
             y = self.g.y
 
-            dnl = np.zeros((len(x), len(y)))
-            unl = np.zeros((len(x), len(y)))
-            vnl = np.zeros((len(x), len(y)))
+            [x_grid, y_grid] = np.meshgrid(x, y)
+            r_grid = np.sqrt(x_grid**2 + y_grid**2)
+            pphi_grid = np.arctan2(y_grid, x_grid)
 
-            for i in tqdm(range(len(x)), desc="* Mapping to physical coords"):
-                for j in range(len(y)):
+            tt = _t_vector(r_grid, Rp, hr, q, p)
 
-                    xx = x[i]
-                    yy = y[j]
-                    rr = np.sqrt(xx**2 + yy**2)
-                    pphi = np.arctan2(yy,xx)
+            CChi = _get_chi_vector(
+                pphi_grid, 
+                r_grid,
+                tt,
+                time_outer,
+                time_inner, 
+                eta_outer, 
+                eta_inner, 
+                eta_tilde_outer,
+                eta_tilde_inner, 
+                C_outer,
+                C_inner, 
+                solution_outer, 
+                solution_inner, 
+                t0_outer,
+                t0_inner, 
+                tf_outer,
+                tf_inner, 
+                Rp, 
+                x_match, 
+                l, 
+                cw, 
+                hr, 
+                q, 
+                p,
+            )
 
-                    Chi = _get_chi(
-                        pphi, 
-                        rr, 
-                        time_outer,
-                        time_inner, 
-                        eta_outer, 
-                        eta_inner, 
-                        eta_tilde_outer,
-                        eta_tilde_inner, 
-                        C_outer,
-                        C_inner, 
-                        solution_outer, 
-                        solution_inner, 
-                        t0_outer,
-                        t0_inner, 
-                        tf_outer,
-                        tf_inner, 
-                        Rp, 
-                        x_match, 
-                        l, 
-                        cw, 
-                        hr, 
-                        q, 
-                        p
-                    )
-
-                    # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
-                    dnl[i,j], unl[i,j], vnl[i,j] = _get_dens_vel(
-                        rr, 
-                        Chi, 
-                        gamma, 
-                        Rp, 
-                        cw, 
-                        csp, 
-                        hr, 
-                        q, 
-                        p
-                    ) 
+            # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
+            dnl, unl, vnl = _get_dens_vel(
+                np.transpose(r_grid), 
+                np.transpose(CChi), 
+                gamma, 
+                Rp, 
+                cw, 
+                csp, 
+                hr, 
+                q, 
+                p
+            )
 
         # if using a cylindrical grid
         else:
-
-            dnl = np.zeros((self.p.n_phi, self.p.n_r))
-            unl = np.zeros((self.p.n_phi, self.p.n_r))
-            vnl = np.zeros((self.p.n_phi, self.p.n_r))
-
             r = self.g.r
             phi = self.g.phi
 
-            for i in tqdm(range(self.p.n_r), desc="* Mapping to physical coords"):
-                rr = r[i]
-                for j in range(self.p.n_phi):
+            r_grid, pphi_grid = np.meshgrid(r, phi)
 
-                    pphi = phi[j]
+            tt = _t_vector(r_grid, Rp, hr, q, p)
 
-                    Chi = _get_chi(
-                        pphi, 
-                        rr, 
-                        time_outer,
-                        time_inner, 
-                        eta_outer, 
-                        eta_inner, 
-                        eta_tilde_outer,
-                        eta_tilde_inner, 
-                        C_outer,
-                        C_inner, 
-                        solution_outer, 
-                        solution_inner, 
-                        t0_outer,
-                        t0_inner, 
-                        tf_outer,
-                        tf_inner, 
-                        Rp, 
-                        x_match, 
-                        l, 
-                        cw, 
-                        hr, 
-                        q, 
-                        p
-                    )
+            Chi = _get_chi_vector(
+                pphi_grid, 
+                r_grid, 
+                tt,
+                time_outer,
+                time_inner, 
+                eta_outer, 
+                eta_inner, 
+                eta_tilde_outer,
+                eta_tilde_inner, 
+                C_outer,
+                C_inner, 
+                solution_outer, 
+                solution_inner, 
+                t0_outer,
+                t0_inner, 
+                tf_outer,
+                tf_inner, 
+                Rp, 
+                x_match, 
+                l, 
+                cw, 
+                hr, 
+                q, 
+                p
+            )
 
-                    # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
-                    dnl[j,i], unl[j,i], vnl[j,i] = _get_dens_vel(
-                        rr, 
-                        Chi, 
-                        gamma, 
-                        Rp, 
-                        cw, 
-                        csp, 
-                        hr, 
-                        q, 
-                        p
-                    ) 
+            # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
+            dnl, unl, vnl = _get_dens_vel(
+                r_grid, 
+                Chi, 
+                gamma, 
+                Rp, 
+                cw, 
+                csp, 
+                hr, 
+                q, 
+                p
+            )
+        
+        timer_1 = time.perf_counter()
+        print(f'Completed in {timer_1-timer_0:0.2f} s')
 
         self.rho = dnl
         self.vr = 1e-5*unl
