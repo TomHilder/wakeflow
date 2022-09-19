@@ -39,6 +39,10 @@ def _Eta(r, phi, Rp, hr, q, cw):
 
 def _Eta_vector(r, phi, Rp, hr, q, cw):
     """Eq. (14) Bollati et al. 2021
+
+    Vectorised version of _Eta.
+    Simply replaces the modular arithmetic which involved if statements with
+    modulus operators and constant offsets.
     """
     coeff    = 1.5 / hr
     phi_w    = _phi_wake(r, Rp, hr, q, cw) % (2*np.pi)
@@ -74,14 +78,31 @@ def _t_integral(up, q, p):
 
 def _t_vector(rr, Rp, hr, q, p):
     """Equation (43) Rafikov 2002    (Eq. 13 Bollati et al. 2021)
+    This is a vectorised version of _t.
+    _t computes an integral where the integrand is independent of the radius r.
+    The radius r only changes the end point of the integral. Instead of using quad
+    for each end point (which is not as easily vectorisable), we can utilise an ODE solver to 
+    obtain the result at every end point without doing redundant work.
     """
-    shape = rr.shape
 
+    # First we will flatten the array, keeping track of the original shape.
+    # We will also obtain the index of each element of the sorted array.
+    # this will allow us to "unsort" the array at the end.
+    shape = rr.shape
     integral_bounds = (rr / Rp).flatten()
     integral_bounds_sorted_indices = np.argsort(integral_bounds)
+
+    # We must divide the integral endpoints into values above one and below one,
+    # since the lower integral bound is one, and the ode solver only accepts time
+    # values in ascending order.
+    # This is effectively dividing the integrals between ones which integrate backwards,
+    # and ones which integrate forwards.
     integral_bounds_mask  = integral_bounds >= 1.0
     num_larger = np.sum(integral_bounds_mask)
 
+    # We will allocate the arrays to store the values >= 1 and < 1, prepending
+    # the initial condition, 1.0. Then we will sort the array since this is required
+    # by the ode solver.
     larger_vals = np.zeros( (num_larger + 1,) , dtype = integral_bounds.dtype)
     larger_vals[0] = 1.0
     larger_vals[1:] = integral_bounds[integral_bounds_mask]
@@ -94,18 +115,26 @@ def _t_vector(rr, Rp, hr, q, p):
     smaller_vals.sort()
     smaller_vals = np.flip(smaller_vals)
 
+    # Now we can evaluate the integral using the ode solver.
     rho = 5 * q + p
     w   = rho / 2 - 11 / 4
 
     odefun = lambda _,x: np.abs(1 - x**(1.5))**(1.5) * x**w
     larger_t = odeint(odefun, np.array([0]), larger_vals)
 
+    # In the case of the lower ones, we are making a linear coordinate 
+    # transformation x -> 1 - x to make the values ascending and starting at
+    # 0 rather than -1 to avoid internal problems in the solver.
     odefun = lambda _,x: np.abs(1 - (1-x)**(1.5))**(1.5) * (1-x)**w
     smaller_t = odeint(odefun, np.array([0]), 1-smaller_vals)
+
+    # combine the results by excluding the prepended initial condition.
     sorted_results = np.concatenate((
         np.flip(smaller_t.flatten()[1:]), 
         larger_t.flatten()[1:]
     ))
+
+    # "unsort", reshape and apply final calculations on the results.
     module_integral = np.zeros_like(sorted_results)
     module_integral[integral_bounds_sorted_indices] = np.abs(sorted_results)
 
@@ -282,15 +311,22 @@ def _get_chi_vector(
     q, 
     p,
 ): 
+    """
+    This is a vectorised version of the previous _get_chi function.
+    Key changes are:
+     - Using masks rather than logical statements to replace
+        if statements.
+     - Using one RectBivariateSpline interpolation function for all
+        points needing interpolation, rather than recreating a function
+        for every point.
+    """
  # COMPUTATION OF Chi
 
     Chi = np.zeros_like(rr)
 
-    # change coordinates of the grid point (rr,pphi) to (t1,eta1)
-    #t1_orig = _t(rr, Rp, hr, q, p)
-
     eta_array = _Eta_vector(rr, pphi, Rp, hr, q, cw)
 
+    # Inner and outer masks will account for the annulus directly.
     outer_mask = rr - Rp >= x_match * l
     inner_mask = rr - Rp <= -x_match * l
 
@@ -299,19 +335,36 @@ def _get_chi_vector(
         tt < (tf_inner + t0_inner)
         )
 
-    m = np.logical_and(outer_mask,
-        np.logical_and(~before_N_wave_mask,
-        np.abs( eta_array - cw * np.sign(rr - Rp) * eta_tilde_outer) < np.sqrt(2 * C_outer * np.abs(tt - t0_outer))
-        ))
-    Chi[m] = (-cw * np.sign(rr[m] - Rp) * eta_array[m] + eta_tilde_outer) / (tt[m] - t0_outer)
+    # Outer masks.
 
+    """
+    if (rr - Rp) >= x_match*l:
+        if t1 >= (tf_outer + t0_outer):
+            if eta1 > extr_left and eta1 < extr_right:
+    """
     m = np.logical_and(outer_mask,
         np.logical_and(~before_N_wave_mask,
-        np.abs( eta_array - cw * np.sign(rr - Rp) * eta_tilde_outer) >= np.sqrt(2 * C_outer * np.abs(tt - t0_outer))
+        np.abs( eta_array - cw * np.sign(rr - Rp) * eta_tilde_outer) > np.sqrt(2 * C_outer * np.abs(tt - t0_outer))
         ))
     Chi[m] = 0.0
 
+    """
+    if (rr - Rp) >= x_match*l:
+        if t1 >= (tf_outer + t0_outer):
+            if eta1 <= extr_left or eta1 >= extr_right:
+    """
+    m = np.logical_and(outer_mask,
+        np.logical_and(~before_N_wave_mask,
+        np.abs( eta_array - cw * np.sign(rr - Rp) * eta_tilde_outer) <= np.sqrt(2 * C_outer * np.abs(tt - t0_outer))
+        ))
+    Chi[m] = (-cw * np.sign(rr[m] - Rp) * eta_array[m] + eta_tilde_outer) / (tt[m] - t0_outer)
 
+
+    """
+    if (rr - Rp) >= x_match*l:
+        if t1 < (tf_outer + t0_outer):
+            if eta1 > eta_outer[-1] or eta1 < eta_outer[0]:
+    """
     interp_outer = RectBivariateSpline(eta_outer, t0_outer + time_outer, solution_outer, kx=1, ky=1)
     m = np.logical_and(outer_mask, 
         np.logical_and(before_N_wave_mask,
@@ -320,8 +373,35 @@ def _get_chi_vector(
         )))
     Chi[m] = interp_outer(eta_array[m], tt[m], grid=False)
 
+    # Inner masks.
+    
+    """
+    if (rr - Rp) <= -x_match*l:
+        if t1 >= (tf_inner + t0_inner):
+            if eta1 > extr_left and eta1 < extr_right:
+    """
+    m = np.logical_and(inner_mask,
+        np.logical_and(~before_N_wave_mask,
+        np.abs( eta_array - cw * np.sign(rr - Rp) * eta_tilde_inner) >= np.sqrt(2 * C_inner * np.abs(tt - t0_inner))
+        ))
+    Chi[m] = 0.0
 
+    """
+    if (rr - Rp) <= -x_match*l:
+        if t1 >= (tf_inner + t0_inner):
+            if eta1 <= extr_left or eta1 >= extr_right:
+    """
+    m = np.logical_and(inner_mask,
+        np.logical_and(~before_N_wave_mask,
+        np.abs( eta_array - cw * np.sign(rr - Rp) * eta_tilde_inner) < np.sqrt(2 * C_inner * np.abs(tt - t0_inner))
+        ))
+    Chi[m] = (-cw * np.sign(rr[m] - Rp) * eta_array[m] + eta_tilde_inner) / (tt[m] - t0_inner)
 
+    """
+    if (rr - Rp) <= -x_match*l:
+        if t1 < (tf_inner + t0_inner):
+            if eta1 <= eta_inner[-1] and eta1 >= eta_inner[0]:
+    """
     interp_inner = RectBivariateSpline(eta_inner, t0_inner + time_inner, solution_inner, kx=1, ky=1)
 
     m = np.logical_and(inner_mask, 
@@ -331,12 +411,6 @@ def _get_chi_vector(
         )))
     Chi[m] = -interp_inner(eta_array[m], tt[m], grid=False)
 
-    
-    m = np.logical_and(inner_mask,
-        np.logical_and(~before_N_wave_mask,
-        np.abs( eta_array - cw * np.sign(rr - Rp) * eta_tilde_inner) < np.sqrt(2 * C_inner * np.abs(tt - t0_inner))
-        ))
-    Chi[m] = (-cw * np.sign(rr[m] - Rp) * eta_array[m] + eta_tilde_inner) / (tt[m] - t0_inner)
 
     return Chi
 
