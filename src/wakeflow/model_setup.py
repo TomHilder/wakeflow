@@ -120,6 +120,7 @@ class _Parameters(_Constants):
         self.box_warp      = bool (config["box_warp"])
         self.use_box_IC    = bool (config["use_box_IC"])
         self.tf_fac        = float(config["tf_fac"])
+        self.use_old_vel   = bool (config["use_old_vel"])
 
         # get flaring at r_planet
         self.hr_planet = self.hr * (self.r_planet / self.r_ref) ** (0.5 - self.q)
@@ -213,6 +214,9 @@ class _Parameters(_Constants):
         if self.show_teta_debug_plots:
             print("WARNING: Choosing show_teta_debug_plots=True may cause the run to fail.")
 
+        # check velocity formulas
+        if self.use_old_vel:
+            print("WARNING: Choosing use_old_vel=True may cause a different velocity output.")
         print("Parameters Ok - continuing")
         return True
 

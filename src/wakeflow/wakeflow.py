@@ -165,6 +165,7 @@ class WakeflowModel():
         show_teta_debug_plots = False         # show (t,eta,chi) space developer plots
         box_warp              = True          # interpret y coordinate of linear regime as arc length, or truly vertical? True (default) for former
         use_box_IC            = False         # use only part of linear regime in box as initial condition for non-linear evolution
+        use_old_vel           = False         # use old approximated formulas for u pert
 
         # generate dictionary for model parameters by grabbing all local variables
         self.model_params = locals()

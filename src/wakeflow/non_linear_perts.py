@@ -430,7 +430,7 @@ class _NonLinearPerts():
             self.linear_solution, 
             self.linear_t, 
             self.p.show_teta_debug_plots,
-            self.p.tf_fac
+            self.p.tf_fac,
         )
 
         timer_1 = time.perf_counter()
@@ -539,7 +539,8 @@ class _NonLinearPerts():
                 csp, 
                 hr, 
                 q, 
-                p
+                p,
+                self.p.use_old_vel
             )
 
         # if using a cylindrical grid
@@ -588,7 +589,8 @@ class _NonLinearPerts():
                 csp, 
                 hr, 
                 q, 
-                p
+                p,
+                self.p.use_old_vel
             )
         
         timer_1 = time.perf_counter()

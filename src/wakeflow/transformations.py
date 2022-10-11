@@ -160,22 +160,22 @@ def _g(r, Rp, hr, q, p):
     return coeff * term1 * term2
 
 # needed to get radial velocities
-#def _Lambda_fu(r, Rp, csp, hr, gamma, q, p):
-#    """Eq. (28) Bollati et al. 2021
-#    """
-#    coeff = 2**0.75 * csp * hr**(-0.5) / (gamma + 1)
-#    term1 = np.abs((r / Rp)**(-1.5) - 1)**0.5
-#    term2 = (r / Rp)**(0.5 * (p + q - 1))
-#    return coeff * term1 * term2
-#
+def _Lambda_fu(r, Rp, csp, hr, gamma, q, p):
+    """Eq. (28) Bollati et al. 2021
+    """
+    coeff = 2**0.75 * csp * hr**(-0.5) / (gamma + 1)
+    term1 = np.abs((r / Rp)**(-1.5) - 1)**0.5
+    term2 = (r / Rp)**(0.5 * (p + q - 1))
+    return coeff * term1 * term2
+
 ## needed to get azimuthal velocities
-#def _Lambda_fv(r, Rp, csp, hr, gamma, q, p):
-#    """Eq. (29) Bollati et al. 2021
-#    """
-#    coeff = 2**0.75 * csp * hr**0.5 / (gamma + 1)
-#    term1 = np.abs((r / Rp)**(-1.5) - 1)**(-0.5)
-#    term2 = (r / Rp)**(0.5 * (p - q - 3))
-#    return coeff * term1 * term2
+def _Lambda_fv(r, Rp, csp, hr, gamma, q, p):
+    """Eq. (29) Bollati et al. 2021
+    """
+    coeff = 2**0.75 * csp * hr**0.5 / (gamma + 1)
+    term1 = np.abs((r / Rp)**(-1.5) - 1)**(-0.5)
+    term2 = (r / Rp)**(0.5 * (p - q - 3))
+    return coeff * term1 * term2
 
 # find chi for a particular grid point, either from Burger's eqn solution or self-similar solution
 def _get_chi(
@@ -415,26 +415,27 @@ def _get_chi_vector(
     return Chi
 
 # get the density and velocity perturbations at the grid point from chi
-def _get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p):
+def _get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p, use_old_vel):
 
     g1  = _g(rr, Rp, hr, q, p)
     dnl = Chi * 2 / (g1 * (gamma + 1))     # Eq. (11) Bollati et al. 2021
-
-    # Lfu = _Lambda_fu(rr, Rp, csp, hr, gamma, q, p)
-    # Lfv = _Lambda_fv(rr, Rp, csp, hr, gamma, q, p)
-    # unl = np.sign(rr - Rp) * Lfu * Chi           # Eq. (23) Bollati et al. 2021
-    # vnl = np.sign(rr - Rp) * Lfv * Chi * (-cw) # Eq. (24) Bollati et al. 2021 (the sign of v is reversed if we change cw)
-
-    #psi = (np.power(dnl + 1, (gamma-1)/2) - 1) * (gamma+1) / (gamma-1)
-    psi = ((gamma+1) / (gamma-1)) * np.sign(dnl + 1) * ((np.abs(dnl + 1)) ** ((gamma - 1) / 2) - 1)
-
-    # get constants
-    dOmega_r = np.abs(csp * Rp**-1 * hr**-1 * ((rr / Rp)**(-3 / 2) - 1)) * rr
-    c0 = csp * (rr / Rp)**(-q)
     
-    # get perturbations
-    unl = np.sign(rr - Rp) * (2 * c0) / (gamma+1) * psi
-    vnl = (-cw) * c0 * unl / dOmega_r
+    if use_old_vel == True:
+        Lfu = _Lambda_fu(rr, Rp, csp, hr, gamma, q, p)
+        Lfv = _Lambda_fv(rr, Rp, csp, hr, gamma, q, p)
+        unl = np.sign(rr - Rp) * Lfu * Chi           # Eq. (23) Bollati et al. 2021
+        vnl = np.sign(rr - Rp) * Lfv * Chi * (-cw) # Eq. (24) Bollati et al. 2021 (the sign of v is reversed if we change cw)
+    else:
+        #psi = (np.power(dnl + 1, (gamma-1)/2) - 1) * (gamma+1) / (gamma-1)
+        psi = ((gamma+1) / (gamma-1)) * np.sign(dnl + 1) * ((np.abs(dnl + 1)) ** ((gamma - 1) / 2) - 1)
+    
+        # get constants
+        dOmega_r = np.abs(csp * Rp**-1 * hr**-1 * ((rr / Rp)**(-3 / 2) - 1)) * rr
+        c0 = csp * (rr / Rp)**(-q)
+        
+        # get perturbations
+        unl = np.sign(rr - Rp) * (2 * c0) / (gamma+1) * psi
+        vnl = (-cw) * c0 * unl / dOmega_r
 
     return dnl, unl, vnl
 
