@@ -474,7 +474,8 @@ class _NonLinearPerts():
 
         # parameters of run
         Rp      = self.p.r_planet
-        x_match = 2*self.p.scale_box 
+        x_match_l = 2*self.p.scale_box_l
+        x_match_r = 2*self.p.scale_box_r
         l       = self.p.l
         cw      = -self.p.a_cw
         hr      = self.p.hr_planet
@@ -521,7 +522,8 @@ class _NonLinearPerts():
                 tf_outer,
                 tf_inner, 
                 Rp, 
-                x_match, 
+                x_match_l,
+                x_match_r,
                 l, 
                 cw, 
                 hr, 
@@ -571,7 +573,8 @@ class _NonLinearPerts():
                 tf_outer,
                 tf_inner, 
                 Rp, 
-                x_match, 
+                x_match_l,
+                x_match_r,
                 l, 
                 cw, 
                 hr, 
