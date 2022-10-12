@@ -340,14 +340,16 @@ class _Grid:
         """
 
         # box size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs
-        x_box_size = 2 * self.p.scale_box
-        y_box_size = 2 * self.p.scale_box_ang
+        x_box_size_l = 2 * self.p.scale_box_l
+        x_box_size_r = 2 * self.p.scale_box_r
+        y_box_size_t = 2 * self.p.scale_box_ang_t
+        y_box_size_b = 2 * self.p.scale_box_ang_b
 
-        min_r = self.p.r_planet - x_box_size * self.p.l
-        max_r = self.p.r_planet + x_box_size * self.p.l
+        min_r = self.p.r_planet - x_box_size_l * self.p.l
+        max_r = self.p.r_planet + x_box_size_r * self.p.l
 
-        min_y = -y_box_size * self.p.l
-        max_y =  y_box_size * self.p.l
+        min_y = -y_box_size_b * self.p.l
+        max_y =  y_box_size_t * self.p.l
 
         max_phi =  np.pi / 2
         min_phi = -np.pi / 2
