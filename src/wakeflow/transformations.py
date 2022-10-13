@@ -304,7 +304,8 @@ def _get_chi_vector(
     tf_outer,
     tf_inner, 
     Rp, 
-    x_match, 
+    x_match_l,
+    x_match_r,
     l, 
     cw, 
     hr, 
@@ -327,8 +328,8 @@ def _get_chi_vector(
     eta_array = _Eta_vector(rr, pphi, Rp, hr, q, cw)
 
     # Inner and outer masks will account for the annulus directly.
-    outer_mask = rr - Rp >= x_match * l
-    inner_mask = rr - Rp <= -x_match * l
+    outer_mask = rr - Rp >= x_match_r * l
+    inner_mask = rr - Rp <= -x_match_l * l
 
     before_N_wave_mask = np.logical_or(
         tt < (tf_outer + t0_outer),
