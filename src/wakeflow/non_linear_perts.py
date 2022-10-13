@@ -57,8 +57,8 @@ class _NonLinearPerts():
         eta_max = 25 
 
         # inner and outer wake x position
-        x_box_outer =  lp.x_box
-        x_box_inner = -lp.x_box
+        x_box_outer =  lp.x_box_r
+        x_box_inner = -lp.x_box_l
 
         # find the index in the x grid corresponding to the edge of the box
         index_outer = np.argmin(np.abs(x - x_box_outer))
