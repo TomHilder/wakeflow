@@ -73,11 +73,14 @@ class _LinearPerts():
         y = self.Y[:,0]
 
         # define constants for linear perts
-        self.x_box = 2 * self.p.scale_box
+        self.x_box_l = 2 * self.p.scale_box_l
+        self.x_box_r = 2 * self.p.scale_box_r
+        self.x_box_t = 2 * self.p.scale_box_ang_t
+        self.x_box_b = 2 * self.p.scale_box_ang_b
         
         # cut square box grid in linear regime
-        self.x_cut = x[np.argmin(x < -self.x_box) : np.argmin(x < self.x_box) + 1]
-        self.y_cut = y[np.argmin(y < -self.x_box) : np.argmin(y < self.x_box) + 1]
+        self.x_cut = x[np.argmin(x < -self.x_box_l) : np.argmin(x < self.x_box_r) + 1]
+        self.y_cut = y[np.argmin(y < -self.x_box_b) : np.argmin(y < self.x_box_t) + 1]
 
         # test plot
         if False:
