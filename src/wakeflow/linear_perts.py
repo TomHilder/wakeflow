@@ -201,7 +201,7 @@ class _LinearPerts():
         self.r_min = self.p.r_planet - x_box_size_l*self.p.l
         self.r_max = self.p.r_planet + x_box_size_r*self.p.l
 
-        x_min_global = np.sqrt(self.r_min**2 - (np.max(y_box_size_t,y_box_size_b)*self.p.l)**2)
+        x_min_global = np.sqrt(self.r_min**2 - (np.amax([y_box_size_t,y_box_size_b])*self.p.l)**2)
         x_min_local  = (x_min_global - self.p.r_planet) / self.p.l
 
         # find cut indicies (remember we need to scale back to units of Hill radius )
