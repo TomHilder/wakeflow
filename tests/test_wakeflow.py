@@ -63,8 +63,10 @@ def test_default_dev_config():
     assert model.model_params["adiabatic_index"]       == 1.6666667
     assert model.model_params["damping_malpha"]        == 0.0
     assert model.model_params["CFL"]                   == 0.5
-    assert model.model_params["scale_box"]             == 1.0
-    assert model.model_params["scale_box_ang"]         == 1.0
+    assert model.model_params["scale_box_l"]           == 1.0
+    assert model.model_params["scale_box_r"]           == 1.0
+    assert model.model_params["scale_box_ang_b"]       == 1.0
+    assert model.model_params["scale_box_ang_t"]       == 1.0
     assert model.model_params["tf_fac"]                == 1.0
     assert model.model_params["show_teta_debug_plots"] == False
     assert model.model_params["box_warp"]              == True
