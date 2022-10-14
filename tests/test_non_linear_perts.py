@@ -81,7 +81,8 @@ def test_alternate_extract_ICs_works():
     param_dict = model.model_params
 
     # extend annulus
-    param_dict["scale_box_ang"] = 4.0
+    param_dict["scale_box_ang_b"] = 4.0
+    param_dict["scale_box_ang_t"] = 4.0
 
     # intialise grid with parameters object
     params = _Parameters(param_dict)
