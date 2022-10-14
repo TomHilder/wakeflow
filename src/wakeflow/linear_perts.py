@@ -97,7 +97,7 @@ class _LinearPerts():
         """
 
         # box size (in units of Hill radius), with default scale_box = 1. (note for conversions that self.p.l = 1 Hill radius in cgs)
-        box_size = 2*self.p.scale_box
+        box_size = 2*self.p.scale_box_l
         artificial_y_scale = 6
 
         # linear perturbations read in grid
