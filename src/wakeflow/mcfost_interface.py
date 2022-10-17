@@ -6,16 +6,18 @@ Contains functions for generating MCFOST grid information and writing MCFOST par
 Requires pymcfost which may be found here: https://github.com/cpinte/pymcfost
 """
 
-import os, subprocess, pkg_resources
+import os, subprocess, pkg_resources, warnings
 import numpy          as np
 from .model_setup import _Parameters
 from typing       import Tuple
 
 try:
+    warnings.filterwarnings("ignore", category=UserWarning)
     from pymcfost.parameters        import Params
     from pymcfost.disc_structure    import Disc
+    warnings.filterwarnings("default")
 except ImportError:
-    pass
+    warnings.warn("pymcfost is not present", ImportWarning)
 
 # NOTE: contents are intended for internal use and should not be directly accessed by users
 
