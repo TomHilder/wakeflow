@@ -57,8 +57,8 @@ class _NonLinearPerts():
         eta_max = 25 
 
         # inner and outer wake x position
-        x_box_outer =  lp.x_box
-        x_box_inner = -lp.x_box
+        x_box_outer =  lp.x_box_r
+        x_box_inner = -lp.x_box_l
 
         # find the index in the x grid corresponding to the edge of the box
         index_outer = np.argmin(np.abs(x - x_box_outer))
@@ -430,7 +430,7 @@ class _NonLinearPerts():
             self.linear_solution, 
             self.linear_t, 
             self.p.show_teta_debug_plots,
-            self.p.tf_fac
+            self.p.tf_fac,
         )
 
         timer_1 = time.perf_counter()
@@ -474,7 +474,8 @@ class _NonLinearPerts():
 
         # parameters of run
         Rp      = self.p.r_planet
-        x_match = 2*self.p.scale_box 
+        x_match_l = 2*self.p.scale_box_l
+        x_match_r = 2*self.p.scale_box_r
         l       = self.p.l
         cw      = -self.p.a_cw
         hr      = self.p.hr_planet
@@ -521,7 +522,8 @@ class _NonLinearPerts():
                 tf_outer,
                 tf_inner, 
                 Rp, 
-                x_match, 
+                x_match_l,
+                x_match_r,
                 l, 
                 cw, 
                 hr, 
@@ -539,7 +541,8 @@ class _NonLinearPerts():
                 csp, 
                 hr, 
                 q, 
-                p
+                p,
+                self.p.use_old_vel
             )
 
         # if using a cylindrical grid
@@ -570,7 +573,8 @@ class _NonLinearPerts():
                 tf_outer,
                 tf_inner, 
                 Rp, 
-                x_match, 
+                x_match_l,
+                x_match_r,
                 l, 
                 cw, 
                 hr, 
@@ -588,7 +592,8 @@ class _NonLinearPerts():
                 csp, 
                 hr, 
                 q, 
-                p
+                p,
+                self.p.use_old_vel
             )
         
         timer_1 = time.perf_counter()
