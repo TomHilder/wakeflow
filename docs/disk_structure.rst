@@ -41,7 +41,10 @@ where :math:`R_\mathrm{c}` is the "critical radius". This density structure is a
 Velocities
 ----------
 
-The velocities are derived assuming radial force balance, where the additional factor that modifies the rotation from Keplerian is due to the radial pressure forces acting on the gas in the disk. [eg. Nelson et al. 2013](https://ui.adsabs.harvard.edu/abs/2013MNRAS.435.2610N/abstract). The radial and vertical motions are set to zero, while the rotation is given by
+The velocities are derived assuming radial force balance, where the additional factor that modifies the rotation from Keplerian is due to the radial pressure forces acting on the gas in the disk. `eg. Nelson et al. 2013`_. The radial and vertical motions are set to zero, while the rotation is given by
+
+Python_.
+.. _`eg. Nelson et al. 2013`: https://ui.adsabs.harvard.edu/abs/2013MNRAS.435.2610N/abstract
 
 .. math::
 
