@@ -7,7 +7,7 @@
 [![JOSS][JOSS-shield]][JOSS-url]
 
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/TomHilder/wakeflow/Tests?label=tests&style=flat-square)
+[![GitHub Workflow Status]][tests-status-shield]
 [![Docs][docs-status-shield]][docs-status-url]
 
 
