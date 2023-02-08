@@ -7,7 +7,7 @@
 [![JOSS][JOSS-shield]][JOSS-url]
 
 
-[![GitHub Workflow Status]][tests-status-shield]
+![GitHub Workflow Status](tests-status-shield)
 [![Docs][docs-status-shield]][docs-status-url]
 
 
