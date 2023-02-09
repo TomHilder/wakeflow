@@ -65,6 +65,7 @@ class _Parameters(_Constants):
         except:
             self.r_ref = self.r_planet
         self.r_c      = float(config["r_c"])
+        self.z_max    = float(config["z_max"])
         self.q        = float(config["q"])
         self.dens_p   = float(config["p"])
         self.p        = self.dens_p + self.q - 1.5

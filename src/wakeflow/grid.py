@@ -101,7 +101,7 @@ class _Grid:
         """
 
         # define disk height (not used for mcfost grid)
-        self.height = self.p.hr * (self.p.r_outer / self.p.r_ref)**(0.5 - self.p.q) * self.p.r_outer
+        self.height = self.p.z_max * self.p.hr * (self.p.r_outer / self.p.r_ref)**(0.5 - self.p.q) * self.p.r_outer
 
         # make cartesian grid
         if self.p.grid_type == "cartesian":
