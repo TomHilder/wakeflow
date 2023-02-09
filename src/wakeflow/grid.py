@@ -392,32 +392,61 @@ class _Grid:
         # get linear solution           
         lp = LinearPerts
         
+        # get flattened grids
+        PHI_flat = np.mod(lp.PHI_ann.flatten(), 2*np.pi)
+        R_flat   = lp.R_ann.flatten()
+        
+        # convert PHI_flat to (-pi, pi)
+        PHI_flat_new = np.zeros(PHI_flat.shape[0])
+        for i in range(PHI_flat.shape[0]):
+
+            # transforming phi coordinate in place
+            if PHI_flat[i] > np.pi:
+                PHI_flat_new[i] = PHI_flat[i] - 2*np.pi
+            else:
+                PHI_flat_new[i] = PHI_flat[i]
+        
         # assemble interpolation functions over linear perts grid
-        interp_v_r   = LinearNDInterpolator(np.transpose([np.mod(lp.PHI_ann.flatten(), 2*np.pi), lp.R_ann.flatten()]), lp.pert_v_r_ann.flatten())
-        interp_v_phi = LinearNDInterpolator(np.transpose([np.mod(lp.PHI_ann.flatten(), 2*np.pi), lp.R_ann.flatten()]), lp.pert_v_phi_ann.flatten())
-        interp_rho   = LinearNDInterpolator(np.transpose([np.mod(lp.PHI_ann.flatten(), 2*np.pi), lp.R_ann.flatten()]), lp.pert_rho_ann.flatten())
+        interp_v_r   = LinearNDInterpolator(np.transpose([PHI_flat_new, R_flat]), lp.pert_v_r_ann.flatten())
+        interp_v_phi = LinearNDInterpolator(np.transpose([PHI_flat_new, R_flat]), lp.pert_v_phi_ann.flatten())
+        interp_rho   = LinearNDInterpolator(np.transpose([PHI_flat_new, R_flat]), lp.pert_rho_ann.flatten())
+        
+        # get new phi accounting for planet
+        PHI_planet = np.mod(PHI_new - self.p.phi_planet, 2*np.pi)
+        
+        # convert PHI_planet to (-pi, pi)
+        PHI_planet_new = np.zeros((PHI_planet.shape[0],PHI_planet.shape[1]))
+        for i in range(PHI_planet.shape[0]):
+            for j in range(PHI_planet.shape[1]):
+
+                # transforming phi coordinate in place
+                if PHI_planet[i,j] > np.pi:
+                    PHI_planet_new[i,j] = PHI_planet[i,j] - 2*np.pi
+                else:
+                    PHI_planet_new[i,j] = PHI_planet[i,j]
         
         # evaluate interpolations on global grid
-        global_lin_v_r   = np.nan_to_num(interp_v_r  (np.mod(PHI_new - self.p.phi_planet, 2*np.pi), R_new))
-        global_lin_v_phi = np.nan_to_num(interp_v_phi(np.mod(PHI_new - self.p.phi_planet, 2*np.pi), R_new))
-        global_lin_rho   = np.nan_to_num(interp_rho  (np.mod(PHI_new - self.p.phi_planet, 2*np.pi), R_new))
+        global_lin_v_r   = np.nan_to_num(interp_v_r  (PHI_planet_new, R_new))
+        global_lin_v_phi = np.nan_to_num(interp_v_phi(PHI_planet_new, R_new))
+        global_lin_rho   = np.nan_to_num(interp_rho  (PHI_planet_new, R_new))
         
-        plt.figure(figsize=[6,6], dpi=150)
-        plt.imshow(global_lin_v_r, origin="lower", cmap="RdBu")
-        plt.show()
+        # for debugging phi_planet
+        #plt.figure(figsize=[6,6], dpi=150)
+        #plt.imshow(global_lin_v_r, origin="lower", cmap="RdBu")
+        #plt.show()
 
         # apply mask to only get solution in valid domain
         global_lin_v_r   = global_lin_v_r   * linear_mask.transpose()
         global_lin_v_phi = global_lin_v_phi * linear_mask.transpose()
         global_lin_rho   = global_lin_rho   * linear_mask.transpose()
         
-        plt.figure(figsize=[6,6], dpi=150)
-        plt.imshow(linear_mask.transpose(), origin="lower")
-        plt.show()
-        
-        plt.figure(figsize=[6,6], dpi=150)
-        plt.imshow(global_lin_v_r, origin="lower", cmap="RdBu")
-        plt.show()
+        # for debugging phi_planet
+        #plt.figure(figsize=[6,6], dpi=150)
+        #plt.imshow(linear_mask.transpose(), origin="lower")
+        #plt.show()
+        #plt.figure(figsize=[6,6], dpi=150)
+        #plt.imshow(global_lin_v_r, origin="lower", cmap="RdBu")
+        #plt.show()
 
         # Add velocities, identical at all heights for now
         self.v_r   += global_lin_v_r  [:, np.newaxis, :]
