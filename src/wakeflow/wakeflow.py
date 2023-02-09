@@ -42,6 +42,7 @@ class WakeflowModel():
         r_outer:            float = 500,
         r_inner:            float = 100,
         r_planet:           float = 250,
+        phi_planet:         float = 0,
         r_ref:              float = None,
         r_c:                float = 0,
         z_max:              float = 3,
@@ -93,10 +94,14 @@ class WakeflowModel():
             inner disk radius in au.
         r_planet : float
             orbital radius of planet in au.
+        phi_planet : float
+            azimuthal position of the planet in radians.
         r_ref : float
             reference radius r_ref in au.
         r_c : float
             critical radius r_c in au, used for exponentially tapered density profile. ignored if set to 0.
+        z_max : float
+            height of the disk in units of pressure scale height at r_outer.
         q : float 
             q index for sound speed profile, defined as c_s \propto r^{-q}.
         p : float

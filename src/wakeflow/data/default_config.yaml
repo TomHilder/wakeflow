@@ -10,6 +10,7 @@ m_planet: 0.1                                # mass of embedded planet(s) in Jup
 r_outer: 500                                 # outer radius of disk in au
 r_inner: 100                                 # inner radius of disk in au (does not apply for Cartesian grid)
 r_planet: 250                                # orbital radius of embedded planet in au
+phi_planet: 0                                # azimuthal position of the planet in radians.
 r_ref: null                                  # reference radius R0 for H/R -- YOU MUST USE null INSTEAD OF None IN A YAML FILE
 r_c: 0                                       # critical radius for exponentially tapered density profile. set to 0 for power law
 z_max: 3                                     # vertical extent of disk in units of scale height at r_outer

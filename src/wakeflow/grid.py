@@ -9,7 +9,7 @@ import numpy                as np
 import matplotlib.pyplot    as plt
 import astropy.io.fits      as fits
 import shutil               as sh
-from scipy.interpolate  import RectBivariateSpline
+from scipy.interpolate  import RectBivariateSpline, LinearNDInterpolator
 from matplotlib.colors  import LogNorm
 from .mcfost_interface  import _read_mcfost_grid_data
 from .model_setup       import _Parameters
@@ -351,8 +351,8 @@ class _Grid:
         min_y = -y_box_size_b * self.p.l
         max_y =  y_box_size_t * self.p.l
 
-        max_phi =  np.pi / 2
-        min_phi = -np.pi / 2
+        max_phi = (max_y / max_r) + (np.pi / 2)
+        min_phi = (min_y / max_r) + (np.pi / 2)
 
         # find (phi, r) grid for either Cartesian or Cylindrical global grid
         if self.info["Type"] == "cartesian":
@@ -364,7 +364,7 @@ class _Grid:
         # new PHI grid to use (-pi,pi) instead of (0,2pi), where values are swapped in place, also ditch z coordinate
         # also construct a mask that contains 0 outside linear annulus and 1 inside
         PHI_new     = np.zeros((PHI.shape[0],PHI.shape[2]))
-        Y_new       = np.zeros((PHI.shape[0],PHI.shape[2]))
+        #Y_new       = np.zeros((PHI.shape[0],PHI.shape[2]))
         linear_mask = np.zeros((PHI.shape[0],PHI.shape[2]))
 
         R_new = R[:,0,:]
@@ -378,11 +378,12 @@ class _Grid:
                 else:
                     PHI_new[i,j] = PHI[i,0,j]
 
-                Y_new[i,j] = R[i,0,j] * np.sin(PHI[i,0,j])
+                #Y_new[i,j] = R[i,0,j] * np.sin(PHI[i,0,j])
 
                 # constructing mask
-                if PHI_new[i,j] > min_phi and PHI_new[i,j] < max_phi \
-                    and Y_new[i,j] > min_y and Y_new[i,j] < max_y \
+                    #and Y_new[i,j] > min_y and Y_new[i,j] < max_y \
+                if np.mod(PHI_new[i,j] + self.p.phi_planet, 2*np.pi) > min_phi \
+                    and np.mod(PHI_new[i,j] + self.p.phi_planet, 2*np.pi) < max_phi \
                     and R_new[i,j] > min_r and R_new[i,j] < max_r:
                     linear_mask[i,j] = 1
                 else:
@@ -390,21 +391,33 @@ class _Grid:
 
         # get linear solution           
         lp = LinearPerts
-
+        
         # assemble interpolation functions over linear perts grid
-        interp_v_r   = RectBivariateSpline(lp.y_ann, lp.r_ann, lp.pert_v_r_ann)
-        interp_v_phi = RectBivariateSpline(lp.y_ann, lp.r_ann, lp.pert_v_phi_ann)
-        interp_rho   = RectBivariateSpline(lp.y_ann, lp.r_ann, lp.pert_rho_ann)
-
+        interp_v_r   = LinearNDInterpolator(np.transpose([np.mod(lp.PHI_ann.flatten(), 2*np.pi), lp.R_ann.flatten()]), lp.pert_v_r_ann.flatten())
+        interp_v_phi = LinearNDInterpolator(np.transpose([np.mod(lp.PHI_ann.flatten(), 2*np.pi), lp.R_ann.flatten()]), lp.pert_v_phi_ann.flatten())
+        interp_rho   = LinearNDInterpolator(np.transpose([np.mod(lp.PHI_ann.flatten(), 2*np.pi), lp.R_ann.flatten()]), lp.pert_rho_ann.flatten())
+        
         # evaluate interpolations on global grid
-        global_lin_v_r   = interp_v_r.ev  (Y_new, R_new)
-        global_lin_v_phi = interp_v_phi.ev(Y_new, R_new)
-        global_lin_rho   = interp_rho.ev  (Y_new, R_new)
+        global_lin_v_r   = np.nan_to_num(interp_v_r  (np.mod(PHI_new - self.p.phi_planet, 2*np.pi), R_new))
+        global_lin_v_phi = np.nan_to_num(interp_v_phi(np.mod(PHI_new - self.p.phi_planet, 2*np.pi), R_new))
+        global_lin_rho   = np.nan_to_num(interp_rho  (np.mod(PHI_new - self.p.phi_planet, 2*np.pi), R_new))
+        
+        plt.figure(figsize=[6,6], dpi=150)
+        plt.imshow(global_lin_v_r, origin="lower", cmap="RdBu")
+        plt.show()
 
         # apply mask to only get solution in valid domain
-        global_lin_v_r   = global_lin_v_r   * linear_mask
-        global_lin_v_phi = global_lin_v_phi * linear_mask
-        global_lin_rho   = global_lin_rho   * linear_mask
+        global_lin_v_r   = global_lin_v_r   * linear_mask.transpose()
+        global_lin_v_phi = global_lin_v_phi * linear_mask.transpose()
+        global_lin_rho   = global_lin_rho   * linear_mask.transpose()
+        
+        plt.figure(figsize=[6,6], dpi=150)
+        plt.imshow(linear_mask.transpose(), origin="lower")
+        plt.show()
+        
+        plt.figure(figsize=[6,6], dpi=150)
+        plt.imshow(global_lin_v_r, origin="lower", cmap="RdBu")
+        plt.show()
 
         # Add velocities, identical at all heights for now
         self.v_r   += global_lin_v_r  [:, np.newaxis, :]
@@ -582,7 +595,7 @@ class _Grid:
             if not dimless:
                 ax.set_xlabel(r"$x \, [\mathrm{AU}]$")
                 ax.set_ylabel(r"$y \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+                fig.colorbar(c, extend="both", label=r"$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$x$")
                 ax.set_ylabel(r"$y$")
@@ -601,7 +614,7 @@ class _Grid:
             if not dimless:
                 ax.set_xlabel(r"$x \, [\mathrm{AU}]$")
                 ax.set_ylabel(r"$y \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+                fig.colorbar(c, extend="both", label=r"$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$x$")
                 ax.set_ylabel(r"$y$")
@@ -640,7 +653,7 @@ class _Grid:
             if not dimless:
                 ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
                 ax.set_ylabel(r"$r \, \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+                fig.colorbar(c, extend="both", label=r"$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
                 ax.set_ylabel(r"$r$")
@@ -658,7 +671,7 @@ class _Grid:
             if not dimless:
                 ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
                 ax.set_ylabel(r"$r \, \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+                fig.colorbar(c, extend="both", label=r"$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
                 ax.set_ylabel(r"$r$")
