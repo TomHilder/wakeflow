@@ -238,13 +238,16 @@ def _load_config_file(config_file: str, default_config_dict: dict = None) -> dic
     """
 
     # read in config file as dictionary
-    config_dict = yaml.load(open(config_file), Loader=yaml.FullLoader)
+    with open(config_file, "r") as file:
+        config_dict = yaml.load(file, Loader=yaml.FullLoader)
 
     # check that keys in config_dict correspond to actual Wakeflow parameters
     if default_config_dict is not None:
         for key in config_dict.keys():
             if key not in default_config_dict.keys():
                 raise Exception(f"{key} is not a valid parameter.")
+            
+    
 
     return config_dict
 
