@@ -38,6 +38,12 @@ bibliography: paper.bib
 induced by planets embedded in gaseous circumstellar disks. These perturbations
 take the form of a spiral shock wave [@Ogilvie:2002], and are often called 
 a "planet wake" in analogy with that produced by a boat in a lake.
+Using `Wakeflow`, users may calculate the perturbed density and velocity fields of the gas in the disk.
+These may be used with radiation transfer codes to generate synthetic observations
+that map both the gas distribution and the gas kinematics. 
+Comparison with real observations, such as from molecular line emission taken with the 
+Attacama Large Millimetre Array, allows researchers to infer the properties of potential planets
+as well as the disk itself.
 
 # Statement of need
 
