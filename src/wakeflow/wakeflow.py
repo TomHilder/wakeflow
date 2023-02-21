@@ -42,8 +42,10 @@ class WakeflowModel():
         r_outer:            float = 500,
         r_inner:            float = 100,
         r_planet:           float = 250,
+        phi_planet:         float = 0,
         r_ref:              float = None,
         r_c:                float = 0,
+        z_max:              float = 3,
         q:                  float = 0.25,
         p:                  float = 1.0,
         hr:                 float = 0.10,
@@ -92,10 +94,14 @@ class WakeflowModel():
             inner disk radius in au.
         r_planet : float
             orbital radius of planet in au.
+        phi_planet : float
+            azimuthal position of the planet in radians.
         r_ref : float
             reference radius r_ref in au.
         r_c : float
             critical radius r_c in au, used for exponentially tapered density profile. ignored if set to 0.
+        z_max : float
+            height of the disk in units of pressure scale height at r_outer.
         q : float 
             q index for sound speed profile, defined as c_s \propto r^{-q}.
         p : float
@@ -159,12 +165,15 @@ class WakeflowModel():
         adiabatic_index       = 1.6666667     # adiabatic index
         damping_malpha        = 0.0           # artificial damping NOT IMPLEMENTED
         CFL                   = 0.5           # Courant stability factor (require <0.5)
-        scale_box             = 1.0           # linear box length scale factor in radial direction
-        scale_box_ang         = 1.0           # linear box length scale factor in angular direction
+        scale_box_l           = 1.0           # linear box length scale factor in radial direction (left)
+        scale_box_r           = 1.0           # linear box length scale factor in radial direction (right)
+        scale_box_ang_t       = 1.0           # linear box length scale factor in angular direction (top)
+        scale_box_ang_b       = 1.0           # linear box length scale factor in angular direction (bottom)
         tf_fac                = 1.0           # scale factor for t coordinate where self-similar solution is used
         show_teta_debug_plots = False         # show (t,eta,chi) space developer plots
         box_warp              = True          # interpret y coordinate of linear regime as arc length, or truly vertical? True (default) for former
         use_box_IC            = False         # use only part of linear regime in box as initial condition for non-linear evolution
+        use_old_vel           = False         # use old approximated formulas for u pert
 
         # generate dictionary for model parameters by grabbing all local variables
         self.model_params = locals()

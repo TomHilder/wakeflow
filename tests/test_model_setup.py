@@ -124,7 +124,7 @@ def test_m_thermal_warning_multiple_masses(capfd):
     captured = capfd.readouterr()
     assert "WARNING: At least one planet mass exceeds thermal mass. This may break the solution. " in captured.out
 
-def test_box_scale_warning(capfd):
+def test_box_scale_l_warning(capfd):
 
     # make params dict
     model = WakeflowModel()
@@ -132,13 +132,62 @@ def test_box_scale_warning(capfd):
     param_dict = model.model_params
 
     # make planet huge
-    param_dict["scale_box"] = 1.01
+    param_dict["scale_box_l"] = 1.01
     params = _Parameters(param_dict)
 
     # check that sanity checks warns about planet mass
     params._do_sanity_checks()
     captured = capfd.readouterr()
     assert "WARNING: Changing linear box scale factor can cause strange results." in captured.out
+    
+def test_box_scale_r_warning(capfd):
+
+    # make params dict
+    model = WakeflowModel()
+    model.configure()
+    param_dict = model.model_params
+
+    # make planet huge
+    param_dict["scale_box_r"] = 1.01
+    params = _Parameters(param_dict)
+
+    # check that sanity checks warns about planet mass
+    params._do_sanity_checks()
+    captured = capfd.readouterr()
+    assert "WARNING: Changing linear box scale factor can cause strange results." in captured.out
+    
+def test_box_scale_lr_warning(capfd):
+
+    # make params dict
+    model = WakeflowModel()
+    model.configure()
+    param_dict = model.model_params
+
+    # make planet huge
+    param_dict["scale_box_l"] = 1.01
+    params = _Parameters(param_dict)
+
+    # check that sanity checks warns about planet mass
+    params._do_sanity_checks()
+    captured = capfd.readouterr()
+    assert "WARNING: Using a different linear box scale factor for left and right edge can cause strange results." in captured.out
+    
+def test_box_scale_tb_warning(capfd):
+
+    # make params dict
+    model = WakeflowModel()
+    model.configure()
+    param_dict = model.model_params
+
+    # make planet huge
+    param_dict["scale_box_ang_t"] = 1.01
+    params = _Parameters(param_dict)
+
+    # check that sanity checks warns about planet mass
+    params._do_sanity_checks()
+    captured = capfd.readouterr()
+    assert "WARNING: Using a different linear box scale factor for top and bottom edge can cause strange results." in captured.out
+
 
 def test_CFL_warning(capfd):
 

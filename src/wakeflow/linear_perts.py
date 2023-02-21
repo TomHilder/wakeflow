@@ -73,11 +73,14 @@ class _LinearPerts():
         y = self.Y[:,0]
 
         # define constants for linear perts
-        self.x_box = 2 * self.p.scale_box
+        self.x_box_l = 2 * self.p.scale_box_l
+        self.x_box_r = 2 * self.p.scale_box_r
+        self.x_box_t = 2 * self.p.scale_box_ang_t
+        self.x_box_b = 2 * self.p.scale_box_ang_b
         
         # cut square box grid in linear regime
-        self.x_cut = x[np.argmin(x < -self.x_box) : np.argmin(x < self.x_box) + 1]
-        self.y_cut = y[np.argmin(y < -self.x_box) : np.argmin(y < self.x_box) + 1]
+        self.x_cut = x[np.argmin(x < -self.x_box_l) : np.argmin(x < self.x_box_r) + 1]
+        self.y_cut = y[np.argmin(y < -self.x_box_b) : np.argmin(y < self.x_box_t) + 1]
 
         # test plot
         if False:
@@ -94,7 +97,7 @@ class _LinearPerts():
         """
 
         # box size (in units of Hill radius), with default scale_box = 1. (note for conversions that self.p.l = 1 Hill radius in cgs)
-        box_size = 2*self.p.scale_box
+        box_size = 2*self.p.scale_box_l
         artificial_y_scale = 6
 
         # linear perturbations read in grid
@@ -145,26 +148,28 @@ class _LinearPerts():
         """
 
         # box size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs
-        x_box_size = 2*self.p.scale_box
-        y_box_size = 2*self.p.scale_box_ang
+        x_box_size_l = 2*self.p.scale_box_l
+        x_box_size_r = 2*self.p.scale_box_r
+        y_box_size_t = 2*self.p.scale_box_ang_t
+        y_box_size_b = 2*self.p.scale_box_ang_b
 
         # linear perturbations read in grid
         x = self.X[0,:]
         y = self.Y[:,0]
 
         # cut square box in linear regime
-        x_cut = x[np.argmin(x < -x_box_size) : np.argmin(x < x_box_size) + 1]
-        y_cut = y[np.argmin(y < -y_box_size) : np.argmin(y < y_box_size) + 1]
+        x_cut = x[np.argmin(x < -x_box_size_l) : np.argmin(x < x_box_size_r) + 1]
+        y_cut = y[np.argmin(y < -y_box_size_b) : np.argmin(y < y_box_size_t) + 1]
 
         # annulus segment grid, granularity from square box
         r = np.linspace(
-            self.p.r_planet - x_box_size*self.p.l, 
-            self.p.r_planet + x_box_size*self.p.l, 
+            self.p.r_planet - x_box_size_l*self.p.l, 
+            self.p.r_planet + x_box_size_r*self.p.l, 
             len(x_cut)
         )
         y_ = np.linspace(
-            -y_box_size*self.p.l,
-            y_box_size*self.p.l,
+            -y_box_size_b*self.p.l,
+            y_box_size_t*self.p.l,
             len(y_cut)
         )
 
@@ -193,17 +198,17 @@ class _LinearPerts():
         Y_pert_grid = Y_ / self.p.l
 
         # cut big perturbations grid to just outside annulus
-        self.r_min = self.p.r_planet - x_box_size*self.p.l
-        self.r_max = self.p.r_planet + x_box_size*self.p.l
+        self.r_min = self.p.r_planet - x_box_size_l*self.p.l
+        self.r_max = self.p.r_planet + x_box_size_r*self.p.l
 
-        x_min_global = np.sqrt(self.r_min**2 - (y_box_size*self.p.l)**2)
+        x_min_global = np.sqrt(self.r_min**2 - (np.amax([y_box_size_t,y_box_size_b])*self.p.l)**2)
         x_min_local  = (x_min_global - self.p.r_planet) / self.p.l
 
         # find cut indicies (remember we need to scale back to units of Hill radius )
         x_cut_i1 = np.argmin(x <  x_min_local)
-        x_cut_i2 = np.argmin(x <  x_box_size) + 1
-        y_cut_i1 = np.argmin(y < -y_box_size)
-        y_cut_i2 = np.argmin(y <  y_box_size) + 1
+        x_cut_i2 = np.argmin(x <  x_box_size_r) + 1
+        y_cut_i1 = np.argmin(y < -y_box_size_b)
+        y_cut_i2 = np.argmin(y <  y_box_size_t) + 1
 
         # cut grid
         x_int_cut = x[x_cut_i1 : x_cut_i2]

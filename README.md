@@ -7,7 +7,7 @@
 [![JOSS][JOSS-shield]][JOSS-url]
 
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/TomHilder/wakeflow/Tests?label=tests&style=flat-square)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/TomHilder/wakeflow/Tests.yml?label=tests&style=flat-square)
 [![Docs][docs-status-shield]][docs-status-url]
 
 
@@ -54,7 +54,7 @@
 <!-- GETTING STARTED -->
 ## Installation
 
-`wakeflow` may be most easily installed from the Python Package Index ([PyPI](https://pypi.org/project/wakeflow/)), or can also be installed from the [GitHub repository](https://github.com/TomHilder/wakeflow) if you wish make contributions. Dependencies for `wakeflow` consist mostly of standard python libraries. We recommend using a package manager such as [Anaconda](https://www.anaconda.com/products/distribution) to make your life easier, but this is not required.
+`wakeflow` may be most easily installed from the Python Package Index ([PyPI](https://pypi.org/project/wakeflow/)), or can also be installed from the [GitHub repository](https://github.com/TomHilder/wakeflow) if you wish to make contributions. Dependencies for `wakeflow` consist mostly of standard python libraries. We recommend using a package manager such as [Anaconda](https://www.anaconda.com/products/distribution) to make your life easier, but this is not required.
 
 
 
@@ -75,7 +75,7 @@ If you want to contribute to, or modify `wakeflow`, you should install it from t
 ```sh
 git clone https://github.com/<replace-by-your-username>/wakeflow.git
 ```
-Alternatively, you may install from source even if you do not with to edit `wakeflow`, in which case I would recommend skipping the fork and simply cloning the repo directly:
+Alternatively, you may install from source even if you do not wish to edit `wakeflow`, in which case I would recommend skipping the fork and simply cloning the repo directly:
 ```sh
 git clone https://github.com/TomHilder/wakeflow.git
 ```
@@ -109,6 +109,7 @@ Python packages:
 * `pyyaml`
 * `tqdm`
 * `pytest` (optional)
+* `pytest-cov` (optional)
 * [`pymcfost`](https://github.com/cpinte/pymcfost) (optional, only if interfacing with [MCFOST](https://github.com/cpinte/mcfost))
 
 If you install `wakeflow` using `pip` then the required dependencies will be automatically installed.
@@ -126,7 +127,7 @@ Please refer to the [Quickstart tutorial](https://wakeflow.readthedocs.io/en/lat
 <!-- USAGE EXAMPLES -->
 ## Testing
 
-`wakeflow` is automatically unit-tested on Github using Actions and [`tox`](https://github.com/tox-dev/tox). If you have installed `wakeflow` from source, you may run a local test on your machine provided that you have `pytest` installed. Simply navigate to your installation directory and run:
+`wakeflow` is automatically unit-tested on Github using Actions and [`tox`](https://github.com/tox-dev/tox). If you have installed `wakeflow` from source, you may run a local test on your machine provided that you have `pytest` and `pytest-cov` installed. Simply navigate to your installation directory and run:
 ```sh
 pytest
 ```
@@ -209,15 +210,15 @@ Additional acknowledgements:
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[pypi-shield]: https://img.shields.io/badge/pypi-1.1.2-green?style=flat-square
+[pypi-shield]: https://img.shields.io/badge/pypi-1.2.0-green?style=flat-square
 [pypi-url]: https://pypi.org/project/wakeflow/
 [python-shield]: https://img.shields.io/badge/python-3.6%2B-orange?style=flat-square
 [python-url]: https://www.python.org
 [license-shield]: https://img.shields.io/badge/license-MIT-blue?style=flat-square
 [license-url]: https://opensource.org/licenses/MIT
-[JOSS-shield]: https://img.shields.io/badge/JOSS-coming%20soon-blueviolet?style=flat-square
-[JOSS-url]: https://example.com
-[test-status-shield]: https://img.shields.io/github/workflow/status/TomHilder/wakeflow/Tests?label=tests&style=flat-square
+[JOSS-shield]: https://img.shields.io/badge/JOSS-under_review-yellow?style=flat-square
+[JOSS-url]: https://joss.theoj.org/papers/22d35f9b0bb35a8df4dab85b0b6f4eb7
+[test-status-shield]: https://img.shields.io/github/actions/workflow/status/TomHilder/wakeflow/Tests.yml?label=tests&style=flat-square
 [test-status-url]: https://github.com/TomHilder/wakeflow/actions/workflows/Tests.yml
 [docs-status-shield]: https://readthedocs.org/projects/wakeflow/badge/?version=latest&style=flat-square
 [docs-status-url]: https://wakeflow.readthedocs.io/en/latest/?badge=latest

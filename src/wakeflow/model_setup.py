@@ -57,14 +57,16 @@ class _Parameters(_Constants):
             self.m_planet       = None
             self.m_planet_array = list(config["m_planet"])
 
-        self.r_outer  = float(config["r_outer"])
-        self.r_inner  = float(config["r_inner"])
-        self.r_planet = float(config["r_planet"])
+        self.r_outer    = float(config["r_outer"])
+        self.r_inner    = float(config["r_inner"])
+        self.r_planet   = float(config["r_planet"])
+        self.phi_planet = float(config["phi_planet"])
         try:
             self.r_ref = float(config["r_ref"])
         except:
             self.r_ref = self.r_planet
         self.r_c      = float(config["r_c"])
+        self.z_max    = float(config["z_max"])
         self.q        = float(config["q"])
         self.dens_p   = float(config["p"])
         self.p        = self.dens_p + self.q - 1.5
@@ -114,12 +116,15 @@ class _Parameters(_Constants):
         self.malpha = float(config["damping_malpha"])
 
         # numerical parameters
-        self.CFL           = float(config["CFL"])
-        self.scale_box     = float(config["scale_box"])
-        self.scale_box_ang = float(config["scale_box_ang"])
-        self.box_warp      = bool (config["box_warp"])
-        self.use_box_IC    = bool (config["use_box_IC"])
-        self.tf_fac        = float(config["tf_fac"])
+        self.CFL             = float(config["CFL"])
+        self.scale_box_l     = float(config["scale_box_l"])
+        self.scale_box_r     = float(config["scale_box_r"])
+        self.scale_box_ang_t = float(config["scale_box_ang_t"])
+        self.scale_box_ang_b = float(config["scale_box_ang_b"])
+        self.box_warp        = bool (config["box_warp"])
+        self.use_box_IC      = bool (config["use_box_IC"])
+        self.tf_fac          = float(config["tf_fac"])
+        self.use_old_vel     = bool (config["use_old_vel"])
 
         # get flaring at r_planet
         self.hr_planet = self.hr * (self.r_planet / self.r_ref) ** (0.5 - self.q)
@@ -194,8 +199,16 @@ class _Parameters(_Constants):
                 raise Exception("Cannot run mcfost without writing FITS file (ie. require write_FITS: True)")
 
         # check linear box scale factor
-        if self.scale_box != 1:
+        if self.scale_box_l != 1 or self.scale_box_r != 1:
             print("WARNING: Changing linear box scale factor can cause strange results.")
+            
+        # check linear box scale factor
+        if self.scale_box_l != self.scale_box_r:
+            print("WARNING: Using a different linear box scale factor for left and right edge can cause strange results.")
+
+        # check linear box scale factor
+        if self.scale_box_ang_t != self.scale_box_ang_b:
+            print("WARNING: Using a different linear box scale factor for top and bottom edge can cause strange results.")
 
         # check CFL
         if self.CFL > 0.5:
@@ -213,6 +226,9 @@ class _Parameters(_Constants):
         if self.show_teta_debug_plots:
             print("WARNING: Choosing show_teta_debug_plots=True may cause the run to fail.")
 
+        # check velocity formulas
+        if self.use_old_vel:
+            print("WARNING: Choosing use_old_vel=True may cause a different velocity output.")
         print("Parameters Ok - continuing")
         return True
 
@@ -222,13 +238,16 @@ def _load_config_file(config_file: str, default_config_dict: dict = None) -> dic
     """
 
     # read in config file as dictionary
-    config_dict = yaml.load(open(config_file), Loader=yaml.FullLoader)
+    with open(config_file, "r") as file:
+        config_dict = yaml.load(file, Loader=yaml.FullLoader)
 
     # check that keys in config_dict correspond to actual Wakeflow parameters
     if default_config_dict is not None:
         for key in config_dict.keys():
             if key not in default_config_dict.keys():
                 raise Exception(f"{key} is not a valid parameter.")
+            
+    
 
     return config_dict
 

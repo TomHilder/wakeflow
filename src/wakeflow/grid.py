@@ -9,7 +9,7 @@ import numpy                as np
 import matplotlib.pyplot    as plt
 import astropy.io.fits      as fits
 import shutil               as sh
-from scipy.interpolate  import RectBivariateSpline
+from scipy.interpolate  import RectBivariateSpline, LinearNDInterpolator
 from matplotlib.colors  import LogNorm
 from .mcfost_interface  import _read_mcfost_grid_data
 from .model_setup       import _Parameters
@@ -101,7 +101,7 @@ class _Grid:
         """
 
         # define disk height (not used for mcfost grid)
-        self.height = self.p.hr * (self.p.r_outer / self.p.r_ref)**(0.5 - self.p.q) * self.p.r_outer
+        self.height = self.p.z_max * self.p.hr * (self.p.r_outer / self.p.r_ref)**(0.5 - self.p.q) * self.p.r_outer
 
         # make cartesian grid
         if self.p.grid_type == "cartesian":
@@ -340,17 +340,23 @@ class _Grid:
         """
 
         # box size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs
-        x_box_size = 2 * self.p.scale_box
-        y_box_size = 2 * self.p.scale_box_ang
+        x_box_size_l = 2 * self.p.scale_box_l
+        x_box_size_r = 2 * self.p.scale_box_r
+        y_box_size_t = 2 * self.p.scale_box_ang_t
+        y_box_size_b = 2 * self.p.scale_box_ang_b
 
-        min_r = self.p.r_planet - x_box_size * self.p.l
-        max_r = self.p.r_planet + x_box_size * self.p.l
+        min_r = self.p.r_planet - x_box_size_l * self.p.l
+        max_r = self.p.r_planet + x_box_size_r * self.p.l
+        
+        min_y = -y_box_size_b * self.p.l
+        max_y =  y_box_size_t * self.p.l
 
-        min_y = -y_box_size * self.p.l
-        max_y =  y_box_size * self.p.l
-
-        max_phi =  np.pi / 2
-        min_phi = -np.pi / 2
+        if self.p.grid_type == "cartesian":
+            max_phi = np.arctan2(max_y, max_r) + (np.pi / 2)
+            min_phi = np.arctan2(min_y, max_r) + (np.pi / 2)
+        else:
+            max_phi = np.arctan2(max_y, max_r) #+ (np.pi / 2)
+            min_phi = np.arctan2(min_y, max_r) #+ (np.pi / 2)
 
         # find (phi, r) grid for either Cartesian or Cylindrical global grid
         if self.info["Type"] == "cartesian":
@@ -362,11 +368,12 @@ class _Grid:
         # new PHI grid to use (-pi,pi) instead of (0,2pi), where values are swapped in place, also ditch z coordinate
         # also construct a mask that contains 0 outside linear annulus and 1 inside
         PHI_new     = np.zeros((PHI.shape[0],PHI.shape[2]))
-        Y_new       = np.zeros((PHI.shape[0],PHI.shape[2]))
+        PHI_new_p   = np.zeros((PHI.shape[0],PHI.shape[2]))
         linear_mask = np.zeros((PHI.shape[0],PHI.shape[2]))
 
         R_new = R[:,0,:]
 
+        # don't modify the following if you want to keep your sanity
         for i in range(PHI.shape[0]):
             for j in range(PHI.shape[2]):
 
@@ -375,34 +382,95 @@ class _Grid:
                     PHI_new[i,j] = PHI[i,0,j] - 2*np.pi
                 else:
                     PHI_new[i,j] = PHI[i,0,j]
-
-                Y_new[i,j] = R[i,0,j] * np.sin(PHI[i,0,j])
+                    
+                # transforming phi coordinate in place for mask
+                inter_phi = np.mod(PHI[i,0,j] - self.p.phi_planet, 2*np.pi)
+                if inter_phi > np.pi:
+                    PHI_new_p[i,j] = inter_phi - 2*np.pi
+                else:
+                    PHI_new_p[i,j] = inter_phi
 
                 # constructing mask
-                if PHI_new[i,j] > min_phi and PHI_new[i,j] < max_phi \
-                    and Y_new[i,j] > min_y and Y_new[i,j] < max_y \
-                    and R_new[i,j] > min_r and R_new[i,j] < max_r:
-                    linear_mask[i,j] = 1
+                if self.p.grid_type == "cartesian":
+                    if np.mod(PHI_new[i,j] + self.p.phi_planet, 2*np.pi) > min_phi \
+                        and np.mod(PHI_new[i,j] + self.p.phi_planet, 2*np.pi) < max_phi \
+                        and R_new[i,j] > min_r and R_new[i,j] < max_r:
+                        linear_mask[i,j] = 1
+                    else:
+                        linear_mask[i,j] = 0
+                
                 else:
-                    linear_mask[i,j] = 0
+                    if PHI_new_p[i,j] > min_phi \
+                        and PHI_new_p[i,j] < max_phi \
+                        and R_new[i,j] > min_r and R_new[i,j] < max_r:
+                        linear_mask[i,j] = 1
+                    else:
+                        linear_mask[i,j] = 0
 
         # get linear solution           
         lp = LinearPerts
+        
+        # get flattened grids
+        PHI_flat = np.mod(lp.PHI_ann.flatten(), 2*np.pi)
+        R_flat   = lp.R_ann.flatten()
+        
+        # convert PHI_flat to (-pi, pi)
+        PHI_flat_new = np.zeros(PHI_flat.shape[0])
+        for i in range(PHI_flat.shape[0]):
 
+            # transforming phi coordinate in place
+            if PHI_flat[i] > np.pi:
+                PHI_flat_new[i] = PHI_flat[i] - 2*np.pi
+            else:
+                PHI_flat_new[i] = PHI_flat[i]
+        
         # assemble interpolation functions over linear perts grid
-        interp_v_r   = RectBivariateSpline(lp.y_ann, lp.r_ann, lp.pert_v_r_ann)
-        interp_v_phi = RectBivariateSpline(lp.y_ann, lp.r_ann, lp.pert_v_phi_ann)
-        interp_rho   = RectBivariateSpline(lp.y_ann, lp.r_ann, lp.pert_rho_ann)
+        interp_v_r   = LinearNDInterpolator(np.transpose([PHI_flat_new, R_flat]), lp.pert_v_r_ann  .flatten())
+        interp_v_phi = LinearNDInterpolator(np.transpose([PHI_flat_new, R_flat]), lp.pert_v_phi_ann.flatten())
+        interp_rho   = LinearNDInterpolator(np.transpose([PHI_flat_new, R_flat]), lp.pert_rho_ann  .flatten())
+        
+        # get new phi accounting for planet
+        PHI_planet = np.mod(PHI_new - self.p.phi_planet, 2*np.pi)
+        
+        # convert PHI_planet to (-pi, pi)
+        PHI_planet_new = np.zeros((PHI_planet.shape[0],PHI_planet.shape[1]))
+        for i in range(PHI_planet.shape[0]):
+            for j in range(PHI_planet.shape[1]):
 
+                # transforming phi coordinate in place
+                if PHI_planet[i,j] > np.pi:
+                    PHI_planet_new[i,j] = PHI_planet[i,j] - 2*np.pi
+                else:
+                    PHI_planet_new[i,j] = PHI_planet[i,j]
+        
         # evaluate interpolations on global grid
-        global_lin_v_r   = interp_v_r.ev  (Y_new, R_new)
-        global_lin_v_phi = interp_v_phi.ev(Y_new, R_new)
-        global_lin_rho   = interp_rho.ev  (Y_new, R_new)
+        global_lin_v_r   = np.nan_to_num(interp_v_r  (PHI_planet_new, R_new))
+        global_lin_v_phi = np.nan_to_num(interp_v_phi(PHI_planet_new, R_new))
+        global_lin_rho   = np.nan_to_num(interp_rho  (PHI_planet_new, R_new))
+        
+        # for debugging phi_planet
+        #plt.figure(figsize=[6,6], dpi=150)
+        #plt.title("first one")
+        #plt.imshow(global_lin_v_r, cmap="RdBu", origin="lower")
+        #plt.show()
 
-        # apply mask to only get solution in valid domain
-        global_lin_v_r   = global_lin_v_r   * linear_mask
-        global_lin_v_phi = global_lin_v_phi * linear_mask
-        global_lin_rho   = global_lin_rho   * linear_mask
+        # apply mask to only get solution in valid domain. This transpose business is confusing but works
+        if self.p.grid_type == "cartesian":
+            global_lin_v_r   = global_lin_v_r   * linear_mask.transpose()
+            global_lin_v_phi = global_lin_v_phi * linear_mask.transpose()
+            global_lin_rho   = global_lin_rho   * linear_mask.transpose()
+        else:
+            global_lin_v_r   = global_lin_v_r   * linear_mask
+            global_lin_v_phi = global_lin_v_phi * linear_mask
+            global_lin_rho   = global_lin_rho   * linear_mask
+        
+        # for debugging phi_planet
+        #plt.figure(figsize=[6,6], dpi=150)
+        #plt.imshow(linear_mask, origin="lower")
+        #plt.show()
+        #plt.figure(figsize=[6,6], dpi=150)
+        #plt.imshow(global_lin_v_r, cmap="RdBu", origin="lower")
+        #plt.show()
 
         # Add velocities, identical at all heights for now
         self.v_r   += global_lin_v_r  [:, np.newaxis, :]
@@ -580,7 +648,7 @@ class _Grid:
             if not dimless:
                 ax.set_xlabel(r"$x \, [\mathrm{AU}]$")
                 ax.set_ylabel(r"$y \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+                fig.colorbar(c, extend="both", label=r"$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$x$")
                 ax.set_ylabel(r"$y$")
@@ -599,7 +667,7 @@ class _Grid:
             if not dimless:
                 ax.set_xlabel(r"$x \, [\mathrm{AU}]$")
                 ax.set_ylabel(r"$y \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+                fig.colorbar(c, extend="both", label=r"$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$x$")
                 ax.set_ylabel(r"$y$")
@@ -638,7 +706,7 @@ class _Grid:
             if not dimless:
                 ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
                 ax.set_ylabel(r"$r \, \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+                fig.colorbar(c, extend="both", label=r"$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
                 ax.set_ylabel(r"$r$")
@@ -656,7 +724,7 @@ class _Grid:
             if not dimless:
                 ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
                 ax.set_ylabel(r"$r \, \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+                fig.colorbar(c, extend="both", label=r"$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
                 ax.set_ylabel(r"$r$")
