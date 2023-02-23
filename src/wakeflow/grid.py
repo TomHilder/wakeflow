@@ -290,7 +290,7 @@ class _Grid:
                 )
         else: #taper
             corr = np.sqrt(
-                (-1* ((p + 2 * q) + (2 - p + 3/2 - q))* hrf**2) + (1 - 2 * q) + (2 * q * r / np.sqrt(r**2 + z**2))
+                (-1* ((p + 2 * q) + (2 - p + 3/2 - q)* (r/r_c)**(2-p+3/2-q))* hrf**2) + (1 - 2 * q) + (2 * q * r / np.sqrt(r**2 + z**2))
                 )
 
         # perform correction
