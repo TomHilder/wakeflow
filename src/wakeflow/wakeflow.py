@@ -6,6 +6,7 @@ Contains the WakeflowModel class, intended for use by users to generate, configu
 """
 
 import subprocess, os
+from copy                 import copy, deepcopy
 from .model_setup         import _load_config_file, _run_setup, _Parameters
 from .grid                import _Grid
 from .linear_perts        import _LinearPerts
@@ -164,6 +165,7 @@ class WakeflowModel():
         # 
         adiabatic_index       = 1.6666667     # adiabatic index
         damping_malpha        = 0.0           # artificial damping NOT IMPLEMENTED
+        smooth_box            = False         # whether to smooth over the edge of the linear box
         CFL                   = 0.5           # Courant stability factor (require <0.5)
         scale_box_l           = 1.0           # linear box length scale factor in radial direction (left)
         scale_box_r           = 1.0           # linear box length scale factor in radial direction (right)
@@ -293,6 +295,27 @@ class WakeflowModel():
 
             # add the linear perturbations onto grid
             grid_lin_perts._add_linear_perturbations(lin_perts, grid_background.rho)
+            
+            # grab a box of double size as well if using smoothing
+            if params.smooth_box:
+                
+                # set box size to twice as big
+                params_s2 = deepcopy(params)
+                params_s2.scale_box_l = 2 * params.scale_box_l
+                params_s2.scale_box_r = 2 * params.scale_box_r
+                
+                # make empty grid for linear perturbations with big box
+                grid_lin_perts_s2 = _Grid(params_s2)
+                grid_lin_perts_s2._make_grid()
+                grid_lin_perts_s2._make_empty_disk()
+
+                # extract linear perturbations from file
+                lin_perts_s2 = _LinearPerts(params_s2)
+                lin_perts_s2._cut_box_annulus_segment()
+
+                # add the linear perturbations onto grid with big box
+                grid_lin_perts_s2._add_linear_perturbations(lin_perts_s2, grid_background.rho)
+                
 
             # make empty grid for non-linear perturbations
             grid_nonlin_perts = _Grid(params)

@@ -117,6 +117,7 @@ class _Parameters(_Constants):
 
         # numerical parameters
         self.CFL             = float(config["CFL"])
+        self.smooth_box      = float(config["smooth_box"])
         self.scale_box_l     = float(config["scale_box_l"])
         self.scale_box_r     = float(config["scale_box_r"])
         self.scale_box_ang_t = float(config["scale_box_ang_t"])

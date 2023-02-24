@@ -348,6 +348,10 @@ class _Grid:
         min_r = self.p.r_planet - x_box_size_l * self.p.l
         max_r = self.p.r_planet + x_box_size_r * self.p.l
         
+        print(f"MIN R = {min_r}, MAX R = {max_r}")
+        self.p.BOX_R_MIN = min_r
+        self.p.BOX_R_MAX = max_r
+        
         min_y = -y_box_size_b * self.p.l
         max_y =  y_box_size_t * self.p.l
 
@@ -364,6 +368,10 @@ class _Grid:
             R, PHI = self.R_xy, self.PHI_xy
         else:
             R, PHI = self.R, self.PHI
+            
+        print(f"MIN PHI = {min_phi}, MAX PHI = {max_phi}")
+        self.p.BOX_PHI_MIN = min_phi
+        self.p.BOX_PHI_MAX = max_phi
 
         # new PHI grid to use (-pi,pi) instead of (0,2pi), where values are swapped in place, also ditch z coordinate
         # also construct a mask that contains 0 outside linear annulus and 1 inside
@@ -840,9 +848,9 @@ class _Grid:
             np.save(f"{savedir}/Z.npy", self.Z_xy)
             np.save(f"{savedir}/Y.npy", self.Y)
         else:
-            np.save(f"{savedir}/{label}_PHI.npy", self.PHI)
-            np.save(f"{savedir}/{label}_Z.npy", self.Z)
-            np.save(f"{savedir}/{label}_R.npy", self.R)
+            np.save(f"{savedir}/PHI.npy", self.PHI)
+            np.save(f"{savedir}/Z.npy", self.Z)
+            np.save(f"{savedir}/R.npy", self.R)
 
         # save results:
         np.save(f"{savedir}/{label}_v_r.npy", self.v_r)
