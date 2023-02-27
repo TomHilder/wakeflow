@@ -210,7 +210,7 @@ Additional acknowledgements:
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[pypi-shield]: https://img.shields.io/badge/pypi-1.2.0-green?style=flat-square
+[pypi-shield]: https://img.shields.io/badge/pypi-1.3.1-green?style=flat-square
 [pypi-url]: https://pypi.org/project/wakeflow/
 [python-shield]: https://img.shields.io/badge/python-3.6%2B-orange?style=flat-square
 [python-url]: https://www.python.org
