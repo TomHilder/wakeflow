@@ -15,18 +15,20 @@ from scipy.interpolate      import RectBivariateSpline
 # TODO: update code to be faster and more efficient, most of the code in this file is still leftover from the old version (Analytical Kinks)
 
 # wake shape
-def _phi_wake(r, Rp, hr, q, cw): 
+def _phi_wake(r, Rp, hr, q, p, cw, m_p, m_th): 
     """Eq. (4) Bollati et al. 2021
     """
     rr = r / Rp
-    return -cw * np.sign(r - Rp) * (1 / hr) * (rr**(q - 0.5) / (q - 0.5) - rr**(q + 1) / (q + 1) - 3 / ((2 * q - 1) * (q + 1)))
+    phi_l = np.sign(r - Rp) * (1 / hr) * (rr**(q - 0.5) / (q - 0.5) - rr**(q + 1) / (q + 1) - 3 / ((2 * q - 1) * (q + 1)))
+    phi_nl = 0#np.sign(r - Rp) * 0.05 * hr * np.sqrt(_t_vector(rr, Rp, hr, q, p, m_p, m_th))
+    return -cw * (phi_l + phi_nl)
 
 # eta coordinate transformation
-def _Eta(r, phi, Rp, hr, q, cw):
+def _Eta(r, phi, Rp, hr, q, p, cw, m_p, m_th):
     """Eq. (14) Bollati et al. 2021
     """
     coeff    = 1.5 / hr
-    phi_w    = _mod2pi(_phi_wake(r, Rp, hr, q, cw))
+    phi_w    = _mod2pi(_phi_wake(r, Rp, hr, q, p, cw, m_p, m_th))
     deltaphi = phi - phi_w
 
     if deltaphi > np.pi:
@@ -37,7 +39,7 @@ def _Eta(r, phi, Rp, hr, q, cw):
 
     return coeff * deltaphi
 
-def _Eta_vector(r, phi, Rp, hr, q, cw):
+def _Eta_vector(r, phi, Rp, hr, q, p, cw, m_p, m_th):
     """Eq. (14) Bollati et al. 2021
 
     Vectorised version of _Eta.
@@ -45,7 +47,7 @@ def _Eta_vector(r, phi, Rp, hr, q, cw):
     modulus operators and constant offsets.
     """
     coeff    = 1.5 / hr
-    phi_w    = _phi_wake(r, Rp, hr, q, cw) % (2*np.pi)
+    phi_w    = _phi_wake(r, Rp, hr, q, p, cw, m_p, m_th) % (2*np.pi)
     deltaphi = (phi - phi_w + np.pi) % (2*np.pi) - np.pi
 
     return coeff * deltaphi
@@ -76,7 +78,7 @@ def _t_integrand(x, q, p):
 def _t_integral(up, q, p):
     return  quad(_t_integrand, 1, up, args=(q,p))[0]
 
-def _t_vector(rr, Rp, hr, q, p):
+def _t_vector(rr, Rp, hr, q, p, m_p, m_th):
     """Equation (43) Rafikov 2002    (Eq. 13 Bollati et al. 2021)
     This is a vectorised version of _t.
     _t computes an integral where the integrand is independent of the radius r.
@@ -138,16 +140,16 @@ def _t_vector(rr, Rp, hr, q, p):
     module_integral = np.zeros_like(sorted_results)
     module_integral[integral_bounds_sorted_indices] = np.abs(sorted_results)
 
-    coeff = 3 * hr**(-5 / 2) / (2**(5 / 4))
+    coeff = 3 * hr**(-5 / 2) / (2**(5 / 4)) * (m_p/m_th)
     return np.reshape(coeff * module_integral, shape)
 
 
 # t coordinate transformation
-def _t(r, Rp, hr, q, p):
+def _t(r, Rp, hr, q, p, m_p, m_th):
     """Equation (43) Rafikov 2002    (Eq. 13 Bollati et al. 2021)
     """
     module_integral = np.abs(_t_integral(r / Rp, q, p))
-    coeff = 3 * hr**(-5 / 2) / (2**(5 / 4))
+    coeff = 3 * hr**(-5 / 2) / (2**(5 / 4)) * (m_p/m_th)
     return coeff * module_integral
 
 # g(r) quantity calculation
@@ -202,7 +204,9 @@ def _get_chi(
     hr, 
     q, 
     p,
-    t1
+    t1,
+    m_p,
+    m_th
 ):
     # COMPUTATION OF Chi
 
@@ -216,7 +220,7 @@ def _get_chi(
     #    print(t1-t1_orig)
 
 
-    eta1 = _Eta(rr, pphi, Rp, hr, q, cw)
+    eta1 = _Eta(rr, pphi, Rp, hr, q, p, cw, m_p, m_th)
 
     # If the point is in the outer disk, use the outer wake solution
     if (rr - Rp) > 0:
@@ -311,6 +315,8 @@ def _get_chi_vector(
     hr, 
     q, 
     p,
+    m_p,
+    m_th
 ): 
     """
     This is a vectorised version of the previous _get_chi function.
@@ -325,7 +331,7 @@ def _get_chi_vector(
 
     Chi = np.zeros_like(rr)
 
-    eta_array = _Eta_vector(rr, pphi, Rp, hr, q, cw)
+    eta_array = _Eta_vector(rr, pphi, Rp, hr, q, p, cw, m_p, m_th)
 
     # Inner and outer masks will account for the annulus directly.
     outer_mask = rr - Rp >= x_match_r * l
@@ -358,7 +364,7 @@ def _get_chi_vector(
         np.logical_and(~before_N_wave_mask,
         np.abs( eta_array - cw * np.sign(rr - Rp) * eta_tilde_outer) <= np.sqrt(2 * C_outer * np.abs(tt - t0_outer))
         ))
-    Chi[m] = (-cw * np.sign(rr[m] - Rp) * eta_array[m] + eta_tilde_outer) / (tt[m] - t0_outer)
+    Chi[m] = (-cw * np.sign(rr[m] - Rp) * (eta_array[m] - eta_tilde_outer)) / (tt[m] - t0_outer)
 
 
     """
@@ -396,7 +402,7 @@ def _get_chi_vector(
         np.logical_and(~before_N_wave_mask,
         np.abs( eta_array - cw * np.sign(rr - Rp) * eta_tilde_inner) < np.sqrt(2 * C_inner * np.abs(tt - t0_inner))
         ))
-    Chi[m] = (-cw * np.sign(rr[m] - Rp) * eta_array[m] + eta_tilde_inner) / (tt[m] - t0_inner)
+    Chi[m] = (-cw * np.sign(rr[m] - Rp) * (eta_array[m] - eta_tilde_inner) / (tt[m] - t0_inner)
 
     """
     if (rr - Rp) <= -x_match*l:
@@ -416,10 +422,10 @@ def _get_chi_vector(
     return Chi
 
 # get the density and velocity perturbations at the grid point from chi
-def _get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p, use_old_vel):
+def _get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p, use_old_vel, m_p, m_th):
 
     g1  = _g(rr, Rp, hr, q, p)
-    dnl = Chi * 2 / (g1 * (gamma + 1))     # Eq. (11) Bollati et al. 2021
+    dnl = Chi * 2 / (g1 * (gamma + 1))*(m_p/m_th)     # Eq. (11) Bollati et al. 2021
     
     if use_old_vel == True:
         Lfu = _Lambda_fu(rr, Rp, csp, hr, gamma, q, p)
@@ -445,7 +451,7 @@ def _plot_r_t(params):
     r = np.linspace(params.r_planet, params.r_outer, 1000)
     times = []
     for rad in r:
-        times.append(_t(rad, params.r_planet, params.hr_planet, params.q, params.p))
+        times.append(_t(rad, params.r_planet, params.hr_planet, params.q, params.p, params.m_planet, params.m_thermal))
 
     plt.plot(r, times)
     plt.xlabel("r")
