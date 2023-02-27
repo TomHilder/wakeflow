@@ -252,8 +252,8 @@ class WakeflowModel():
                 working_dir = os.getcwd()
                 os.chdir(f"{params.system}/{params.name}/{mass_p}Mj/")
                 subprocess.call(
-                    ["mcfost", "mcfost.para", "-df", "wakeflow_model.fits", "-mol", "-freeze-out", "20", "-photodissociation", "-photodesorption"], 
-                    stdout=subprocess.DEVNULL
+                    ["mcfost", "mcfost.para", "-df", "wakeflow_model.fits", "-mol", "-freeze-out", "20", "-photodissociation", "-photodesorption"] #, 
+                    #stdout=subprocess.DEVNULL
                 )
                 os.chdir(working_dir)
 
@@ -315,7 +315,6 @@ class WakeflowModel():
 
                 # add the linear perturbations onto grid with big box
                 grid_lin_perts_s2._add_linear_perturbations(lin_perts_s2, grid_background.rho)
-                
 
             # make empty grid for non-linear perturbations
             grid_nonlin_perts = _Grid(params)
@@ -339,9 +338,17 @@ class WakeflowModel():
             # merge grids for result
             if params.include_linear:
                 grid_background._merge_grids(grid_lin_perts)
-
+                
             # merge grids for results
             grid_background._merge_grids(grid_nonlin_perts)
+            
+            # if box smoothing is on
+            if params.smooth_box:
+                print("Smoothing join between regimes")
+                grid_background._smooth_box(grid_lin_perts_s2)
+            
+            # REMOVE: checking smoothing
+            grid_background._show_disk2D(0, show=True, save=False, dimless=params.dimensionless)
 
             # flip results if desired
             if params.user_cw_rotation:

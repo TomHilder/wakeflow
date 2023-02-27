@@ -30,7 +30,7 @@ def _make_mcfost_parameter_file(parameters: _Parameters) -> None:
     p = parameters
 
     # get location of mcfost reference para file
-    mcfost_para_file = pkg_resources.resource_filename('wakeflow', 'data/ref3.0_3D.para')
+    mcfost_para_file = pkg_resources.resource_filename('wakeflow', 'data/ref4.0_3D.para')
     print("Reading reference mcfost parameter file: "+mcfost_para_file)
 
     # setting up an mcfost parameters object

@@ -15,6 +15,7 @@ from .mcfost_interface  import _read_mcfost_grid_data
 from .model_setup       import _Parameters
 from .linear_perts      import _LinearPerts
 from .non_linear_perts  import _NonLinearPerts
+from .utilities         import sigmoid_smoothing
 
 # NOTE: contents are intended mostly for internal use and should not really be accessed by users, but I have still provided
 # documentation in the case that advanced users want to mess around with any of it.
@@ -348,9 +349,10 @@ class _Grid:
         min_r = self.p.r_planet - x_box_size_l * self.p.l
         max_r = self.p.r_planet + x_box_size_r * self.p.l
         
-        print(f"MIN R = {min_r}, MAX R = {max_r}")
-        self.p.BOX_R_MIN = min_r
-        self.p.BOX_R_MAX = max_r
+        self.BOX_R_MIN = min_r
+        self.BOX_R_MAX = max_r
+        print(f"MIN R = {self.BOX_R_MIN}, MAX R = {self.BOX_R_MAX}")
+        
         
         min_y = -y_box_size_b * self.p.l
         max_y =  y_box_size_t * self.p.l
@@ -369,9 +371,10 @@ class _Grid:
         else:
             R, PHI = self.R, self.PHI
             
-        print(f"MIN PHI = {min_phi}, MAX PHI = {max_phi}")
-        self.p.BOX_PHI_MIN = min_phi
-        self.p.BOX_PHI_MAX = max_phi
+        self.BOX_PHI_MIN = min_phi
+        self.BOX_PHI_MAX = max_phi
+        print(f"MIN PHI = {self.BOX_PHI_MIN}, MAX PHI = {self.BOX_PHI_MAX}")
+        
 
         # new PHI grid to use (-pi,pi) instead of (0,2pi), where values are swapped in place, also ditch z coordinate
         # also construct a mask that contains 0 outside linear annulus and 1 inside
@@ -583,9 +586,54 @@ class _Grid:
         self.v_r   += g.v_r
         self.v_phi += g.v_phi
         self.rho   += g.rho
+        
+        # add info about linear box (this is needed for smoothing)
+        try:
+            self.BOX_R_MIN   = g.BOX_R_MIN
+            self.BOX_R_MAX   = g.BOX_R_MAX
+            self.BOX_PHI_MIN = g.BOX_PHI_MIN
+            self.BOX_PHI_MAX = g.BOX_PHI_MAX
+        except:
+            pass
 
         # update info
         self.info["Contains"] += " AND " + g.info["Contains"]
+        
+    def _smooth_box(self, big_box_grid : "_Grid") -> None:
+        """Under development
+        """
+        
+        if self.p.grid_type == "cartesian":
+            raise Exception("Cannot perform box smoothing on Cartesian grid.")
+
+        if type(big_box_grid) is not _Grid:
+            raise Exception("Must be given a Grid object. Smoothing failed.")
+        
+        s2 = big_box_grid
+        
+        # smoothing scale in AU
+        smoothing_scale = 3
+        
+        # middle points for smoothing
+        left_boundary_av  = (self.BOX_R_MIN + s2.BOX_R_MIN) / 2
+        right_boundary_av = (self.BOX_R_MAX + s2.BOX_R_MAX) / 2
+        
+        # smooth left boundary
+        smooth_left_boundary = sigmoid_smoothing(            self.v_r,   s2.v_r, self.R,  left_boundary_av, smoothing_scale)
+        
+        # smooth right boundary
+        smooth_both_boundary = sigmoid_smoothing(smooth_left_boundary, self.v_r, self.R, right_boundary_av, smoothing_scale)
+        
+        # update with smoothed version
+        self.v_r = smooth_both_boundary
+
+        # merge data arrays
+        #self.v_r   += g.v_r
+        #self.v_phi += g.v_phi
+        #self.rho   += g.rho
+
+        # update info
+        #self.info["Contains"] += " AND " + g.info["Contains"]
 
 #    def merge_phantom_densities(self, grid_to_merge):
 #
