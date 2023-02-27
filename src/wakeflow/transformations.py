@@ -402,7 +402,7 @@ def _get_chi_vector(
         np.logical_and(~before_N_wave_mask,
         np.abs( eta_array - cw * np.sign(rr - Rp) * eta_tilde_inner) < np.sqrt(2 * C_inner * np.abs(tt - t0_inner))
         ))
-    Chi[m] = (-cw * np.sign(rr[m] - Rp) * (eta_array[m] - eta_tilde_inner) / (tt[m] - t0_inner)
+    Chi[m] = (-cw * np.sign(rr[m] - Rp) * (eta_array[m] - eta_tilde_inner)) / (tt[m] - t0_inner)
 
     """
     if (rr - Rp) <= -x_match*l:
