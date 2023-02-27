@@ -121,9 +121,9 @@ class _Grid:
         """
         
         # make grid from specified parameters
-        self.x    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_x)
-        self.y    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_y)
-        self.z_xy = np.linspace(0, self.height, self.p.n_z)
+        self.x, stepx_    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_x, retstep="True")
+        self.y, stepy_    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_y, retstep="True")
+        self.z_xy         = np.linspace(0, self.height, self.p.n_z)
         
         if self.p.rot_interp == True:
             x_grid_ext_l = np.arange(-np.sqrt(2)*self.p.r_outer, -self.p.r_outer, stepx_)
