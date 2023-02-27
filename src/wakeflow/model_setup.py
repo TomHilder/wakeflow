@@ -122,9 +122,12 @@ class _Parameters(_Constants):
         self.box_warp        = bool (config["box_warp"])
         self.use_box_IC      = bool (config["use_box_IC"])
         self.tf_fac          = float(config["tf_fac"])
-        self.use_old_vel     = bool (config["use_old_vel"])
         self.rot_interp      = bool (config["rot_interp"])
-
+        
+        # Choice of physics
+        self.use_old_vel     = bool (config["use_old_vel"])
+        self.lin_type        = str  (config["lin_type"])
+        
         # get flaring at r_planet
         self.hr_planet = self.hr * (self.r_planet / self.r_ref) ** (0.5 - self.q)
 
@@ -230,6 +233,14 @@ class _Parameters(_Constants):
             print("WARNING: Choosing use_old_vel=True may cause a different velocity output.")
         print("Parameters Ok - continuing")
         return True
+        
+        # check linear perturbations input from user
+        if self.lin_type != "shearing_sheet" and self.lin_type != "global" and self.lin_type != "simulation":
+            raise Exception("Invalid linear perturbation type. Choose either global or simulation or shearing_sheet)")
+        
+        # Warning on shearing sheet approximation
+        if self.lin_type == "shearing_sheet":
+            print("WARNING: The shearing sheet approximation may be invalid for a given choice of parameters. This may lead to incorrect results")
 
 # read in .yaml file, check keys correspond to parameters and return dictionary of parameters
 def _load_config_file(config_file: str, default_config_dict: dict = None) -> dict:
