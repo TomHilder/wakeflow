@@ -63,6 +63,7 @@ class WakeflowModel():
         include_linear:      bool = True,
         save_perturbations:  bool = True,
         save_total:          bool = True,
+        rot_interp:          bool = False,
         write_FITS:          bool = False,
         run_mcfost:          bool = False,
         inclination:        float = -225,
@@ -134,6 +135,8 @@ class WakeflowModel():
             Save the perturbations?
         save_total : bool
             Save the totals (perturbations + background disk)?
+        rot_interp : bool
+            Extend grid by a factor sqrt(2) to account for interpolation on corners over rotated grid (working only for cartesian)
         write_FITS : bool
             Generate a .FITS file to run in MCFOST? Requires "mcfost" grid type.
         run_mcfost : bool
@@ -168,6 +171,7 @@ class WakeflowModel():
         box_warp              = True          # interpret y coordinate of linear regime as arc length, or truly vertical? True (default) for former
         use_box_IC            = False         # use only part of linear regime in box as initial condition for non-linear evolution
         use_old_vel           = False         # use old approximated formulas for u pert
+        rot_interp            = False         # expand grid to avoid border effects when interpolatin on rotated grid
 
         # generate dictionary for model parameters by grabbing all local variables
         self.model_params = locals()
