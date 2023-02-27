@@ -42,6 +42,7 @@ def test_default_user_config():
     assert model.model_params["include_linear"]      == True
     assert model.model_params["save_perturbations"]  == True
     assert model.model_params["save_total"]          == True
+    assert model.model_params["rot_interp"]:         == False,
     assert model.model_params["write_FITS"]          == False
     assert model.model_params["run_mcfost"]          == False
     assert model.model_params["inclination"]         == -225
@@ -71,6 +72,8 @@ def test_default_dev_config():
     assert model.model_params["show_teta_debug_plots"] == False
     assert model.model_params["box_warp"]              == True
     assert model.model_params["use_box_IC"]            == False
+    assert model.model_params["use_old_vel"]           == False
+    assert model.model_params["rot_interp"]            == False 
 
 # test that user configuration overrides default
 def test_manual_config():
