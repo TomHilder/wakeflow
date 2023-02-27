@@ -124,6 +124,16 @@ class _Grid:
         self.x    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_x)
         self.y    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_y)
         self.z_xy = np.linspace(0, self.height, self.p.n_z)
+        
+        if self.p.rot_interp == True:
+            x_grid_ext_l = np.arange(-np.sqrt(2)*self.p.r_outer, -self.p.r_outer, stepx_)
+            y_grid_ext_l = np.arange(-np.sqrt(2)*self.p.r_outer, -self.p.r_outer, stepy_)
+            
+            x_grid_ext_r = -x_grid_ext_l[::-1]
+            y_grid_ext_r = -y_grid_ext_l[::-1]
+            
+            self.x = np.concatenate([x_grid_ext_l, self.x, x_grid_ext_r])
+            self.y = np.concatenate([y_grid_ext_l, self.y, y_grid_ext_r])
 
         self.X, self.Z_xy, self.Y  = np.meshgrid(self.x, self.z_xy, self.y, indexing='ij')
 
