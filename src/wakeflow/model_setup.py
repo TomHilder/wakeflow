@@ -123,6 +123,7 @@ class _Parameters(_Constants):
         self.use_box_IC      = bool (config["use_box_IC"])
         self.tf_fac          = float(config["tf_fac"])
         self.use_old_vel     = bool (config["use_old_vel"])
+        self.rot_interp      = bool (config["rot_interp"])
 
         # get flaring at r_planet
         self.hr_planet = self.hr * (self.r_planet / self.r_ref) ** (0.5 - self.q)
