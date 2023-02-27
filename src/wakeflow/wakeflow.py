@@ -172,6 +172,7 @@ class WakeflowModel():
         use_box_IC            = False         # use only part of linear regime in box as initial condition for non-linear evolution
         use_old_vel           = False         # use old approximated formulas for u pert
         rot_interp            = False         # expand grid to avoid border effects when interpolatin on rotated grid
+        lin_type              = "global"      # Choose the perturbations to use in the linear regime. Supported options: global, simulation, shearing_sheet
 
         # generate dictionary for model parameters by grabbing all local variables
         self.model_params = locals()
@@ -287,7 +288,7 @@ class WakeflowModel():
 
             # extract linear perturbations from file
             lin_perts = _LinearPerts(params)
-            lin_perts._cut_box_annulus_segment()
+            lin_perts._cut_annulus_segment()
 
             # add the linear perturbations onto grid
             grid_lin_perts._add_linear_perturbations(lin_perts, grid_background.rho)
@@ -301,9 +302,9 @@ class WakeflowModel():
             nonlin_perts = _NonLinearPerts(params, grid_nonlin_perts)
 
             # extract initial condition from the linear perturbations
-            nonlin_perts._extract_ICs(lin_perts)
+            nonlin_perts._extract_ICs_ann(lin_perts)
             if params.use_box_IC:
-                nonlin_perts._extract_ICs_ann(lin_perts)
+                nonlin_perts._extract_ICs_ann_old(lin_perts)
 
             # solve for non-linear perturbations
             nonlin_perts._get_non_linear_perts()
