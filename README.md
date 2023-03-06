@@ -216,7 +216,7 @@ Additional acknowledgements:
 [python-url]: https://www.python.org
 [license-shield]: https://img.shields.io/badge/license-MIT-blue?style=flat-square
 [license-url]: https://opensource.org/licenses/MIT
-[JOSS-shield]: https://img.shields.io/badge/JOSS-under_review-yellow?style=flat-square
+[JOSS-shield]: https://img.shields.io/badge/JOSS-10.21105/joss.04863-brightgreen?style=flat-square
 [JOSS-url]: https://joss.theoj.org/papers/22d35f9b0bb35a8df4dab85b0b6f4eb7
 [test-status-shield]: https://img.shields.io/github/actions/workflow/status/TomHilder/wakeflow/Tests.yml?label=tests&style=flat-square
 [test-status-url]: https://github.com/TomHilder/wakeflow/actions/workflows/Tests.yml
