@@ -234,16 +234,20 @@ class _Parameters(_Constants):
             print("WARNING: Choosing use_old_vel=True may cause a different velocity output.")
         print("Parameters Ok - continuing")
         return True
-    
+        
+        # warning for saving results in mcmc
         if self.mcmc and self.save_perturbations:
             print("WARNING: Do not save the perturbation fields when using wakeflow inside the mcmc chain")
-            
+        
+        # warning for saving results in mcmc
         if self.mcmc and self.save_total:
             print("WARNING: Do not save the density and velocity fields when using wakeflow inside the mcmc chain")
             
+        # check linear perturbations input from user    
         if self.lin_type != "shearing_sheet" and self.lin_type != "global" and self.lin_type != "simulation":
             raise Exception("Invalid linear perturbation type. Choose either global or simulation or shearing_sheet)")
             
+        # Warning on shearing sheet approximation
         if self.lin_type == "shearing_sheet":
             print("WARNING: The shearing sheet approximation may be invalid for a given choice of parameters. This may lead to incorrect results")
 

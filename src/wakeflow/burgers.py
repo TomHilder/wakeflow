@@ -26,7 +26,7 @@ def _solve_burgers(
     linear_t, 
     show_teta, 
     tf_fac,
-    edge_limit=1e10
+    edge_limit
 ): 
     """Propagate the wake in (t,eta,chi) space by solving Eq. 10 from Bollati et al. 2021 using Godunov scheme.
     """
@@ -153,7 +153,7 @@ def _solve_burgers(
         counter += 1
 
         # time step calculation
-        dt = min(deta * CFL / (max(abs(solution[-1]))+ 1e-8), 0.02)
+        dt = min(deta * CFL / (max(abs(solution[-1])) + 1e-8), 0.02)
 
         # update time
         time.append(time[-1] + dt)

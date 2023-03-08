@@ -134,7 +134,6 @@ class _Grid:
             
             self.x = np.concatenate([x_grid_ext_l, self.x, x_grid_ext_r])
             self.y = np.concatenate([y_grid_ext_l, self.y, y_grid_ext_r])
-            
 
         self.X, self.Z_xy, self.Y  = np.meshgrid(self.x, self.z_xy, self.y, indexing='ij')
 
@@ -339,102 +338,6 @@ class _Grid:
         self.info["Contains"] = "Zeros"
 
     # add results from the linear regime nearby the planet onto the grid (old version)
-    def _add_linear_perturbations_old(self, LinearPerts : _LinearPerts, rho_background : "_Grid.rho") -> None:
-        """Add results from the linear regime, stored in LinearPerts object, to the grid
-
-        Parameters
-        ----------
-        LinearPerts : LinearPerts
-            LinearPerts object containing results from the linear regime.
-        rho_background : Grid.rho
-            unperturbed density from Grid object where make_keplerian_disk has been used.
-        """
-
-        # box size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs
-        x_box_size_l = 2 * self.p.scale_box_l
-        x_box_size_r = 2 * self.p.scale_box_r
-        y_box_size_t = 2 * self.p.scale_box_ang_t
-        y_box_size_b = 2 * self.p.scale_box_ang_b
-
-        min_r = self.p.r_planet - x_box_size_l * self.p.l
-        max_r = self.p.r_planet + x_box_size_r * self.p.l
-
-        min_y = -y_box_size_b * self.p.l
-        max_y =  y_box_size_t * self.p.l
-
-        max_phi =  np.pi / 2
-        min_phi = -np.pi / 2
-
-        # find (phi, r) grid for either Cartesian or Cylindrical global grid
-        if self.info["Type"] == "cartesian":
-            self._get_r_phi_coords()
-            R, PHI = self.R_xy, self.PHI_xy
-        else:
-            R, PHI = self.R, self.PHI
-
-        # new PHI grid to use (-pi,pi) instead of (0,2pi), where values are swapped in place, also ditch z coordinate
-        # also construct a mask that contains 0 outside linear annulus and 1 inside
-        PHI_new     = np.zeros((PHI.shape[0],PHI.shape[2]))
-        Y_new       = np.zeros((PHI.shape[0],PHI.shape[2]))
-        linear_mask = np.zeros((PHI.shape[0],PHI.shape[2]))
-
-        R_new = R[:,0,:]
-
-        for i in range(PHI.shape[0]):
-            for j in range(PHI.shape[2]):
-
-                # transforming phi coordinate in place
-                if PHI[i,0,j] > np.pi:
-                    PHI_new[i,j] = PHI[i,0,j] - 2*np.pi
-                else:
-                    PHI_new[i,j] = PHI[i,0,j]
-
-                Y_new[i,j] = R[i,0,j] * np.sin(PHI[i,0,j])
-
-                # constructing mask
-                if PHI_new[i,j] > min_phi and PHI_new[i,j] < max_phi \
-                    and Y_new[i,j] > min_y and Y_new[i,j] < max_y \
-                    and R_new[i,j] > min_r and R_new[i,j] < max_r:
-                    linear_mask[i,j] = 1
-                else:
-                    linear_mask[i,j] = 0
-
-        # get linear solution           
-        lp = LinearPerts
-
-        # assemble interpolation functions over linear perts grid
-        interp_v_r   = RectBivariateSpline(lp.y_ann, lp.r_ann, lp.pert_v_r_ann)
-        interp_v_phi = RectBivariateSpline(lp.y_ann, lp.r_ann, lp.pert_v_phi_ann)
-        interp_rho   = RectBivariateSpline(lp.y_ann, lp.r_ann, lp.pert_rho_ann)
-
-        # evaluate interpolations on global grid
-        global_lin_v_r   = interp_v_r.ev  (Y_new, R_new)
-        global_lin_v_phi = interp_v_phi.ev(Y_new, R_new)
-        global_lin_rho   = interp_rho.ev  (Y_new, R_new)
-
-        # apply mask to only get solution in valid domain
-        global_lin_v_r   = global_lin_v_r   * linear_mask
-        global_lin_v_phi = global_lin_v_phi * linear_mask
-        global_lin_rho   = global_lin_rho   * linear_mask
-
-        # Add velocities, identical at all heights for now
-        self.v_r   += global_lin_v_r  [:, np.newaxis, :]
-        self.v_phi += global_lin_v_phi[:, np.newaxis, :]
-
-        # Add density, scaling by background density
-        self.rho += global_lin_rho[:, np.newaxis, :] * rho_background
-
-        # plot for debugging
-        #_, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-        #myplot = ax.contourf(PHI[:,0,:], R[:,0,:], global_lin_v_r, levels=300, cmap='RdBu')
-        #ax.set_ylim(0, self.p.r_outer)
-        #plt.colorbar(myplot)
-        #plt.show()
-
-        # update grid info
-        self.info["Contains"] = "linear perturbations"
-
-    # add results from the linear regime nearby the planet onto the grid
     def _add_linear_perturbations(self, LinearPerts : _LinearPerts, rho_background : "_Grid.rho") -> None:
         """Add results from the linear regime, stored in LinearPerts object, to the grid
 
@@ -471,12 +374,33 @@ class _Grid:
 
         # new PHI grid to use (-pi,pi) instead of (0,2pi), where values are swapped in place, also ditch z coordinate
         # also construct a mask that contains 0 outside linear annulus and 1 inside
-        #PHI_new     = np.zeros((PHI.shape[0],PHI.shape[2]))
-        #linear_mask = np.zeros((PHI.shape[0],PHI.shape[2]))
-
         R_new       = R[:,0,:]
         PHI_new     = np.where(PHI[:,0,:]>np.pi, PHI[:,0,:] - 2*np.pi, PHI[:,0,:])
         linear_mask = np.where(np.logical_and(np.logical_and(PHI_new>=min_phi,PHI_new<=max_phi), np.logical_and(R_new>min_r,R_new<max_r)), 1, 0)
+
+        R_new = R[:,0,:]
+
+        for i in range(PHI.shape[0]):
+            for j in range(PHI.shape[2]):
+
+                # transforming phi coordinate in place
+                if PHI[i,0,j] > np.pi:
+                    PHI_new[i,j] = PHI[i,0,j] - 2*np.pi
+                else:
+                    PHI_new[i,j] = PHI[i,0,j]
+
+                Y_new[i,j] = R[i,0,j] * np.sin(PHI[i,0,j])
+
+                # constructing mask
+                if PHI_new[i,j] > min_phi and PHI_new[i,j] < max_phi \
+                    and Y_new[i,j] > min_y and Y_new[i,j] < max_y \
+                    and R_new[i,j] > min_r and R_new[i,j] < max_r:
+                    linear_mask[i,j] = 1
+                else:
+                    linear_mask[i,j] = 0
+
+        # get linear solution           
+        lp = LinearPerts
 
         # assemble interpolation functions over linear perts grid
         interp_v_r   = RectBivariateSpline(lp.phi_ann, lp.r_ann, lp.pert_v_r_ann)
@@ -613,11 +537,7 @@ class _Grid:
 #            return False
 #
 #        # merge data arrays
-#        self.rho = g.rho
-
-    # rotate grids and fields to account for planet azimuth, then cut them to original grid
-#    def _rotate_planet(self) -> None:
-        
+#        self.rho = g.rho 
 
     # create plots of a constant z slice, mostly used for debugging but also shows midplane results to user
     # if they set show_midplane_plots=True
@@ -875,9 +795,10 @@ class _Grid:
         np.save(f"{savedir}/{label}_rho.npy", self.rho)
 
         print(f"{printed} saved to {savedir}")
-        
-    # method to get the velocity perturbations to feed to the mcmc chain
-    def _get_velocity_perturbations(self) -> float:
-        
-        return self.v_r, self.v_phi, self.X, self.Y
- 
+
+        # method to get the velocity perturbations to feed to the mcmc chain
+        def _get_velocity_perturbations(self) -> float:
+
+            return self.v_r, self.v_phi, self.X, self.Y
+
+
