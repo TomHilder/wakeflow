@@ -378,27 +378,6 @@ class _Grid:
         PHI_new     = np.where(PHI[:,0,:]>np.pi, PHI[:,0,:] - 2*np.pi, PHI[:,0,:])
         linear_mask = np.where(np.logical_and(np.logical_and(PHI_new>=min_phi,PHI_new<=max_phi), np.logical_and(R_new>min_r,R_new<max_r)), 1, 0)
 
-        R_new = R[:,0,:]
-
-        for i in range(PHI.shape[0]):
-            for j in range(PHI.shape[2]):
-
-                # transforming phi coordinate in place
-                if PHI[i,0,j] > np.pi:
-                    PHI_new[i,j] = PHI[i,0,j] - 2*np.pi
-                else:
-                    PHI_new[i,j] = PHI[i,0,j]
-
-                Y_new[i,j] = R[i,0,j] * np.sin(PHI[i,0,j])
-
-                # constructing mask
-                if PHI_new[i,j] > min_phi and PHI_new[i,j] < max_phi \
-                    and Y_new[i,j] > min_y and Y_new[i,j] < max_y \
-                    and R_new[i,j] > min_r and R_new[i,j] < max_r:
-                    linear_mask[i,j] = 1
-                else:
-                    linear_mask[i,j] = 0
-
         # get linear solution           
         lp = LinearPerts
 
