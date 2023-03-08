@@ -164,7 +164,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CITATION -->
 ## Citing
 
-Please cite [Hilder et al. (in prep)](https://example.com) in any work where `wakeflow` has been used. Please contact us if `wakeflow` is useful to you, we welcome any collaboration opportunities.
+Please cite [Hilder et al. (2023)](https://joss.theoj.org/papers/10.21105/joss.04863) and [Bollati et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021MNRAS.504.5444B/abstract) in any work where `wakeflow` has been used. Please contact us if `wakeflow` is useful to you, we welcome any collaboration opportunities.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
