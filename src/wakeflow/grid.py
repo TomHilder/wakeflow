@@ -776,8 +776,8 @@ class _Grid:
         print(f"{printed} saved to {savedir}")
 
         # method to get the velocity perturbations to feed to the mcmc chain
-        def _get_velocity_perturbations(self) -> float:
+    def _get_velocity_perturbations(self) -> float:
 
-            return self.v_r, self.v_phi, self.X, self.Y
+        return self.v_r, self.v_phi, self.X, self.Y
 
 
