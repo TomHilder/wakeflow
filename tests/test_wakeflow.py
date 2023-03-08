@@ -71,6 +71,7 @@ def test_default_dev_config():
     assert model.model_params["show_teta_debug_plots"] == False
     assert model.model_params["box_warp"]              == True
     assert model.model_params["use_box_IC"]            == False
+    assert model.model_params["mcmc"]                  == False
 
 # test that user configuration overrides default
 def test_manual_config():

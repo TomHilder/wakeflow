@@ -11,6 +11,7 @@ from .grid                import _Grid
 from .linear_perts        import _LinearPerts
 from .non_linear_perts    import _NonLinearPerts
 #from phantom_interface   import PhantomDump
+from typing import Optional
 
 # class for use by the user to interact with Wakeflow
 class WakeflowModel():
@@ -63,6 +64,8 @@ class WakeflowModel():
         include_linear:      bool = True,
         save_perturbations:  bool = True,
         save_total:          bool = True,
+        mcmc:                bool = False,
+        rot_interp:          bool = False,
         write_FITS:          bool = False,
         run_mcfost:          bool = False,
         inclination:        float = -225,
@@ -134,6 +137,8 @@ class WakeflowModel():
             Save the perturbations?
         save_total : bool
             Save the totals (perturbations + background disk)?
+        rot_interp : bool
+            Extend grid by a factor sqrt(2) to account for interpolation on corners over rotated grid (working only for cartesian)
         write_FITS : bool
             Generate a .FITS file to run in MCFOST? Requires "mcfost" grid type.
         run_mcfost : bool
@@ -168,6 +173,9 @@ class WakeflowModel():
         box_warp              = True          # interpret y coordinate of linear regime as arc length, or truly vertical? True (default) for former
         use_box_IC            = False         # use only part of linear regime in box as initial condition for non-linear evolution
         use_old_vel           = False         # use old approximated formulas for u pert
+        mcmc                  = False         # use wakeflow inside mcmc chain, pass perturbations without saving them
+        rot_interp            = False         # expand grid to avoid border effects when interpolatin on rotated grid
+        lin_type              = "global"      # Choose the perturbations to use in the linear regime. Supported options: global, simulation, shearing_sheet
 
         # generate dictionary for model parameters by grabbing all local variables
         self.model_params = locals()
@@ -204,7 +212,7 @@ class WakeflowModel():
         print(f"Model configuration read from file: {param_file}")
 
     # generate the model using the configuration specified by the user
-    def run(self, overwrite: bool = False) -> None:
+    def run(self, overwrite: bool = False) -> Optional[float]:
         """
         Generate results for model, requires user to have called either configure or configure_from_file first.
 
@@ -234,7 +242,10 @@ class WakeflowModel():
         for mass_p in planet_masses:
             params.m_planet = mass_p
             print(f"\n* Creating {mass_p} Mj model:")
-            self._run_wakeflow(params)
+            if params.mcmc:
+                v_r, v_phi, xgrid, ygrid = self._run_wakeflow(params) # this works only for a single planet mass, should be fin efor mcmc
+            else:
+                self._run_wakeflow(params)
 
         # run mcfost for each model
         if params.run_mcfost == True:
@@ -250,10 +261,12 @@ class WakeflowModel():
                 os.chdir(working_dir)
 
         print("\n* Done!")
+        if params.mcmc:
+            return v_r, v_phi, xgrid, ygrid
 
     # internal method that is called by self.run to generate the results for a specific set of parameters
     # may be called more than once if the user has specified multiple planet masses
-    def _run_wakeflow(self, params: _Parameters) -> None:
+    def _run_wakeflow(self, params: _Parameters) -> Optional[float]:
         """
         Internal use method for generating the planet wake by calling other parts of Wakeflow.
 
@@ -283,7 +296,7 @@ class WakeflowModel():
 
             # extract linear perturbations from file
             lin_perts = _LinearPerts(params)
-            lin_perts._cut_box_annulus_segment()
+            lin_perts._cut_annulus_segment()
 
             # add the linear perturbations onto grid
             grid_lin_perts._add_linear_perturbations(lin_perts, grid_background.rho)
@@ -297,9 +310,9 @@ class WakeflowModel():
             nonlin_perts = _NonLinearPerts(params, grid_nonlin_perts)
 
             # extract initial condition from the linear perturbations
-            nonlin_perts._extract_ICs(lin_perts)
+            nonlin_perts._extract_ICs_ann(lin_perts)
             if params.use_box_IC:
-                nonlin_perts._extract_ICs_ann(lin_perts)
+                nonlin_perts._extract_ICs_ann_old(lin_perts)
 
             # solve for non-linear perturbations
             nonlin_perts._get_non_linear_perts()
@@ -319,7 +332,7 @@ class WakeflowModel():
                 grid_background._flip_results()
 
             # merge grids to save or plot perturbations
-            if params.make_midplane_plots or params.save_perturbations:
+            if params.make_midplane_plots or params.save_perturbations or params.mcmc:
 
                 if params.include_linear:
                     grid_nonlin_perts._merge_grids(grid_lin_perts)
@@ -355,3 +368,7 @@ class WakeflowModel():
         # write fits file
         if params.write_FITS:
             grid_background._write_fits_file()
+            
+        # Pass perturbations for mcmc chain
+        if params.mcmc:
+            return grid_nonlin_perts._get_velocity_perturbations()

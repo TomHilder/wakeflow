@@ -121,9 +121,20 @@ class _Grid:
         """
         
         # make grid from specified parameters
-        self.x    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_x)
-        self.y    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_y)
-        self.z_xy = np.linspace(0, self.height, self.p.n_z)
+        self.x, stepx_    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_x, retstep="True")
+        self.y, stepy_    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_y, retstep="True")
+        self.z_xy         = np.linspace(0, self.height, self.p.n_z)
+        
+        if self.p.rot_interp == True:
+            x_grid_ext_l = np.arange(-np.sqrt(2)*self.p.r_outer, -self.p.r_outer, stepx_)
+            y_grid_ext_l = np.arange(-np.sqrt(2)*self.p.r_outer, -self.p.r_outer, stepy_)
+            
+            x_grid_ext_r = -x_grid_ext_l[::-1]
+            y_grid_ext_r = -y_grid_ext_l[::-1]
+            
+            self.x = np.concatenate([x_grid_ext_l, self.x, x_grid_ext_r])
+            self.y = np.concatenate([y_grid_ext_l, self.y, y_grid_ext_r])
+            
 
         self.X, self.Z_xy, self.Y  = np.meshgrid(self.x, self.z_xy, self.y, indexing='ij')
 
@@ -327,8 +338,8 @@ class _Grid:
         # update grid info
         self.info["Contains"] = "Zeros"
 
-    # add results from the linear regime nearby the planet onto the grid
-    def _add_linear_perturbations(self, LinearPerts : _LinearPerts, rho_background : "_Grid.rho") -> None:
+    # add results from the linear regime nearby the planet onto the grid (old version)
+    def _add_linear_perturbations_old(self, LinearPerts : _LinearPerts, rho_background : "_Grid.rho") -> None:
         """Add results from the linear regime, stored in LinearPerts object, to the grid
 
         Parameters
@@ -400,6 +411,82 @@ class _Grid:
         global_lin_v_r   = interp_v_r.ev  (Y_new, R_new)
         global_lin_v_phi = interp_v_phi.ev(Y_new, R_new)
         global_lin_rho   = interp_rho.ev  (Y_new, R_new)
+
+        # apply mask to only get solution in valid domain
+        global_lin_v_r   = global_lin_v_r   * linear_mask
+        global_lin_v_phi = global_lin_v_phi * linear_mask
+        global_lin_rho   = global_lin_rho   * linear_mask
+
+        # Add velocities, identical at all heights for now
+        self.v_r   += global_lin_v_r  [:, np.newaxis, :]
+        self.v_phi += global_lin_v_phi[:, np.newaxis, :]
+
+        # Add density, scaling by background density
+        self.rho += global_lin_rho[:, np.newaxis, :] * rho_background
+
+        # plot for debugging
+        #_, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+        #myplot = ax.contourf(PHI[:,0,:], R[:,0,:], global_lin_v_r, levels=300, cmap='RdBu')
+        #ax.set_ylim(0, self.p.r_outer)
+        #plt.colorbar(myplot)
+        #plt.show()
+
+        # update grid info
+        self.info["Contains"] = "linear perturbations"
+
+    # add results from the linear regime nearby the planet onto the grid
+    def _add_linear_perturbations(self, LinearPerts : _LinearPerts, rho_background : "_Grid.rho") -> None:
+        """Add results from the linear regime, stored in LinearPerts object, to the grid
+
+        Parameters
+        ----------
+        LinearPerts : LinearPerts
+            LinearPerts object containing results from the linear regime.
+        rho_background : Grid.rho
+            unperturbed density from Grid object where make_keplerian_disk has been used.
+        """
+
+        # get linear solution           
+        lp = LinearPerts
+
+        # segment radial size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs. bsl/r stands for box_size_left/right
+        r_bsl = lp.x_box_l
+        r_bsr = lp.x_box_r
+        # segment azimuthal size (in units of \pi). bst/b stands for box_size_top/bottom
+        phi_bst = lp.x_box_t / 2
+        phi_bsb = lp.x_box_b / 2
+        # segment radial extrema for masking
+        min_r = self.p.r_planet - r_bsl * self.p.l
+        max_r = self.p.r_planet + r_bsr * self.p.l
+        # segment azimuthal extrema for masking
+        max_phi =  phi_bst * np.pi 
+        min_phi = -phi_bst * np.pi 
+
+        # find (phi, r) grid for either Cartesian or Cylindrical global grid
+        if self.info["Type"] == "cartesian":
+            self._get_r_phi_coords()
+            R, PHI = self.R_xy, self.PHI_xy
+        else:
+            R, PHI = self.R, self.PHI
+
+        # new PHI grid to use (-pi,pi) instead of (0,2pi), where values are swapped in place, also ditch z coordinate
+        # also construct a mask that contains 0 outside linear annulus and 1 inside
+        #PHI_new     = np.zeros((PHI.shape[0],PHI.shape[2]))
+        #linear_mask = np.zeros((PHI.shape[0],PHI.shape[2]))
+
+        R_new       = R[:,0,:]
+        PHI_new     = np.where(PHI[:,0,:]>np.pi, PHI[:,0,:] - 2*np.pi, PHI[:,0,:])
+        linear_mask = np.where(np.logical_and(np.logical_and(PHI_new>=min_phi,PHI_new<=max_phi), np.logical_and(R_new>min_r,R_new<max_r)), 1, 0)
+
+        # assemble interpolation functions over linear perts grid
+        interp_v_r   = RectBivariateSpline(lp.phi_ann, lp.r_ann, lp.pert_v_r_ann)
+        interp_v_phi = RectBivariateSpline(lp.phi_ann, lp.r_ann, lp.pert_v_phi_ann)
+        interp_rho   = RectBivariateSpline(lp.phi_ann, lp.r_ann, lp.pert_rho_ann)
+
+        # evaluate interpolations on global grid
+        global_lin_v_r   = interp_v_r.ev  (PHI_new, R_new)
+        global_lin_v_phi = interp_v_phi.ev(PHI_new, R_new)
+        global_lin_rho   = interp_rho.ev  (PHI_new, R_new)
 
         # apply mask to only get solution in valid domain
         global_lin_v_r   = global_lin_v_r   * linear_mask
@@ -527,6 +614,10 @@ class _Grid:
 #
 #        # merge data arrays
 #        self.rho = g.rho
+
+    # rotate grids and fields to account for planet azimuth, then cut them to original grid
+#    def _rotate_planet(self) -> None:
+        
 
     # create plots of a constant z slice, mostly used for debugging but also shows midplane results to user
     # if they set show_midplane_plots=True
@@ -784,5 +875,9 @@ class _Grid:
         np.save(f"{savedir}/{label}_rho.npy", self.rho)
 
         print(f"{printed} saved to {savedir}")
-
         
+    # method to get the velocity perturbations to feed to the mcmc chain
+    def _get_velocity_perturbations(self) -> float:
+        
+        return self.v_r, self.v_phi, self.X, self.Y
+ 

@@ -12,6 +12,7 @@ import sys, pkg_resources, tarfile
 import numpy                    as np
 import matplotlib.pyplot        as plt
 from scipy.interpolate      import RectBivariateSpline
+from .transformations       import _Eta_vector
 
 if TYPE_CHECKING:
     from .model_setup       import _Parameters
@@ -29,67 +30,208 @@ class _LinearPerts():
 
         # grab parameters object
         self.p = parameters
-
-        # get location of linear perturbations data files
-        pert_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations.npy')
-        mesh_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations_mesh.npy')
-
-        # read perturbations from files
-        try:
-            perts = np.load(pert_loc)
-            mesh  = np.load(mesh_loc)
-
-        # in the case files have not been extracted from tarballs yet, extract them
-        except FileNotFoundError:
-
-            # open tarballs
-            pert_tar = tarfile.open(f"{pert_loc}.tar.gz")
-            mesh_tar = tarfile.open(f"{mesh_loc}.tar.gz")
-
-            # extract npy files
-            loc = pkg_resources.resource_filename('wakeflow', 'data')
-            pert_tar.extractall(loc)
-            mesh_tar.extractall(loc)
-
-            # close tarballs
-            pert_tar.close()
-            mesh_tar.close()
-
-            # read perturbations from files
-            perts = np.load(pert_loc)
-            mesh  = np.load(mesh_loc)
-
-        # get perturbation arrays
-        self.pert_v_r   = perts[0]
-        self.pert_v_phi = perts[1]
-        self.pert_rho   = perts[2]
-
-        # grid
-        self.X = mesh[0]
-        self.Y = mesh[1]
-
-        # linear perturbations read in grid
-        x = self.X[0,:]
-        y = self.Y[:,0]
-
-        # define constants for linear perts
-        self.x_box_l = 2 * self.p.scale_box_l
-        self.x_box_r = 2 * self.p.scale_box_r
-        self.x_box_t = 2 * self.p.scale_box_ang_t
-        self.x_box_b = 2 * self.p.scale_box_ang_b
         
-        # cut square box grid in linear regime
-        self.x_cut = x[np.argmin(x < -self.x_box_l) : np.argmin(x < self.x_box_r) + 1]
-        self.y_cut = y[np.argmin(y < -self.x_box_b) : np.argmin(y < self.x_box_t) + 1]
+        # initialise perturbations properties
+        self.info = {
+            "Type": None,
+            "Grid": None,
+            "Size": [0, 0, 0]
+            }
+        
+        # Using linear perturbations computed following Bollati et al. 2021 with shearing sheet assumption
+        # DEPRECATED: THIS WILL PROBABLY LEAD TO WRONG RESULTS
+        if self.p.lin_type == "shearing_sheet":
+            # get location of linear perturbations data files
+            pert_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations.npy')
+            mesh_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations_mesh.npy')
+    
+            # read perturbations from files
+            try:
+                perts = np.load(pert_loc)
+                mesh  = np.load(mesh_loc)
+    
+            # in the case files have not been extracted from tarballs yet, extract them
+            except FileNotFoundError:
+    
+                # open tarballs
+                pert_tar = tarfile.open(f"{pert_loc}.tar.gz")
+                mesh_tar = tarfile.open(f"{mesh_loc}.tar.gz")
+    
+                # extract npy files
+                loc = pkg_resources.resource_filename('wakeflow', 'data')
+                pert_tar.extractall(loc)
+                mesh_tar.extractall(loc)
+    
+                # close tarballs
+                pert_tar.close()
+                mesh_tar.close()
+    
+                # read perturbations from files
+                perts = np.load(pert_loc)
+                mesh  = np.load(mesh_loc)
+    
+            # get perturbation arrays
+            self.pert_v_r   = perts[0]
+            self.pert_v_phi = perts[1]
+            self.pert_rho   = perts[2]
+    
+            # grid
+            self.X = mesh[0]
+            self.Y = mesh[1]
+    
+            # linear perturbations read in grid
+            x = self.X[0,:]
+            y = self.Y[:,0]
+    
+            # define constants for linear perts
+            self.x_box_l = 2 * self.p.scale_box_l
+            self.x_box_r = 2 * self.p.scale_box_r
+            self.x_box_t = 2 * self.p.scale_box_ang_t
+            self.x_box_b = 2 * self.p.scale_box_ang_b
+            
+            # cut square box grid in linear regime
+            self.x_cut = x[np.argmin(x < -self.x_box_l) : np.argmin(x < self.x_box_r) + 1]
+            self.y_cut = y[np.argmin(y < -self.x_box_b) : np.argmin(y < self.x_box_t) + 1]
+    
+            # test plot
+            if False:
+                plt.figure()
+                plt.contourf(x, y, self.pert_rho, levels=100, cmap='RdBu')
+                plt.xlim(self.x_cut[0],self.x_cut[-1])
+                plt.ylim(self.y_cut[0],self.y_cut[-1])
+                plt.colorbar()
+                plt.show()
 
-        # test plot
-        if False:
-            plt.figure()
-            plt.contourf(x, y, self.pert_rho, levels=100, cmap='RdBu')
-            plt.xlim(self.x_cut[0],self.x_cut[-1])
-            plt.ylim(self.y_cut[0],self.y_cut[-1])
-            plt.colorbar()
-            plt.show()
+            #updating info of linear perts        
+            self.info["Type"]    = "shearing_sheet"
+            self.info["Grid"]    = "cartesian"
+            self.info["Size"][0] = x.shape[0]
+            self.info["Size"][1] = y.shape[0]
+            self.info["Size"][2] = self.p.n_z
+
+        #Using global linear perturbations computed using Miranda's code.         
+        elif self.p.lin_type == "global":
+            # get location of linear perturbations data files
+            pert_loc = pkg_resources.resource_filename('wakeflow', 'data/global_linear_perturbations.npy')
+            mesh_loc = pkg_resources.resource_filename('wakeflow', 'data/global_linear_perturbations_mesh.npy')
+    
+            # read perturbations from files
+            try:
+                perts = np.load(pert_loc)
+                mesh  = np.load(mesh_loc)
+    
+            # in the case files have not been extracted from tarballs yet, extract them
+            except FileNotFoundError:
+    
+                # open tarballs
+                pert_tar = tarfile.open(f"{pert_loc}.tar.gz")
+                mesh_tar = tarfile.open(f"{mesh_loc}.tar.gz")
+    
+                # extract npy files
+                loc = pkg_resources.resource_filename('wakeflow', 'data')
+                pert_tar.extractall(loc)
+                mesh_tar.extractall(loc)
+    
+                # close tarballs
+                pert_tar.close()
+                mesh_tar.close()
+    
+                # read perturbations from files
+                perts = np.load(pert_loc)
+                mesh  = np.load(mesh_loc)
+                
+            # get perturbation arrays
+            self.pert_v_r   = perts[0]
+            self.pert_v_phi = perts[1]
+            self.pert_rho   = perts[2]
+    
+            # grid
+            self.R   = mesh[0]
+            self.PHI = mesh[1]
+
+            #Rescale R with planet radius
+            self.R *= self.p.r_planet
+    
+            # linear perturbations read in grid
+            r   = self.R[0,:]
+            phi = self.PHI[:,0]
+
+            #defining cartesian grid
+            x = np.linspace(-np.max(r), np.max(r), len(r))
+            y = np.linspace(-np.max(r), np.max(r), len(r))
+
+            #creating cartesian mesh
+            self.X, self.Y = np.meshgrid(x, y)
+
+            # define constants for linear perts
+            self.x_box_l = 2 * self.p.scale_box_l
+            self.x_box_r = 2 * self.p.scale_box_r
+            self.x_box_t = 2 * self.p.scale_box_ang_t
+            self.x_box_b = 2 * self.p.scale_box_ang_b
+
+            #updating info of linear perts      
+            self.info["Type"]    = "global"
+            self.info["Grid"]    = "cylindrical"
+            self.info["Size"][0] = r.shape[0]
+            self.info["Size"][1] = phi.shape[0]
+            self.info["Size"][2] = self.p.n_z
+
+        #Using perturbations from hydro simulation (not yet implemented)
+        elif self.p.lin_type == "simulation":
+            # get location of linear perturbations data files
+            pert_loc = pkg_resources.resource_filename('wakeflow', 'data/simulation_linear_perturbations.npy')
+            mesh_loc = pkg_resources.resource_filename('wakeflow', 'data/simulation_linear_perturbations_mesh.npy')
+    
+            # read perturbations from files
+            try:
+                perts = np.load(pert_loc)
+                mesh  = np.load(mesh_loc)
+    
+            # in the case files have not been extracted from tarballs yet, extract them
+            except FileNotFoundError:
+    
+                # open tarballs
+                pert_tar = tarfile.open(f"{pert_loc}.tar.gz")
+                mesh_tar = tarfile.open(f"{mesh_loc}.tar.gz")
+    
+                # extract npy files
+                loc = pkg_resources.resource_filename('wakeflow', 'data')
+                pert_tar.extractall(loc)
+                mesh_tar.extractall(loc)
+    
+                # close tarballs
+                pert_tar.close()
+                mesh_tar.close()
+    
+                # read perturbations from files
+                perts = np.load(pert_loc)
+                mesh  = np.load(mesh_loc)
+                
+            # get perturbation arrays
+            self.pert_v_r   = perts[0]
+            self.pert_v_phi = perts[1]
+            self.pert_rho   = perts[2]
+    
+            # grid
+            self.X = mesh[0]
+            self.Y = mesh[1]
+    
+            # linear perturbations read in grid
+            x = self.X[0,:]
+            y = self.Y[:,0]
+
+            # define constants for linear perts
+            self.x_box_l = 2 * self.p.scale_box_l
+            self.x_box_r = 2 * self.p.scale_box_r
+            self.x_box_t = 2 * self.p.scale_box_ang_t
+            self.x_box_b = 2 * self.p.scale_box_ang_b
+
+            #updating info of linear perts      
+            self.info["Type"]    = "simulation"
+            self.info["Grid"]    = "cartesian"
+            self.info["Size"][0] = self.x.shape[0]
+            self.info["Size"][1] = self.y.shape[0]
+            self.info["Size"][2] = self.p.n_z
 
     # old method of extracting linear perturbations 
     def _cut_box_square(self) -> None:
@@ -185,6 +327,7 @@ class _LinearPerts():
                     X_pert_grid = (R - self.p.r_planet) / self.p.l
                 else:
                     X_pert_grid = (np.sqrt(R**2 - Y_**2) - self.p.r_planet) / self.p.l
+                    print('Are you really, really, REALLY sure? Box_warp = False makes things weird')
 
                 # get phi values
                 PHI = np.arctan2(Y_, np.sqrt(R**2 - Y_**2))
@@ -201,6 +344,7 @@ class _LinearPerts():
         self.r_min = self.p.r_planet - x_box_size_l*self.p.l
         self.r_max = self.p.r_planet + x_box_size_r*self.p.l
 
+        # NEED to check this closely
         x_min_global = np.sqrt(self.r_min**2 - (np.amax([y_box_size_t,y_box_size_b])*self.p.l)**2)
         x_min_local  = (x_min_global - self.p.r_planet) / self.p.l
 
@@ -210,7 +354,7 @@ class _LinearPerts():
         y_cut_i1 = np.argmin(y < -y_box_size_b)
         y_cut_i2 = np.argmin(y <  y_box_size_t) + 1
 
-        # cut grid
+        # cut grid (done too early!!!)
         x_int_cut = x[x_cut_i1 : x_cut_i2]
         y_int_cut = y[y_cut_i1 : y_cut_i2]
 
@@ -219,7 +363,7 @@ class _LinearPerts():
         cut_v_phi = self.pert_v_phi [y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]
         cut_rho   = self.pert_rho   [y_cut_i1:y_cut_i2, x_cut_i1:x_cut_i2]
 
-        if False:
+        if True:
             plt.contourf(x_int_cut, y_int_cut, cut_rho, cmap="RdBu", vmin=-1, vmax=1, levels=100)
             plt.show()
 
@@ -239,8 +383,15 @@ class _LinearPerts():
         self.pert_v_phi_ann = interp_v_phi.ev(Y_pert_grid, X_pert_grid)
         self.pert_rho_ann   = interp_v_rho.ev(Y_pert_grid, X_pert_grid)
 
-        if False:
-            plt.imshow(self.pert_rho_ann, cmap="RdBu", vmin=-1, vmax=1)
+        if True:
+            plt.imshow(self.pert_rho_ann, cmap="RdBu", vmin=-1, vmax=1, origin='lower')
+            plt.axis('auto')
+            plt.show()
+        if True:
+            plt.plot(y[y_cut_i1:y_cut_i2], self.pert_rho_ann[:,-1])
+            ax = plt.gca()
+            ax.set_xlabel(r'y/l')
+            ax.set_ylabel(r'$\sigma$')
             plt.show()
 
         # scale to cgs units
@@ -258,10 +409,393 @@ class _LinearPerts():
         self.R_ann   = R
         self.PHI_ann = PHI
 
-        if False:
+        if True:
             # plotting (for debugging)
             _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
             myplot = ax.contourf(PHI, R, self.pert_rho_ann/(self.p.m_planet/self.p.m_thermal), levels=300, vmin=-1, vmax=1, cmap='RdBu')
             ax.set_ylim(0, self.p.r_outer)
             plt.colorbar(myplot)
             plt.show()
+            
+            
+    # extract linear perturbations and interpolate onto annulus segment grid for global results
+    def _cut_box_annulus_segment_Daniele(self) -> None:
+        """Extract the part of the linear solution needed for the model, and interpolate onto appropriate grid
+        """
+
+        # box size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs
+        x_box_size_l = 2*self.p.scale_box_l
+        x_box_size_r = 2*self.p.scale_box_r
+        y_box_size_t = 2*self.p.scale_box_ang_t
+        y_box_size_b = 2*self.p.scale_box_ang_b
+        phi_box_size_t = self.p.scale_box_ang_t
+        phi_box_size_b = self.p.scale_box_ang_b
+
+        # linear perturbations read in grid
+        x = self.X[0,:]
+        y = self.Y[:,0]
+
+        # cut square box in linear regime
+        x_cut = x[np.argmin(x < -x_box_size_l) : np.argmin(x < x_box_size_r) + 1]
+        y_cut = y[np.argmin(y < -y_box_size_b) : np.argmin(y < y_box_size_t) + 1]
+
+        # annulus segment grid, radial granularity from square box, angular granularity fixed for now
+        r = np.linspace(
+            self.p.r_planet - x_box_size_l*self.p.l, 
+            self.p.r_planet + x_box_size_r*self.p.l, 
+            len(x_cut)
+        )
+        
+        r_ = np.linspace(
+            0, 
+            200, 
+            1000
+        )
+        phi = np.linspace(
+            -phi_box_size_b*np.pi/2,# % (2*np.pi),
+            phi_box_size_t*np.pi/2,# % (2*np.pi),
+            1000
+        )
+
+        R, PHI = np.meshgrid(r, phi)
+        
+        # preparing pertubations for interpolation
+        v_r_cart   = self.pert_v_r   
+        v_phi_cart = self.pert_v_phi 
+        rho_cart   = self.pert_rho
+        
+        #flip perts  if rotation is clockwise
+        if self.p.a_cw == -1:
+            v_r_cart   =  np.flipud(v_r_cart)
+            v_phi_cart = -np.flipud(v_phi_cart)
+            rho_cart   =  np.flipud(rho_cart)
+            
+        # interpolation over global linear (cartesian) grid
+        interp_v_r   = RectBivariateSpline(y, x, v_r_cart)
+        interp_v_phi = RectBivariateSpline(y, x, v_phi_cart)
+        interp_v_rho = RectBivariateSpline(y, x, rho_cart)
+        
+        print(60*self.p.l/self.p.r_planet/(np.pi)*180)
+        
+        if True:
+            print((self.p.l,x[-1],y[-1]))
+            plt.imshow(rho_cart, origin='lower', vmin=-1, vmax=1, extent=(x[0]*self.p.l, x[-1]*self.p.l, y[0]*self.p.l, y[-1]*self.p.l), cmap="RdBu")
+            plt.axis('auto')
+            plt.vlines([-x_box_size_l*self.p.l,x_box_size_r*self.p.l], -30*self.p.l, 30*self.p.l, colors='g')
+            plt.vlines([-x_box_size_l*self.p.l,x_box_size_r*self.p.l], -y_box_size_b*self.p.l, y_box_size_t*self.p.l, colors='r')
+            plt.xlabel('x [au]')
+            plt.ylabel('y [au]')
+            plt.show()
+        #evaluation of cartesian coordinates corresponding to our polar grid
+        X_pert_grid = (R * np.cos(PHI) - self.p.r_planet)/self.p.l
+        Y_pert_grid = R * np.sin(PHI)/self.p.l
+        if True:
+            plt.imshow(R, cmap="RdBu", vmin=-80, vmax=120, origin='lower', extent=(r[0], r[-1], phi[0], phi[-1]))
+            plt.axis('auto')
+            plt.show()
+            plt.imshow(PHI, cmap="RdBu", vmin=-np.pi/2, vmax=np.pi/2, origin='lower', extent=(r[0], r[-1], phi[0], phi[-1]))
+            plt.axis('auto')
+            plt.show()
+            plt.imshow(X_pert_grid, cmap="RdBu", vmin=np.min(X_pert_grid), vmax=np.max(X_pert_grid), origin='lower', extent=(r[0], r[-1], phi[0], phi[-1]))
+            plt.axis('auto')
+            plt.show()
+            plt.imshow(Y_pert_grid, cmap="RdBu", vmin=np.min(Y_pert_grid), vmax=np.max(Y_pert_grid), origin='lower', extent=(r[0], r[-1], phi[0], phi[-1]))
+            plt.axis('auto')
+            plt.show()
+        
+        # evaluate interpolation over our annulus segment
+        self.pert_v_r_ann   = interp_v_r.ev  (Y_pert_grid, X_pert_grid)
+        self.pert_v_phi_ann = interp_v_phi.ev(Y_pert_grid, X_pert_grid)
+        self.pert_rho_ann   = interp_v_rho.ev(Y_pert_grid, X_pert_grid)
+        
+        phi_cut_i1l = np.argmin(phi < np.arctan2(-y_box_size_b*self.p.l, self.p.r_planet - x_box_size_l*self.p.l))
+        phi_cut_i1r = np.argmin(phi < np.arctan2(y_box_size_t*self.p.l, self.p.r_planet - x_box_size_l*self.p.l)) + 1
+        
+        phi_cut_i2l = np.argmin(phi < np.arctan2(-y_box_size_b*self.p.l, self.p.r_planet + x_box_size_l*self.p.l))
+        phi_cut_i2r = np.argmin(phi < np.arctan2(y_box_size_t*self.p.l, self.p.r_planet + x_box_size_l*self.p.l)) + 1
+        
+        #plots for phi in [-pi/2,pi/2]
+        if True:
+            plt.imshow(self.pert_rho_ann, cmap="RdBu", vmin=-1, vmax=1, origin='lower', extent=(r_[0], r_[-1], phi[0], phi[-1]))
+            plt.axis('auto')
+            plt.xlabel('R [au]')
+            plt.ylabel(r'$\varphi$ [rad]')
+            plt.show()
+        if True:
+            eta = _Eta_vector(self.p.r_planet + x_box_size_l*self.p.l, phi, self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.cw_rotation, self.p.m_planet, self.p.m_thermal)
+            plt.plot(phi, self.pert_rho_ann[:,-1])
+            #plt.plot(phi, self.pert_rho_ann[:,np.argmin(r_<self.p.r_planet + x_box_size_r*self.p.l)])
+            ax = plt.gca()
+            ax.set_xlabel(r'$\varphi$ [rad]')
+            ax.set_ylabel(r'$\sigma$')
+            ax2 = ax.twiny()
+            ax2.plot(eta, self.pert_rho_ann[:,-1])
+            #ax2.plot(eta, self.pert_rho_ann[:,np.argmin(r_<self.p.r_planet + x_box_size_r*self.p.l)])
+            ax2.set_xlabel(r'$\eta$')
+            plt.show()
+        #plots for phi in annulus calculated for inner edge    
+        if True:
+            plt.imshow(self.pert_rho_ann[phi_cut_i1l:phi_cut_i1r], cmap="RdBu", vmin=-1, vmax=1, origin='lower', extent=(r[0], r[-1], phi[phi_cut_i1l], phi[phi_cut_i1r]))
+            plt.axis('auto')
+            plt.xlabel('R [au]')
+            plt.ylabel(r'$\varphi$ [rad]')
+            plt.show()
+        if True:
+            eta = _Eta_vector(self.p.r_planet + x_box_size_l*self.p.l, phi[phi_cut_i1l:phi_cut_i1r], self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.cw_rotation, self.p.m_planet, self.p.m_thermal)
+            plt.plot(phi[phi_cut_i1l:phi_cut_i1r], self.pert_rho_ann[phi_cut_i1l:phi_cut_i1r,-1])
+            #plt.plot(phi[phi_cut_i1l:phi_cut_i1r], self.pert_rho_ann[phi_cut_i1l:phi_cut_i1r,np.argmin(r_<self.p.r_planet + x_box_size_r*self.p.l)])
+            ax = plt.gca()
+            ax.set_xlabel(r'$\varphi$ [rad]')
+            ax.set_ylabel(r'$\sigma$')
+            ax2 = ax.twiny()
+            ax2.plot(eta, self.pert_rho_ann[phi_cut_i1l:phi_cut_i1r,-1])
+            #ax2.plot(eta, self.pert_rho_ann[phi_cut_i1l:phi_cut_i1r,np.argmin(r_<self.p.r_planet + x_box_size_r*self.p.l)])
+            ax2.set_xlabel(r'$\eta$')
+            plt.show()
+        #plots for phi in annulus calculated for outer edge     
+        if True:
+            plt.imshow(self.pert_rho_ann[phi_cut_i2l:phi_cut_i2r], cmap="RdBu", vmin=-1, vmax=1, origin='lower', extent=(r[0], r[-1], phi[phi_cut_i2l], phi[phi_cut_i2r]))
+            plt.axis('auto')
+            plt.xlabel('R [au]')
+            plt.ylabel(r'$\varphi$ [rad]')
+            plt.show()
+        if True:
+            eta = _Eta_vector(self.p.r_planet + x_box_size_l*self.p.l, phi[phi_cut_i2l:phi_cut_i2r], self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.cw_rotation, self.p.m_planet, self.p.m_thermal)
+            plt.plot(phi[phi_cut_i2l:phi_cut_i2r], self.pert_rho_ann[phi_cut_i2l:phi_cut_i2r,-1])
+            #plt.plot(phi[phi_cut_i2l:phi_cut_i2r], self.pert_rho_ann[phi_cut_i2l:phi_cut_i2r,np.argmin(r_<self.p.r_planet + x_box_size_r*self.p.l)])
+            ax = plt.gca()
+            ax.set_xlabel(r'$\varphi$ [rad]')
+            ax.set_ylabel(r'$\sigma$')
+            ax2 = ax.twiny()
+            ax2.plot(eta, self.pert_rho_ann[phi_cut_i2l:phi_cut_i2r,-1])
+            #ax2.plot(eta, self.pert_rho_ann[phi_cut_i2l:phi_cut_i2r,np.argmin(r_<self.p.r_planet + x_box_size_r*self.p.l)])
+            ax2.set_xlabel(r'$\eta$')
+            plt.show()
+
+        # scale to cgs units
+        self.pert_v_r_ann   *= self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)
+        self.pert_v_phi_ann *= self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)
+        self.pert_rho_ann   *=                   (self.p.m_planet/self.p.m_thermal)
+
+        # scale velocities to km/s
+        self.pert_v_r_ann   *= 1e-5
+        self.pert_v_phi_ann *= 1e-5
+
+        # save annulus grid
+        self.r_ann   = r
+        self.y_ann   = phi
+        self.R_ann   = R
+        self.PHI_ann = PHI
+
+        if True:
+            # plotting (for debugging)
+            _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+            myplot = ax.contourf(PHI, R, self.pert_rho_ann/(self.p.m_planet/self.p.m_thermal), levels=300, vmin=-1, vmax=1, cmap='RdBu')
+            ax.set_ylim(0, self.p.r_outer)
+            plt.colorbar(myplot)
+            plt.show()
+            
+        if True:
+            # plotting (for debugging)
+            _, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+            myplot = ax.contourf(PHI[phi_cut_i1l:phi_cut_i1r,:], R[phi_cut_i1l:phi_cut_i1r,:], self.pert_rho_ann[phi_cut_i1l:phi_cut_i1r,:]/(self.p.m_planet/self.p.m_thermal), levels=300, vmin=-1, vmax=1, cmap='RdBu')
+            ax.set_ylim(0, self.p.r_outer)
+            plt.colorbar(myplot)
+            plt.show()
+
+    # extract linear perturbations and interpolate onto annulus segment grid for global results
+    def _cut_annulus_segment(self) -> None:
+        """Extract the part of the linear solution needed for the model, and interpolate onto appropriate grid
+        """
+
+        # segment radial size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs. bsl/r stands for box_size_left/right
+        r_bsl = self.x_box_l
+        r_bsr = self.x_box_r
+        # segment azimuthal size (in units of \pi). bst/b stands for box_size_top/bottom
+        phi_bst = self.x_box_t / 2
+        phi_bsb = self.x_box_b / 2
+
+        #interpolate perturbations on a cylindrical grid and evaluate them in the annulus segment
+        if self.info["Type"] == "shearing_sheet" or self.info["Type"] == "simulation":
+
+            # linear perturbations read in grid
+            x = self.X[0,:]
+            y = self.Y[:,0]
+
+            # cut square box in linear regime
+            x_cut = x[np.argmin(x < -r_bsl) : np.argmin(x < r_bsr) + 1]
+
+            # annulus segment grid, radial granularity from square box, angular granularity fixed for now
+            r = np.linspace(
+                self.p.r_planet - r_bsl*self.p.l, 
+                self.p.r_planet + r_bsr*self.p.l, 
+                len(x_cut)
+            )
+            
+            phi = np.linspace(
+                -phi_bsb*np.pi,
+                phi_bst*np.pi,
+                1000
+            )
+
+            R, PHI = np.meshgrid(r, phi)
+            
+            # preparing pertubations for interpolation
+            v_r_cart   = self.pert_v_r   
+            v_phi_cart = self.pert_v_phi 
+            rho_cart   = self.pert_rho
+            
+            #flip perts  if rotation is clockwise
+            if self.p.a_cw == -1:
+                v_r_cart   =  np.flipud(v_r_cart)
+                v_phi_cart = -np.flipud(v_phi_cart)
+                rho_cart   =  np.flipud(rho_cart)
+                
+            # interpolation over global linear (cartesian) grid
+            interp_v_r   = RectBivariateSpline(y, x, v_r_cart)
+            interp_v_phi = RectBivariateSpline(y, x, v_phi_cart)
+            interp_v_rho = RectBivariateSpline(y, x, rho_cart)
+
+            #evaluation of cartesian coordinates corresponding to our polar grid
+            X_pert_grid = (R * np.cos(PHI) - self.p.r_planet)/self.p.l
+            Y_pert_grid = R * np.sin(PHI)/self.p.l
+
+            # evaluate interpolation over our annulus segment
+            self.pert_v_r_ann   = interp_v_r.ev  (Y_pert_grid, X_pert_grid)
+            self.pert_v_phi_ann = interp_v_phi.ev(Y_pert_grid, X_pert_grid)
+            self.pert_rho_ann   = interp_v_rho.ev(Y_pert_grid, X_pert_grid)
+
+            #plot for debugging
+            if True:
+                plt.imshow(self.pert_rho_ann, cmap="RdBu", vmin=-1, vmax=1, origin='lower', extent=(r[0], r[-1], phi[0], phi[-1]))
+                plt.axis('auto')
+                plt.xlabel('R [au]')
+                plt.ylabel(r'$\varphi$ [rad]')
+                plt.show()
+            if True:
+                eta = _Eta_vector(self.p.r_planet + r_bsl*self.p.l, phi, self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.cw_rotation, self.p.m_planet, self.p.m_thermal)
+                plt.plot(phi, self.pert_rho_ann[:,-1])
+                ax = plt.gca()
+                ax.set_xlabel(r'$\varphi$ [rad]')
+                ax.set_ylabel(r'$\sigma$')
+                ax2 = ax.twiny()
+                ax2.plot(eta, self.pert_rho_ann[:,-1])
+                #ax2.plot(eta, self.pert_rho_ann[:,np.argmin(r_<self.p.r_planet + x_box_size_r*self.p.l)])
+                ax2.set_xlabel(r'$\eta$')
+                plt.show()
+
+            # scale to cgs units
+            self.pert_v_r_ann   *= self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)
+            self.pert_v_phi_ann *= self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)
+            self.pert_rho_ann   *=                   (self.p.m_planet/self.p.m_thermal)
+
+            # scale velocities to km/s
+            self.pert_v_r_ann   *= 1e-5
+            self.pert_v_phi_ann *= 1e-5
+
+            # save annulus grid
+            self.r_ann   = r
+            self.phi_ann = phi
+            self.R_ann   = R
+            self.PHI_ann = PHI
+
+        #The global solution is computed on a cylindrical grid, no need to interpolate
+        elif self.info["Type"] == "global":
+
+            # linear perturbations read in grid
+            r   = self.R[0,:]
+            phi = self.PHI[:,0]
+
+            #masks for restriction
+            r_mask = np.logical_and(r >= self.p.r_planet - r_bsl*self.p.l, r <= self.p.r_planet + r_bsr*self.p.l)
+            phi_mask = np.logical_and(phi >= -phi_bsb*np.pi, phi <= phi_bst*np.pi)
+            print(r_mask.shape, phi_mask.shape)
+            #restricting grid to the annulus segment
+            r_ann   = r[r_mask]
+            phi_ann = phi[phi_mask]
+
+            R_ann, PHI_ann = np.meshgrid(r_ann, phi_ann)
+
+            # preparing pertubations for annulus segment
+            v_r_cyl   = self.pert_v_r.T   
+            v_phi_cyl = self.pert_v_phi.T
+            rho_cyl   = self.pert_rho.T
+
+            if True:
+                plt.imshow(rho_cyl, cmap="RdBu", vmin=-1, vmax=1, origin='lower', extent=(r_ann[0], r_ann[-1], phi_ann[0], phi_ann[-1]))
+                plt.axis('auto')
+                plt.xlabel('R [au]')
+                plt.ylabel(r'$\varphi$ [rad]')
+                plt.show()
+                plt.imshow(v_r_cyl, cmap="RdBu", vmin=-1, vmax=1, origin='lower', extent=(r_ann[0], r_ann[-1], phi_ann[0], phi_ann[-1]))
+                plt.axis('auto')
+                plt.xlabel('R [au]')
+                plt.ylabel(r'$\varphi$ [rad]')
+                plt.show()
+                plt.imshow(v_phi_cyl, cmap="RdBu", vmin=-1, vmax=1, origin='lower', extent=(r_ann[0], r_ann[-1], phi_ann[0], phi_ann[-1]))
+                plt.axis('auto')
+                plt.xlabel('R [au]')
+                plt.ylabel(r'$\varphi$ [rad]')
+                plt.show()
+            print(v_r_cyl.shape)
+
+            #flip perts  if rotation is clockwise
+            if self.p.a_cw == -1:
+                v_r_cyl   =  np.flipud(v_r_cyl)
+                v_phi_cyl = -np.flipud(v_phi_cyl)
+                rho_cyl   =  np.flipud(rho_cyl)
+
+            #restricting perturbations to the annulus segment
+            self.pert_v_r_ann   = v_r_cyl[:,r_mask][phi_mask,:]
+            self.pert_v_phi_ann = v_phi_cyl[:,r_mask][phi_mask,:]
+            self.pert_rho_ann   = rho_cyl[:,r_mask][phi_mask,:]
+
+            #plot for debugging
+            if True:
+                plt.imshow(self.pert_rho_ann, cmap="RdBu", vmin=-1, vmax=1, origin='lower', extent=(r_ann[0], r_ann[-1], phi_ann[0], phi_ann[-1]))
+                plt.axis('auto')
+                plt.xlabel('R [au]')
+                plt.ylabel(r'$\varphi$ [rad]')
+                plt.show()
+                plt.imshow(self.pert_v_r_ann, cmap="RdBu", vmin=-1, vmax=1, origin='lower', extent=(r_ann[0], r_ann[-1], phi_ann[0], phi_ann[-1]))
+                plt.axis('auto')
+                plt.xlabel('R [au]')
+                plt.ylabel(r'$\varphi$ [rad]')
+                plt.show()
+                plt.imshow(self.pert_v_phi_ann, cmap="RdBu", vmin=-1, vmax=1, origin='lower', extent=(r_ann[0], r_ann[-1], phi_ann[0], phi_ann[-1]))
+                plt.axis('auto')
+                plt.xlabel('R [au]')
+                plt.ylabel(r'$\varphi$ [rad]')
+                plt.show()
+            if True:
+                eta = _Eta_vector(self.p.r_planet + r_bsl*self.p.l, phi_ann, self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.cw_rotation, self.p.m_planet, self.p.m_thermal)
+                plt.plot(phi_ann, self.pert_rho_ann[:,-1])
+                ax = plt.gca()
+                ax.set_xlabel(r'$\varphi$ [rad]')
+                ax.set_ylabel(r'$\sigma$')
+                ax2 = ax.twiny()
+                ax2.plot(eta, self.pert_rho_ann[:,-1])
+                #ax2.plot(eta, self.pert_rho_ann[:,np.argmin(r_<self.p.r_planet + x_box_size_r*self.p.l)])
+                ax2.set_xlabel(r'$\eta$')
+                plt.show()
+
+            # scale to cgs units
+            self.pert_v_r_ann   *= self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)
+            self.pert_v_phi_ann *= self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal)
+            self.pert_rho_ann   *=                   (self.p.m_planet/self.p.m_thermal)
+
+            # scale velocities to km/s
+            self.pert_v_r_ann   *= 1e-5
+            self.pert_v_phi_ann *= 1e-5
+
+            # save annulus grid
+            self.r_ann   = r_ann
+            self.phi_ann = phi_ann
+            self.R_ann   = R_ann
+            self.PHI_ann = PHI_ann
+
+
+
+
+
+

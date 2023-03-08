@@ -253,6 +253,23 @@ def test_show_teta_warning(capfd):
     captured = capfd.readouterr()
     assert "WARNING: Choosing show_teta_debug_plots=True may cause the run to fail." in captured.out
 
+def test_mcmc_warning(capfd):
+    
+    # make params dict
+    model = WakeflowModel()
+    model.configure()
+    param_dict = model.model_params
+
+    # use mcmc
+    param_dict["mcmc"] = True
+    params = _Parameters(param_dict)
+
+    # check that sanity checks warns about saving perturbations during mcmcm
+    params._do_sanity_checks()
+    captured = capfd.readouterr()
+    assert "WARNING: Do not save the perturbation fields when using wakeflow inside the mcmc chain" in captured.out
+    assert "WARNING: Do not save the density and velocity fields when using wakeflow inside the mcmc chain" in captured.out
+
 def test_load_config_file():
 
     # make default params dict
