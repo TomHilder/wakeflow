@@ -354,7 +354,7 @@ class _LinearPerts():
                 plt.ylabel(r'$\varphi$ [rad]')
                 plt.show()
             if False:
-                eta = _Eta_vector(self.p.r_planet + r_bsl*self.p.l, phi, self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.cw_rotation, self.p.m_planet, self.p.m_thermal)
+                eta = _Eta_vector(self.p.r_planet + r_bsl*self.p.l, phi, self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.cw_rotation, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
                 plt.plot(phi, self.pert_rho_ann[:,-1])
                 ax = plt.gca()
                 ax.set_xlabel(r'$\varphi$ [rad]')
@@ -450,7 +450,7 @@ class _LinearPerts():
                 plt.ylabel(r'$\varphi$ [rad]')
                 plt.show()
             if False:
-                eta = _Eta_vector(self.p.r_planet + r_bsl*self.p.l, phi_ann, self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.cw_rotation, self.p.m_planet, self.p.m_thermal)
+                eta = _Eta_vector(self.p.r_planet + r_bsl*self.p.l, phi_ann, self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.cw_rotation, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
                 plt.plot(phi_ann, self.pert_rho_ann[:,-1])
                 ax = plt.gca()
                 ax.set_xlabel(r'$\varphi$ [rad]')

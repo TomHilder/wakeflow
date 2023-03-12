@@ -109,8 +109,8 @@ class _NonLinearPerts():
         t_IC_outer   = np.zeros(len(y_rest))
         t_IC_inner   = np.zeros(len(y_rest))
         
-        eta_IC_outer = _Eta_vector(r_IC_outer, phi_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal)
-        eta_IC_inner = _Eta_vector(r_IC_inner, phi_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal)
+        eta_IC_outer = _Eta_vector(r_IC_outer, phi_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+        eta_IC_inner = _Eta_vector(r_IC_inner, phi_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
 
         # t for outer and inner
         t_IC_outer = _t_vector(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
@@ -122,8 +122,8 @@ class _NonLinearPerts():
         for i in range(len(y_rest)):
 
             # eta for outer and inner
-            eta_IC_outer[i] = _Eta(r_IC_outer[i], phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal)
-            eta_IC_inner[i] = _Eta(r_IC_inner[i], phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal)
+            eta_IC_outer[i] = _Eta(r_IC_outer[i], phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+            eta_IC_inner[i] = _Eta(r_IC_inner[i], phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
 
             # t for outer and inner
             t_IC_outer[i] = _t(r_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
@@ -259,7 +259,7 @@ class _NonLinearPerts():
             for i in range(eta_lin.shape[0]):
                 #print(str(i))
                 for j in range(eta_lin.shape[1]):
-                    eta_lin[i,j] = _Eta(r_glob[i,j], phi_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -self.p.a_cw, self.p.m_planet, self.p.m_thermal)
+                    eta_lin[i,j] = _Eta(r_glob[i,j], phi_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -self.p.a_cw, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
                     t_lin[i,j] = _t(r_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
 
             # Plot Chi vs eta when using eta transformation used for IC cut out
@@ -375,8 +375,8 @@ class _NonLinearPerts():
         self.eta_inner = np.zeros(len(phi_IC_outer))
 
         # perform transformation
-        self.eta_outer = _Eta_vector(r_IC_outer, phi_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal)
-        self.eta_inner = _Eta_vector(r_IC_inner, phi_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal)
+        self.eta_outer = _Eta_vector(r_IC_outer, phi_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+        self.eta_inner = _Eta_vector(r_IC_inner, phi_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
         
         #Sorting eta and profile in order to have eta in ascending order
         self.eta_outer = self.eta_outer[:-1]
@@ -391,8 +391,8 @@ class _NonLinearPerts():
         self.profile_inner = self.profile_inner[idx_srt]
         '''
         for i in range(len(phi_IC_outer)):
-            self.eta_outer[i] = _Eta(r_IC_outer, phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal)
-            self.eta_inner[i] = _Eta(r_IC_inner, phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal)
+            self.eta_outer[i] = _Eta(r_IC_outer, phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+            self.eta_inner[i] = _Eta(r_IC_inner, phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
         '''
         plt.plot(self.eta_outer,self.profile_outer)
         # set t0
@@ -528,6 +528,7 @@ class _NonLinearPerts():
         p       = self.p.p
         m_p     = self.p.m_planet
         m_th    = self.p.m_thermal
+        nl_wake = self.p.nl_wake
 
         # physical parameters
         gamma = self.p.gamma
@@ -578,7 +579,8 @@ class _NonLinearPerts():
                 q, 
                 p,
                 m_p,
-                m_th
+                m_th,
+                nl_wake
             )
 
             # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
@@ -633,7 +635,8 @@ class _NonLinearPerts():
                 q, 
                 p,
                 m_p,
-                m_th
+                m_th, 
+                nl_wake
             )
 
             # COMPUTE DENSITY AND VELOCITY PERTURBATIONS

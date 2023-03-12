@@ -16,20 +16,23 @@ from scipy.interpolate      import RectBivariateSpline
 
 
 # wake shape
-def _phi_wake(r, Rp, hr, q, p, cw, m_p, m_th): 
+def _phi_wake(r, Rp, hr, q, p, cw, m_p, m_th, nl_wake): 
     """Eq. (4) Bollati et al. 2021
     """
     rr = r / Rp
     phi_l = np.sign(r - Rp) * (1 / hr) * (rr**(q - 0.5) / (q - 0.5) - rr**(q + 1) / (q + 1) - 3 / ((2 * q - 1) * (q + 1)))
-    phi_nl = 0#np.sign(r - Rp) * 0.05 * hr * np.sqrt(_t_vector(rr, Rp, hr, q, p, m_p, m_th))
+    if nl_wake:
+        phi_nl = np.sign(r - Rp) * hr * np.sqrt(_t_vector(r, Rp, hr, q, p, m_p, m_th))
+    else:
+        phi_nl = 0
     return -cw * (phi_l + phi_nl)
 
 # eta coordinate transformation
-def _Eta(r, phi, Rp, hr, q, p, cw, m_p, m_th):
+def _Eta(r, phi, Rp, hr, q, p, cw, m_p, m_th, nl_wake):
     """Eq. (14) Bollati et al. 2021
     """
     coeff    = 1.5 / hr
-    phi_w    = _mod2pi(_phi_wake(r, Rp, hr, q, p, cw, m_p, m_th))
+    phi_w    = _mod2pi(_phi_wake(r, Rp, hr, q, p, cw, m_p, m_th, nl_wake))
     deltaphi = phi - phi_w
 
     if deltaphi > np.pi:
@@ -40,7 +43,7 @@ def _Eta(r, phi, Rp, hr, q, p, cw, m_p, m_th):
 
     return coeff * deltaphi
 
-def _Eta_vector(r, phi, Rp, hr, q, p, cw, m_p, m_th):
+def _Eta_vector(r, phi, Rp, hr, q, p, cw, m_p, m_th, nl_wake):
     """Eq. (14) Bollati et al. 2021
 
     Vectorised version of _Eta.
@@ -48,7 +51,7 @@ def _Eta_vector(r, phi, Rp, hr, q, p, cw, m_p, m_th):
     modulus operators and constant offsets.
     """
     coeff    = 1.5 / hr
-    phi_w    = _phi_wake(r, Rp, hr, q, p, cw, m_p, m_th) % (2*np.pi)
+    phi_w    = _phi_wake(r, Rp, hr, q, p, cw, m_p, m_th, nl_wake) % (2*np.pi)
     deltaphi = (phi - phi_w + np.pi) % (2*np.pi) - np.pi
 
     return coeff * deltaphi
@@ -207,7 +210,8 @@ def _get_chi(
     p,
     t1,
     m_p,
-    m_th
+    m_th, 
+    nl_wake
 ):
     # COMPUTATION OF Chi
 
@@ -221,7 +225,7 @@ def _get_chi(
     #    print(t1-t1_orig)
 
 
-    eta1 = _Eta(rr, pphi, Rp, hr, q, p, cw, m_p, m_th)
+    eta1 = _Eta(rr, pphi, Rp, hr, q, p, cw, m_p, m_th, nl_wake)
 
     # If the point is in the outer disk, use the outer wake solution
     if (rr - Rp) > 0:
@@ -317,7 +321,8 @@ def _get_chi_vector(
     q, 
     p,
     m_p,
-    m_th
+    m_th,
+    nl_wake
 ): 
     """
     This is a vectorised version of the previous _get_chi function.
@@ -332,7 +337,7 @@ def _get_chi_vector(
 
     Chi = np.zeros_like(rr)
 
-    eta_array = _Eta_vector(rr, pphi, Rp, hr, q, p, cw, m_p, m_th)
+    eta_array = _Eta_vector(rr, pphi, Rp, hr, q, p, cw, m_p, m_th, nl_wake)
 
     # Inner and outer masks will account for the annulus directly.
     outer_mask = rr - Rp >= x_match_r * l
