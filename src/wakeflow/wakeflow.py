@@ -176,7 +176,7 @@ class WakeflowModel():
         mcmc                  = False         # use wakeflow inside mcmc chain, pass perturbations without saving them
         rot_interp            = False         # expand grid to avoid border effects when interpolatin on rotated grid
         lin_type              = "global"      # Choose the perturbations to use in the linear regime. Supported options: global, simulation, shearing_sheet
-        nl_wake               = "False"       # Add non linear correction to wake structure
+        nl_wake               = False         # Add non linear correction to wake structure
 
         # generate dictionary for model parameters by grabbing all local variables
         self.model_params = locals()
