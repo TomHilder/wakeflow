@@ -128,6 +128,7 @@ class _Parameters(_Constants):
         # Choice of physics
         self.use_old_vel     = bool (config["use_old_vel"])
         self.lin_type        = str  (config["lin_type"])
+        self.nl_wake         = bool (config["nl_wake"])
         
         # get flaring at r_planet
         self.hr_planet = self.hr * (self.r_planet / self.r_ref) ** (0.5 - self.q)
