@@ -9,7 +9,7 @@
 project = 'Wakeflow'
 copyright = '2022, Thomas Hilder'
 author = 'Thomas Hilder'
-release = '1.3.1'
+release = '1.3.2'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
