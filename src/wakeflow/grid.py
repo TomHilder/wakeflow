@@ -567,6 +567,13 @@ class _Grid:
             plt.close("all")
             fig, ax = plt.subplots(dpi=150)
             c       = ax.pcolormesh(self.x, self.y, np.transpose(self.v_r[:,z_slice,:]), vmin=-vr_max, vmax=vr_max, cmap='RdBu', rasterized=True)
+            if False:
+                from .transformations import _phi_wake
+                r_wake = np.linspace(5, self.p.r_outer, 1000)
+                wake_ = _phi_wake(r_wake, self.p.r_planet, self.p.hr, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, True)
+                ax.plot(r_wake*np.cos(wake_), r_wake*np.sin(wake_), ls = '--', c='r', linewidth=0.5)
+                wake_ = _phi_wake(r_wake, self.p.r_planet, self.p.hr, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, False)
+                ax.plot(r_wake*np.cos(wake_), r_wake*np.sin(wake_), ls = '--', c='k', linewidth=0.5)
             ax.axis('scaled')
             ax.set_title(r"$\delta v_r$")
             if not dimless:
@@ -586,6 +593,13 @@ class _Grid:
             plt.close("all")
             fig, ax = plt.subplots(dpi=150)
             c       = ax.pcolormesh(self.x, self.y, np.transpose(self.v_phi[:,z_slice,:]), vmin=-vphi_max, vmax=vphi_max, cmap='RdBu', rasterized=True)
+            if False:
+                from .transformations import _phi_wake
+                r_wake = np.linspace(5, self.p.r_outer, 1000)
+                wake_ = _phi_wake(r_wake, self.p.r_planet, self.p.hr, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, True)
+                ax.plot(r_wake*np.cos(wake_), r_wake*np.sin(wake_), ls = '--', c='r', linewidth=0.5)
+                wake_ = _phi_wake(r_wake, self.p.r_planet, self.p.hr, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, False)
+                ax.plot(r_wake*np.cos(wake_), r_wake*np.sin(wake_), ls = '--', c='k', linewidth=0.5)
             ax.axis('scaled')
             ax.set_title(r"$\delta v_{\phi}$")
             if not dimless:
@@ -605,6 +619,13 @@ class _Grid:
             plt.close("all")
             fig, ax = plt.subplots(dpi=150)
             c       = ax.pcolormesh(self.x, self.y, np.transpose(self.rho[:,z_slice,:]), vmin=-rho_max, vmax=rho_max, cmap='RdBu', rasterized=True)
+            if False:
+                from .transformations import _phi_wake
+                r_wake = np.linspace(5, self.p.r_outer, 1000)
+                wake_ = _phi_wake(r_wake, self.p.r_planet, self.p.hr, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, True)
+                ax.plot(r_wake*np.cos(wake_), r_wake*np.sin(wake_), ls = '--', c='r', linewidth=0.5)
+                wake_ = _phi_wake(r_wake, self.p.r_planet, self.p.hr, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, False)
+                ax.plot(r_wake*np.cos(wake_), r_wake*np.sin(wake_), ls = '--', c='k', linewidth=0.5)
             ax.axis('scaled')
             ax.set_title(r"$\delta \rho \, / \rho$")
             if not dimless:
