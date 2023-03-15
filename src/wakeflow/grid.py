@@ -273,7 +273,7 @@ class _Grid:
             z = self.Z
 
         # rename for readability in long equations
-        p       = self.p.p
+        p       = self.p.p_rho
         q       = self.p.q
         hr      = self.p.hr
         r_ref   = self.p.r_ref
