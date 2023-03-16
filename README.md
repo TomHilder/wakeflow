@@ -164,7 +164,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CITATION -->
 ## Citing
 
-Please cite [Hilder et al. (in prep)](https://example.com) in any work where `wakeflow` has been used. Please contact us if `wakeflow` is useful to you, we welcome any collaboration opportunities.
+Please cite [Hilder et al. (2023)](https://joss.theoj.org/papers/10.21105/joss.04863) and [Bollati et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021MNRAS.504.5444B/abstract) in any work where `wakeflow` has been used. Please contact us if `wakeflow` is useful to you, we welcome any collaboration opportunities.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -210,13 +210,13 @@ Additional acknowledgements:
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[pypi-shield]: https://img.shields.io/badge/pypi-1.2.0-green?style=flat-square
+[pypi-shield]: https://img.shields.io/badge/pypi-1.3.2-green?style=flat-square
 [pypi-url]: https://pypi.org/project/wakeflow/
 [python-shield]: https://img.shields.io/badge/python-3.6%2B-orange?style=flat-square
 [python-url]: https://www.python.org
 [license-shield]: https://img.shields.io/badge/license-MIT-blue?style=flat-square
 [license-url]: https://opensource.org/licenses/MIT
-[JOSS-shield]: https://img.shields.io/badge/JOSS-under_review-yellow?style=flat-square
+[JOSS-shield]: https://img.shields.io/badge/JOSS-10.21105/joss.04863-brightgreen?style=flat-square
 [JOSS-url]: https://joss.theoj.org/papers/22d35f9b0bb35a8df4dab85b0b6f4eb7
 [test-status-shield]: https://img.shields.io/github/actions/workflow/status/TomHilder/wakeflow/Tests.yml?label=tests&style=flat-square
 [test-status-url]: https://github.com/TomHilder/wakeflow/actions/workflows/Tests.yml
