@@ -348,7 +348,7 @@ class WakeflowModel():
                 grid_background._smooth_box(grid_lin_perts_s2)
             
             # REMOVE: checking smoothing
-            grid_background._show_disk2D(0, show=True, save=False, dimless=params.dimensionless)
+            #grid_background._show_disk2D(0, show=True, save=False, dimless=params.dimensionless)
 
             # flip results if desired
             if params.user_cw_rotation:
