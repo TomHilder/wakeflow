@@ -13,7 +13,7 @@ r_planet: 250                                # orbital radius of embedded planet
 r_ref: null                                  # reference radius R0 for H/R -- YOU MUST USE null INSTEAD OF None IN A YAML FILE
 r_c: 0                                       # critical radius for exponentially tapered density profile. set to 0 for power law
 q: 0.25                                      # q index, defined as c_s \propto R^{-q}
-p: 1.0                                       # p index, defined as Sigma \propto R^{-p}
+p: 1.0                                       # p index, defined as rho \propto R^{-p} or \propto R^{-p}*\exp{-R/r_c}^{2-p}
 hr: 0.10                                     # disc flaring H/R at R0
 dens_ref: 1                                  # rho at R0 in g/cm^3, unimportant for mcfost as it rescales
 cw_rotation: False                           # clockwise (True) or anticlockwise results (False)
