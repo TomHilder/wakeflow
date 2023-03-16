@@ -101,7 +101,6 @@ class _Parameters(_Constants):
         self.save_total         = bool(config["save_total"])
         self.write_FITS         = bool(config["write_FITS"])
         self.dimensionless      = bool(config["dimensionless"])
-        self.mcmc               = bool(config["mcmc"])
 
         # mcfost parameters
         self.run_mcfost = bool (config["run_mcfost"])
@@ -235,14 +234,6 @@ class _Parameters(_Constants):
             print("WARNING: Choosing use_old_vel=True may cause a different velocity output.")
         print("Parameters Ok - continuing")
         return True
-        
-        # warning for saving results in mcmc
-        if self.mcmc and self.save_perturbations:
-            print("WARNING: Do not save the perturbation fields when using wakeflow inside the mcmc chain")
-        
-        # warning for saving results in mcmc
-        if self.mcmc and self.save_total:
-            print("WARNING: Do not save the density and velocity fields when using wakeflow inside the mcmc chain")
             
         # check linear perturbations input from user    
         if self.lin_type != "shearing_sheet" and self.lin_type != "global" and self.lin_type != "simulation":

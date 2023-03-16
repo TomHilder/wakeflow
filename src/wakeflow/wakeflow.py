@@ -243,10 +243,7 @@ class WakeflowModel():
         for mass_p in planet_masses:
             params.m_planet = mass_p
             print(f"\n* Creating {mass_p} Mj model:")
-            if params.mcmc:
-                v_r, v_phi, xgrid, ygrid = self._run_wakeflow(params) # this works only for a single planet mass, should be fin efor mcmc
-            else:
-                self._run_wakeflow(params)
+            self._run_wakeflow(params)
 
         # run mcfost for each model
         if params.run_mcfost == True:
@@ -262,8 +259,6 @@ class WakeflowModel():
                 os.chdir(working_dir)
 
         print("\n* Done!")
-        if params.mcmc:
-            return v_r, v_phi, xgrid, ygrid
 
     # internal method that is called by self.run to generate the results for a specific set of parameters
     # may be called more than once if the user has specified multiple planet masses
@@ -333,7 +328,7 @@ class WakeflowModel():
                 grid_background._flip_results()
 
             # merge grids to save or plot perturbations
-            if params.make_midplane_plots or params.save_perturbations or params.mcmc:
+            if params.make_midplane_plots or params.save_perturbations:
 
                 if params.include_linear:
                     grid_nonlin_perts._merge_grids(grid_lin_perts)
@@ -369,7 +364,3 @@ class WakeflowModel():
         # write fits file
         if params.write_FITS:
             grid_background._write_fits_file()
-            
-        # Pass perturbations for mcmc chain
-        if params.mcmc:
-            return grid_nonlin_perts._get_velocity_perturbations()
