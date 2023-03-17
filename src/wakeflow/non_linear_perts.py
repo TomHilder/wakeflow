@@ -274,8 +274,8 @@ class _NonLinearPerts():
             plt.plot(eta_lin[:,-1], chi0_v_phi, label="chi vphi")
             plt.legend(loc="lower left")
             plt.xlim(-10,10)
-            plt.xlabel('$\eta$')
-            plt.ylabel('$\chi$')
+            plt.xlabel(r'$\eta$')
+            plt.ylabel(r'$\chi$')
             plt.show()
 
 #            if True: # save results to file for plotting
@@ -286,13 +286,13 @@ class _NonLinearPerts():
 #                np.save(f"{name}_eta.npy", eta_save)
 #                np.save(f"{name}_chi.npy", chi_save)
 #
-            plt.plot(linear_eta[:,-1], linear_profile[:,-1], label="Approximate $\eta$ transformation")
-            plt.plot(eta_lin[:,-1], linear_profile[:,-1], label="Full $\eta$ transformation")
+            plt.plot(linear_eta[:,-1], linear_profile[:,-1], label=r"Approximate $\eta$ transformation")
+            plt.plot(eta_lin[:,-1], linear_profile[:,-1], label=r"Full $\eta$ transformation")
             #plt.plot(self.eta, self.profile, ls='--', label="Actual IC used")
             plt.legend(loc="lower left")
             plt.xlim(-10,10)
-            plt.xlabel('$\eta$')
-            plt.ylabel('$\chi$')
+            plt.xlabel(r'$\eta$')
+            plt.ylabel(r'$\chi$')
             plt.show()
 
             plt.scatter(t_lin, eta_lin)
@@ -394,7 +394,8 @@ class _NonLinearPerts():
             self.eta_outer[i] = _Eta(r_IC_outer, phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
             self.eta_inner[i] = _Eta(r_IC_inner, phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
         '''
-        plt.plot(self.eta_outer,self.profile_outer)
+        if False:
+            plt.plot(self.eta_outer,self.profile_outer)
         # set t0
         self.t0_outer = t_IC_outer
         self.t0_inner = t_IC_inner
@@ -407,7 +408,8 @@ class _NonLinearPerts():
                 zero_outer = 0.5 * (self.eta_outer[i] + self.eta_outer[i + 1])
         self.eta_tilde_outer = zero_outer
 
-        plt.plot(self.eta_inner,self.profile_inner)
+        if False:
+            plt.plot(self.eta_inner,self.profile_inner)
         # set eta_tilde for inner wake:
         for i in range(len(self.eta_inner)):
             if self.profile_inner[i] == 0 and self.eta_inner[i] > 0 and self.eta_inner[i] < 10:
@@ -549,9 +551,9 @@ class _NonLinearPerts():
             pphi_grid = np.arctan2(y_grid, x_grid)
 
             tt = _t_vector(r_grid, Rp, hr, q, p, m_p, m_th)
-            plt.plot(eta_outer)
-            plt.plot(t0_outer + time_outer)
-            plt.show()
+            #plt.plot(eta_outer)
+            #plt.plot(t0_outer + time_outer)
+            #plt.show()
             CChi = _get_chi_vector(
                 pphi_grid, 
                 r_grid,

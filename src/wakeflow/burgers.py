@@ -201,7 +201,7 @@ def _solve_burgers(
     solution = np.array(solution).transpose()
     time     = np.array(time)
    
-    if True:
+    if False:
 
         #colorbar
         n = len(time)
@@ -225,60 +225,60 @@ def _solve_burgers(
         plt.plot(eta, solution[:,-1], label = "$t=t_0+%.1lf$ "%time[-1],
                 color = cmap.to_rgba(time[-1]), ls='-.')#+str(round(T,2)))
     
-    if eta_tilde <= 0:
-        eta_plus = eta_tilde + np.sqrt(2*C*(time[-1]-t0))
-        eta_minus = eta_tilde - np.sqrt(2*C*(time[-1]-t0))
-        #plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),(eta-eta_tilde)/(time[-1]-t0),0), label='N')
-    else:
-        eta_plus = eta_tilde + np.sqrt(2*C*(time[-1]-t0))
-        eta_minus = eta_tilde - np.sqrt(2*C*(time[-1]-t0))
-        #plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),-(eta-eta_tilde)/(time[-1]-t0),0), label='N')
-    
-    plt.legend()
-    plt.xlim(-40,40)
-    plt.xlabel(r"$\eta$")
-    plt.ylabel(r"$\chi(t,\eta)$")
-    plt.grid(True)
-    cb = plt.colorbar(cmap, label = r't', shrink = 1)
-    #cb.ax.tick_params(labelsize=20)
-    cb.ax.set_ylabel(r't')#, fontsize=20)
-    cb.ax.yaxis.set_label_position('left')
-    cb.ax.set_aspect('auto')
-    """
-    cb2 = cb.ax.twinx() 
-    cb2.set_ylim([time[0], time[-1]])
-    
-    rticks=np.zeros(np.shape(time))
-    for i in range(len(time)):
-        if i%idxp == 0 or i == len(time)-1:
-            def invert_t(x, Rp, hr, q, p, m_p, m_th):
-                return _t_vector(x, Rp, hr, q, p, m_p, m_th) - time[i]
-            rticks[i] = fsolve(invert_t, args=(Rp, hr, q, p, m_p, m_th), x0 = 120)
-    cb2.set_yticks([time[0*idxp],time[1*idxp],time[2*idxp],time[3*idxp],time[4*idxp],time[-1]])
-    cb2.set_yticklabels([round(rticks[0*idxp]),round(rticks[1*idxp]),round(rticks[2*idxp]),
-                         round(rticks[3*idxp]),round(rticks[4*idxp]),round(rticks[-1])])
-    #cb2.set_yticks([tic for tic in pdfp])
-    cb2.set_ylabel(r'R/R$_{\rm p}$', labelpad=8)#, fontsize=20)
-    #cb2.tick_params(labelsize=20)
-    """
-    if eta_tilde <= 0:
-        plt.title(r'$\chi$ "evolution" $r > r_p$')
-    else:
-        plt.title(r'$\chi$ "evolution" $r < r_p$')
-    plt.show()
-    
-    plt.plot(eta, solution[:,-1], label = "$t=t_0+%.1lf$ "%time[-1])#+str(round(T,2)))
-    #plt.plot(eta, solution[:,-1], label = "$t=t_0+$ ")#+str(round(T,2)))
-    if eta_tilde <= 0:
-        plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),(eta-eta_tilde)/(time[-1]-t0),0), label='N')
-    else:
-        plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),(eta-eta_tilde)/(time[-1]-t0),0), label='N')
-    plt.legend()
-    plt.xlabel(r"$\eta$")
-    plt.ylabel(r"$\chi(t,\eta)$")
-    plt.grid(True)
-    #plt.xticks([-28, -27, -26, -25, -24, 0, 20, 21, 22])
-    plt.show()
+        if eta_tilde <= 0:
+            eta_plus = eta_tilde + np.sqrt(2*C*(time[-1]-t0))
+            eta_minus = eta_tilde - np.sqrt(2*C*(time[-1]-t0))
+            #plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),(eta-eta_tilde)/(time[-1]-t0),0), label='N')
+        else:
+            eta_plus = eta_tilde + np.sqrt(2*C*(time[-1]-t0))
+            eta_minus = eta_tilde - np.sqrt(2*C*(time[-1]-t0))
+            #plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),-(eta-eta_tilde)/(time[-1]-t0),0), label='N')
+        
+        plt.legend()
+        plt.xlim(-40,40)
+        plt.xlabel(r"$\eta$")
+        plt.ylabel(r"$\chi(t,\eta)$")
+        plt.grid(True)
+        cb = plt.colorbar(cmap, label = r't', shrink = 1)
+        #cb.ax.tick_params(labelsize=20)
+        cb.ax.set_ylabel(r't')#, fontsize=20)
+        cb.ax.yaxis.set_label_position('left')
+        cb.ax.set_aspect('auto')
+        """
+        cb2 = cb.ax.twinx() 
+        cb2.set_ylim([time[0], time[-1]])
+        
+        rticks=np.zeros(np.shape(time))
+        for i in range(len(time)):
+            if i%idxp == 0 or i == len(time)-1:
+                def invert_t(x, Rp, hr, q, p, m_p, m_th):
+                    return _t_vector(x, Rp, hr, q, p, m_p, m_th) - time[i]
+                rticks[i] = fsolve(invert_t, args=(Rp, hr, q, p, m_p, m_th), x0 = 120)
+        cb2.set_yticks([time[0*idxp],time[1*idxp],time[2*idxp],time[3*idxp],time[4*idxp],time[-1]])
+        cb2.set_yticklabels([round(rticks[0*idxp]),round(rticks[1*idxp]),round(rticks[2*idxp]),
+                            round(rticks[3*idxp]),round(rticks[4*idxp]),round(rticks[-1])])
+        #cb2.set_yticks([tic for tic in pdfp])
+        cb2.set_ylabel(r'R/R$_{\rm p}$', labelpad=8)#, fontsize=20)
+        #cb2.tick_params(labelsize=20)
+        """
+        if eta_tilde <= 0:
+            plt.title(r'$\chi$ "evolution" $r > r_p$')
+        else:
+            plt.title(r'$\chi$ "evolution" $r < r_p$')
+        plt.show()
+        
+        plt.plot(eta, solution[:,-1], label = "$t=t_0+%.1lf$ "%time[-1])#+str(round(T,2)))
+        #plt.plot(eta, solution[:,-1], label = "$t=t_0+$ ")#+str(round(T,2)))
+        if eta_tilde <= 0:
+            plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),(eta-eta_tilde)/(time[-1]-t0),0), label='N')
+        else:
+            plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),(eta-eta_tilde)/(time[-1]-t0),0), label='N')
+        plt.legend()
+        plt.xlabel(r"$\eta$")
+        plt.ylabel(r"$\chi(t,\eta)$")
+        plt.grid(True)
+        #plt.xticks([-28, -27, -26, -25, -24, 0, 20, 21, 22])
+        plt.show()
         
     #plt.plot(time, rticks)
 
@@ -295,10 +295,10 @@ def _solve_burgers(
         cont = ax.contourf(total_time, eta, total_solution, levels=np.arange(-4, 4, 0.05), cmap='RdBu')
         for c in cont.collections:
             c.set_rasterized(True)
-        plt.colorbar(cont, label='$\chi$')
+        plt.colorbar(cont, label=r'$\chi$')
         ax.set_xlim(0,10)
-        ax.set_xlabel('$t$')
-        ax.set_ylabel('$\eta$')
+        ax.set_xlabel(r'$t$')
+        ax.set_ylabel(r'$\eta$')
     #    #plt.savefig("teta_badjoin.pdf")
         plt.show()
 
