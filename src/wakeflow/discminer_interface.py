@@ -13,7 +13,7 @@ from .non_linear_perts    import _NonLinearPerts
 from .wakeflow            import WakeflowModel
 
 # class for wakefit to use to generate velocity perturbations for models
-class _DiscminerModel(WakeflowModel):
+class _WakeminerModel(WakeflowModel):
 
     # generate the model using the configuration specified by the user
     def run(self) -> None:
