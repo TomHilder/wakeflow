@@ -482,7 +482,7 @@ class _NonLinearPerts():
 
         timer_0 = time.perf_counter()
         
-        self.edge_limit = _t_vector(np.array(self.p.r_planet/5), self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
+        self.edge_limit = _t_vector(np.array(self.p.r_planet/self.p.r_cut_in_fac), self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
 
         time_inner, eta_inner, solution_inner = _solve_burgers(
             self.eta_inner, 

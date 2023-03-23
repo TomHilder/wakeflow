@@ -123,6 +123,7 @@ class _Parameters(_Constants):
         self.use_box_IC      = bool (config["use_box_IC"])
         self.tf_fac          = float(config["tf_fac"])
         self.rot_interp      = bool (config["rot_interp"])
+        self.r_cut_in_fac    = float(config["r_cut_in_fac"])
         
         # Choice of physics
         self.use_old_vel     = bool (config["use_old_vel"])
