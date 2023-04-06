@@ -2,7 +2,7 @@
 # Written by Thomas Hilder
 
 """
-Constains the rotation_matrix function used to perform 3D rotations of vector fields.
+Contains the rotation_matrix function used to perform 3D rotations of vector fields.
 """
 
 import numpy as np

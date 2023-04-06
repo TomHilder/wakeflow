@@ -2,7 +2,7 @@
 # Written by Thomas Hilder
 
 """
-Constains TODO: add contents description
+Contains TODO: add contents description
 """
 
 import numpy as np

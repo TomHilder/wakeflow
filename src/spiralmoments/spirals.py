@@ -2,7 +2,7 @@
 # Written by Thomas Hilder
 
 """
-Constains the Spiral class that allows uses to manipulate, project and rotate different spiral shapes easily.
+Contains the Spiral class that allows uses to manipulate, project and rotate different spiral shapes easily.
 """
 
 import numpy as np
