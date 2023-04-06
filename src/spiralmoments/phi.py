@@ -25,12 +25,15 @@ class PhiFunctions():
     
     @staticmethod
     def planet_wake_powerlaw_disk():
+        # TODO: implement method
         pass
     
     @staticmethod
     def planet_wake_numerical():
+        # TODO: implement method
         pass
     
     @staticmethod
     def m_mode_spiral_numerical():
+        # TODO: implement method
         pass
