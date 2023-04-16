@@ -17,7 +17,7 @@ class HeightFunctions():
         return lambda r : z_ref * np.power(r / r_ref, power_index)
     
     @staticmethod
-    def powerlaw_tapered(z_ref: float, r_ref: float, power_index: float, r_taper: float, power_index_taper: float):
+    def powerlaw_tapered(z_ref: float, r_ref: float, power_index: float, r_taper: float, power_index_taper: float) -> Callable:
         # get regular power-law
         powerlaw = HeightFunctions.powerlaw(z_ref, r_ref, power_index)
         # return modification with taper
@@ -28,6 +28,6 @@ class HeightFunctions():
         )
         
     @staticmethod
-    def tabulated() -> Callable:
+    def interpolate_tabulated() -> Callable:
         # TODO: implement method
         pass

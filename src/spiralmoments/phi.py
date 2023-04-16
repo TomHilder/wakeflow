@@ -9,6 +9,7 @@ import numpy as np
 
 from scipy.integrate import quad
 from typing import Callable
+from .lindblad import lindblad_resonances
 
 class PhiFunctions():
     
@@ -104,6 +105,42 @@ class PhiFunctions():
             )
     
     @staticmethod
-    def m_mode_spiral_numerical() -> Callable:
-        # TODO: implement method
-        pass
+    def m_mode_spiral_numerical(phi_0: float, r_0: float, m: int, Omega_func: float, cs_func: float, rotation_sign: int) -> Callable:
+        """Individual spiral mode with azimuthal wave number m, defined in terms of the rotation curve Omega(r) and the sounds speed cs(r).
+        CURRENTLY STRICTLY REQUIRES THAT Omega \propto r^-3/2
+        TODO: add a useful reference here.
+        
+        Parameters
+        ----------
+        phi_0 : azimuthal launching location for the spiral wave
+        r_0 : radial launching location for the spiral wave
+        m : azimuthal wave number of the spiral wave
+        Omega_func : function that takes only r as an argument and returns the rotation Omega at r
+        cs_func : function that takes only r as an argument and returns the sound speed cs at r
+        rotation_sign : sign of the rotation. +1 for clockwise and -1 for anticlockwise.
+        
+        returns : Callable function that will numerically evaluate and return the phi value at a provided radius, given the origin and mode of the wave.
+        """
+        # get a function to calculate the integrand (we use nan_to_num to ignore wave propagation in evanescent region)
+        integrand = lambda r : (
+            np.reciprocal(cs_func(r))
+        ) * (
+            np.nan_to_num(
+                np.sqrt((Omega_func(r) - Omega_func(r_0))**2 - (Omega_func(r) / m)**2)
+            )
+        )
+        # # calculate the lindblad radii (in this context it is just the radius where the wavenumber becomes 
+        # # imaginary, since there is not necessarily a perturber)
+        # r_i, r_o = lindblad_resonances(m=m, r_0=r_0)
+        # # get correct resonance based on calculating inner or outer arm
+        # if outer:
+        #     r_origin = r_o
+        # else:
+        #     r_origin = r_i
+        # get a function that returns the result of the integral from r_0 to r
+        integral = lambda r : quad(integrand, r_0, r)[0]
+        #integral = lambda r : quad(integrand, r_origin, r)[0]
+        # return function for absolute position of the spiral
+        return np.vectorize(
+            lambda r : phi_0 + rotation_sign * integral(r)
+            )
