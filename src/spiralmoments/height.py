@@ -2,7 +2,7 @@
 # Written by Thomas Hilder
 
 """
-Contains TODO: add contents description
+Contains the HeightFunctions class, which allows users to generate functions that return the disk height as a function of radius, using the parameterisation of their choice.
 """
 
 import numpy as np
@@ -10,9 +10,22 @@ import numpy as np
 from typing import Callable
 
 class HeightFunctions():
+    """
+    Class containing methods to generate functions that allow users to get disk height as a function of radius (most-likely used for the height of the emitting layer for a certain line). 
+    """
     
     @staticmethod
     def powerlaw(z_ref: float, r_ref: float, power_index: float) -> Callable:
+        """Power-law height profile height = z_ref * (r / r_ref)**power_index.
+        
+        Parameters
+        ----------
+        z_ref : disk height at r_ref
+        r_ref : reference radius
+        power_index : power-law index for the height profile
+        
+        returns : Callable function that will return the height value at a provided radius, for the power-law profile.
+        """
         # return power-law function
         return lambda r : z_ref * np.power(r / r_ref, power_index)
     

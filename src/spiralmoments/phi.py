@@ -2,7 +2,7 @@
 # Written by Thomas Hilder
 
 """
-Contains TODO: add contents description
+Contains the PhiFunctions class, which allows users to generate functions that return the azimuthal position of a spiral as a function of radius, using the parameterisation of their choice. Includes options to use physical spirals from the Lin-Shu dispersion relation, including the planet wake shape (Ogilvie and Lubow 2002).
 """
 
 import numpy as np
@@ -12,6 +12,9 @@ from typing import Callable
 from .lindblad import lindblad_resonances
 
 class PhiFunctions():
+    """
+    Class containing methods to generate functions that allow users to get spiral shape functions \phi(r) using either simple or physically-motivated parameterisations. In the latter case, \phi(r) can be generated from arbitrary rotation and sound speed curves.
+    """
     
     @staticmethod
     def log(b: float, c: float) -> Callable:
