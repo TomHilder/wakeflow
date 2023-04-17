@@ -142,5 +142,5 @@ class PhiFunctions():
         #integral = lambda r : quad(integrand, r_origin, r)[0]
         # return function for absolute position of the spiral
         return np.vectorize(
-            lambda r : phi_0 + rotation_sign * integral(r)
+            lambda r : phi_0 - rotation_sign * integral(r)
             )
