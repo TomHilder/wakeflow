@@ -8,7 +8,15 @@ Contains the rotation_matrix function used to perform 3D rotations of vector fie
 import numpy as np
 
 def rotation_matrix(angle: float, axis='x') -> np.ndarray:
-    """Function for rotation matrices"""
+    """Function for rotation matrices
+    
+    Parameters
+    ----------
+    angle : angle (in radians) around which vector field should be rotated
+    axis : axis around which vector field should be rotated, either 'x', 'y', or 'z'
+    
+    returns : numpy.ndarray with shape (3,3) representing the rotation matrix.
+    """
     
     # get phi in [0, 2pi)
     angle = np.mod(angle, 2*np.pi)
