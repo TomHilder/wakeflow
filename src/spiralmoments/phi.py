@@ -2,7 +2,7 @@
 # Written by Thomas Hilder
 
 """
-Contains the PhiFunctions class, which allows users to generate functions that return the azimuthal position of a spiral as a function of radius, using the parameterisation of their choice. Includes options to use physical spirals from the Lin-Shu dispersion relation, including the planet wake shape (Ogilvie and Lubow 2002).
+Contains the PhiFunctions class, which allows users to generate functions that return the azimuthal position of a spiral as a function of radius, using the parameterisation of their choice. Includes options to use physical spirals from the Lin-Shu dispersion relation, including the planet wake shape (Ogilvie and Lubow 2002), as well as parameterised spirals such as logarithmic or power-law spirals.
 """
 
 import numpy as np
@@ -86,7 +86,7 @@ class PhiFunctions():
     
     @staticmethod
     def planet_wake_numerical(phi_planet: float, r_planet: float, Omega_func: float, cs_func: float, rotation_sign: int) -> Callable:
-        """Planet wake form given in Rafikov (2002), defined in terms of the rotation curve Omega(r) and the sounds speed cs(r).
+        """Planet wake form given in Rafikov (2002), defined in terms of the rotation curve Omega(r) and the sounds speed cs(r), calculated numerically.
         
         Parameters
         ----------
@@ -109,9 +109,7 @@ class PhiFunctions():
     
     @staticmethod
     def m_mode_spiral_numerical(phi_0: float, r_0: float, m: int, Omega_func: float, cs_func: float, rotation_sign: int) -> Callable:
-        """Individual spiral mode with azimuthal wave number m, defined in terms of the rotation curve Omega(r) and the sounds speed cs(r).
-        CURRENTLY STRICTLY REQUIRES THAT Omega \propto r^-3/2
-        TODO: add a useful reference here.
+        """Individual spiral mode with azimuthal wave number m, defined in terms of the rotation curve Omega(r) and the sounds speed cs(r). Keep in mind that there are evanescent regions interior to the locations of the Lindblad radii. TODO: add a useful reference here.
         
         Parameters
         ----------
@@ -132,17 +130,8 @@ class PhiFunctions():
                 np.sqrt((Omega_func(r) - Omega_func(r_0))**2 - (Omega_func(r) / m)**2)
             )
         )
-        # # calculate the lindblad radii (in this context it is just the radius where the wavenumber becomes 
-        # # imaginary, since there is not necessarily a perturber)
-        # r_i, r_o = lindblad_resonances(m=m, r_0=r_0)
-        # # get correct resonance based on calculating inner or outer arm
-        # if outer:
-        #     r_origin = r_o
-        # else:
-        #     r_origin = r_i
         # get a function that returns the result of the integral from r_0 to r
         integral = lambda r : quad(integrand, r_0, r)[0]
-        #integral = lambda r : quad(integrand, r_origin, r)[0]
         # return function for absolute position of the spiral
         return np.vectorize(
             lambda r : phi_0 - rotation_sign * integral(r)
