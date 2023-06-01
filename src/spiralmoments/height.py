@@ -41,6 +41,7 @@ class HeightFunctions():
         r_taper : taper radius
         power_index_taper : power-law index for the exponential taper
         
+        returns : Callable function that will return the height value at a provided radius, for the tapered power-law profile.
         """
         # get regular power-law
         powerlaw = HeightFunctions.powerlaw(z_ref, r_ref, power_index)
