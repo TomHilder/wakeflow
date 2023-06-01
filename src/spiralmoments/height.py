@@ -31,6 +31,17 @@ class HeightFunctions():
     
     @staticmethod
     def powerlaw_tapered(z_ref: float, r_ref: float, power_index: float, r_taper: float, power_index_taper: float) -> Callable:
+        """Power-law height profile height = z_red * (r / r_ref)**power_intex * exp(- (r / r_taper)**power_index_taper).
+        
+        Parameters
+        ----------
+        z_ref : disk height at r_ref
+        r_ref : reference radius
+        power_index : power-law index for the height profile
+        r_taper : taper radius
+        power_index_taper : power-law index for the exponential taper
+        
+        """
         # get regular power-law
         powerlaw = HeightFunctions.powerlaw(z_ref, r_ref, power_index)
         # return modification with taper
@@ -42,5 +53,10 @@ class HeightFunctions():
         
     @staticmethod
     def interpolate_tabulated() -> Callable:
+        """Height function defined by interpolating over user-specified values. NOT IMPLEMENTED.
+        
+        Parameters
+        ----------
+        """
         # TODO: implement method
-        pass
+        return NotImplementedError
