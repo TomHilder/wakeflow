@@ -252,8 +252,8 @@ class WakeflowModel():
                 working_dir = os.getcwd()
                 os.chdir(f"{params.system}/{params.name}/{mass_p}Mj/")
                 subprocess.call(
-                    ["mcfost", "mcfost.para", "-df", "wakeflow_model.fits", "-mol", "-freeze-out", "20", "-photodissociation", "-photodesorption"] #, 
-                    #stdout=subprocess.DEVNULL
+                    ["mcfost", "mcfost.para", "-df", "wakeflow_model.fits", "-mol", "-freeze-out", "20", "-photodissociation", "-photodesorption"], 
+                    stdout=subprocess.DEVNULL
                 )
                 os.chdir(working_dir)
 
