@@ -338,17 +338,14 @@ class WakeflowModel():
             # merge grids for result
             if params.include_linear:
                 grid_background._merge_grids(grid_lin_perts)
-                
+
             # merge grids for results
             grid_background._merge_grids(grid_nonlin_perts)
-            
+
             # if box smoothing is on
             if params.smooth_box:
                 print("Smoothing join between regimes")
                 grid_background._smooth_box(grid_lin_perts_s2)
-            
-            # REMOVE: checking smoothing
-            #grid_background._show_disk2D(0, show=True, save=False, dimless=params.dimensionless)
 
             # flip results if desired
             if params.user_cw_rotation:
