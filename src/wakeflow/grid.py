@@ -607,7 +607,8 @@ class _Grid:
         self.info["Contains"] += " AND " + g.info["Contains"]
         
     def _smooth_box(self, big_box_grid : "_Grid") -> None:
-        """Under development
+        """Under development. Smooths the solution between the linear and non-linear regimes. Currently
+        only smooths in v_r (it would be easy to extend to the other components if you need it).
         """
         
         if self.p.grid_type == "cartesian":
@@ -633,14 +634,6 @@ class _Grid:
         
         # update with smoothed version
         self.v_r = smooth_both_boundary
-
-        # merge data arrays
-        #self.v_r   += g.v_r
-        #self.v_phi += g.v_phi
-        #self.rho   += g.rho
-
-        # update info
-        #self.info["Contains"] += " AND " + g.info["Contains"]
 
 #    def merge_phantom_densities(self, grid_to_merge):
 #
