@@ -356,8 +356,9 @@ class _Grid:
         
         self.BOX_R_MIN = min_r
         self.BOX_R_MAX = max_r
-        print(f"MIN R = {self.BOX_R_MIN}, MAX R = {self.BOX_R_MAX}")
         
+        # debug
+        #print(f"MIN R = {self.BOX_R_MIN}, MAX R = {self.BOX_R_MAX}")
         
         min_y = -y_box_size_b * self.p.l
         max_y =  y_box_size_t * self.p.l
@@ -378,9 +379,10 @@ class _Grid:
             
         self.BOX_PHI_MIN = min_phi
         self.BOX_PHI_MAX = max_phi
-        print(f"MIN PHI = {self.BOX_PHI_MIN}, MAX PHI = {self.BOX_PHI_MAX}")
         
-
+        # debug
+        #print(f"MIN PHI = {self.BOX_PHI_MIN}, MAX PHI = {self.BOX_PHI_MAX}")
+        
         # new PHI grid to use (-pi,pi) instead of (0,2pi), where values are swapped in place, also ditch z coordinate
         # also construct a mask that contains 0 outside linear annulus and 1 inside
         PHI_new     = np.zeros((PHI.shape[0],PHI.shape[2]))
