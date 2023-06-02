@@ -17,6 +17,35 @@ Wakeflow module
    :undoc-members:
    :show-inheritance:
 
+Spiralmoments User API
+======================
+
+Sub-module contents
+-------------------
+
+.. automodule:: spiralmoments
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Spiralmoments sub-module
+------------------------
+
+.. automodule:: spiralmoments.spirals
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: spiralmoments.height
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: spiralmoments.phi
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Wakeflow Dev API
 ================
 

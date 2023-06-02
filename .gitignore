@@ -23,6 +23,9 @@
 # Mac OS
 .DS_Store
 
+# vs code config
+.vscode/*
+
 # Notebooks extras
 /.ipynb_checkpoints
 

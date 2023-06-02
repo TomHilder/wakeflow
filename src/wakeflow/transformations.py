@@ -313,13 +313,9 @@ def _get_chi_vector(
     p,
 ): 
     """
-    This is a vectorised version of the previous _get_chi function.
-    Key changes are:
-     - Using masks rather than logical statements to replace
-        if statements.
-     - Using one RectBivariateSpline interpolation function for all
-        points needing interpolation, rather than recreating a function
-        for every point.
+    This is a vectorised version of the previous _get_chi function. Uses masks rather than logical statements to replace
+    if statements. Uses one RectBivariateSpline interpolation function for all points needing interpolation, rather than 
+    recreating a function for every point.
     """
  # COMPUTATION OF Chi
 
