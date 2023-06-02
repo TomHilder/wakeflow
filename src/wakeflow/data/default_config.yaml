@@ -65,7 +65,7 @@ damping_malpha: 0.0                          # artificial damping
 
 #numerical:
 CFL: 0.5                                     # CFL safety factor for Godunov scheme that solves Burger's eqn
-smooth_box: False                            # whether to smooth over the edge of the linear box
+smooth_box: False                            # whether to smooth over the edge of the linear box (requires grid_type="cylindrical") -- default is False
 scale_box_l: 1.0                             # scale factor for linear regime box side length (left side)      -- default is 1
 scale_box_r: 1.0                             # scale factor for linear regime box side length (right side)     -- default is 1
 scale_box_ang_b: 1.0                         # scale factor for linear regime box angular extent (bottom side) -- default is 1
