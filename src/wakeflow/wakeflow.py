@@ -6,7 +6,7 @@ Contains the WakeflowModel class, intended for use by users to generate, configu
 """
 
 import subprocess, os
-from copy                 import copy, deepcopy
+from copy                 import deepcopy
 from .model_setup         import _load_config_file, _run_setup, _Parameters
 from .grid                import _Grid
 from .linear_perts        import _LinearPerts
