@@ -191,7 +191,7 @@ class _Parameters(_Constants):
         # check grid type
         if self.grid_type != "cartesian" and self.grid_type != "cylindrical" and self.grid_type != "mcfost":
             raise Exception("Invalid grid type. Choose either cartesian or cylindrical or mcfost)")
-        
+
         # check settings OK if mcfost is to be run
         if self.run_mcfost:
             if self.grid_type != "mcfost":
@@ -199,10 +199,16 @@ class _Parameters(_Constants):
             elif self.write_FITS != True:
                 raise Exception("Cannot run mcfost without writing FITS file (ie. require write_FITS: True)")
 
+        # check if box smoothing is enabled
+        if self.smooth_box:
+            print("WARNING: Using smooth_box=True can cause strange results.")
+            if self.grid_type != "cylindrical":
+                raise Exception("You must choose grid_type='cylindrical' to use smooth_box=True")
+
         # check linear box scale factor
         if self.scale_box_l != 1 or self.scale_box_r != 1:
             print("WARNING: Changing linear box scale factor can cause strange results.")
-            
+
         # check linear box scale factor
         if self.scale_box_l != self.scale_box_r:
             print("WARNING: Using a different linear box scale factor for left and right edge can cause strange results.")
