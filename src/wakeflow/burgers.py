@@ -26,14 +26,14 @@ def _solve_burgers(
     linear_t, 
     show_teta, 
     tf_fac,
-    edge_limit
+    t_edge
 ): 
     """Propagate the wake in (t,eta,chi) space by solving Eq. 10 from Bollati et al. 2021 using Godunov scheme.
     """
 
     #Get eta step
     deta = eta[1] - eta[0]
-    print(len(eta))
+    #print(len(eta))
 
     # time required to develop N-wave for betap = 1
     tf_th = 300 
@@ -43,6 +43,10 @@ def _solve_burgers(
     tf *= tf_fac
     
     """
+    # Eq. (18) Bollati et al. 2021
+    eta_min = -eta_tilde - np.sqrt(2 * C * tf) - 3 
+    eta_max = -eta_tilde + np.sqrt(2 * C * tf) + 3
+
     # extend the profile domain due to profile broadening during evolution 
     extr = eta[-1]
 
@@ -117,7 +121,7 @@ def _solve_burgers(
         counter += 1
 
         # time step calculation
-        dt = min(deta * CFL / (max(abs(solution[-1]))+ 1e-8), 0.02)
+        dt = min(deta * CFL / (max(abs(solution[-1])) + 1e-8), 0.02)
 
         # update time
         time.append(time[-1] + dt)
@@ -142,12 +146,12 @@ def _solve_burgers(
         eta_minus = eta_tilde - np.sqrt(2 * C * tf)
         eta_plus = eta_tilde + np.sqrt(2 * C * tf)
 
-        if lapsed_time >= edge_limit:
+        if lapsed_time >= t_edge:
             break
     """
     # time integration until boundary of the disc
-    print(edge_limit)
-    while lapsed_time <= edge_limit:
+    #print(t_edge)
+    while lapsed_time <= t_edge:
 
         # increment
         counter += 1
@@ -202,7 +206,7 @@ def _solve_burgers(
     time     = np.array(time)
    
     if False:
-
+        #plots for debugging: plot \eta profiles to check the evolution of the solution
         #colorbar
         n = len(time)
         norm = cl.Normalize(vmin=time.min(), vmax=time.max())
@@ -211,7 +215,7 @@ def _solve_burgers(
         
         plt.figure(figsize=(15,5))
         
-        idxp = int(n/5)
+        idxp = int(n/5) #index to plot 5 profiles equidistant in \t
         plt.plot(eta, solution[:,0*idxp], label = "$t=t_0+%.1lf$ "%time[0*idxp],
                 color = cmap.to_rgba(time[0*idxp] + 1), ls='-.')#+str(0*dt))
         plt.plot(eta, solution[:,1*idxp], label = "$t=t_0+%.1lf$ "%time[1*idxp],
@@ -224,7 +228,8 @@ def _solve_burgers(
                 color = cmap.to_rgba(time[4*idxp] + 1), ls='-.')#+str(round(T,2)))
         plt.plot(eta, solution[:,-1], label = "$t=t_0+%.1lf$ "%time[-1],
                 color = cmap.to_rgba(time[-1]), ls='-.')#+str(round(T,2)))
-    
+
+        #check last profile with analytic N wave to see if asymptotic limit already reached
         if eta_tilde <= 0:
             eta_plus = eta_tilde + np.sqrt(2*C*(time[-1]-t0))
             eta_minus = eta_tilde - np.sqrt(2*C*(time[-1]-t0))
@@ -244,6 +249,7 @@ def _solve_burgers(
         cb.ax.set_ylabel(r't')#, fontsize=20)
         cb.ax.yaxis.set_label_position('left')
         cb.ax.set_aspect('auto')
+        #Trying to get nice double colorbars, failing miserably
         """
         cb2 = cb.ax.twinx() 
         cb2.set_ylim([time[0], time[-1]])
@@ -267,6 +273,7 @@ def _solve_burgers(
             plt.title(r'$\chi$ "evolution" $r < r_p$')
         plt.show()
         
+        #Like before, check last profile with analytic N wave to see if asymptotic limit already reached
         plt.plot(eta, solution[:,-1], label = "$t=t_0+%.1lf$ "%time[-1])#+str(round(T,2)))
         #plt.plot(eta, solution[:,-1], label = "$t=t_0+$ ")#+str(round(T,2)))
         if eta_tilde <= 0:
@@ -282,7 +289,7 @@ def _solve_burgers(
         
     #plt.plot(time, rticks)
 
-    if False: # combining linear and non-linear solution and plotting
+    if show_teta: # combining linear and non-linear solution and plotting
         
         # scale linear solution
         linear_solution = linear_solution * (gamma + 1) * beta_p / 2**(3 / 4)

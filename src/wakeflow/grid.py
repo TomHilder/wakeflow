@@ -124,7 +124,8 @@ class _Grid:
         self.x, stepx_    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_x, retstep="True")
         self.y, stepy_    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_y, retstep="True")
         self.z_xy         = np.linspace(0, self.height, self.p.n_z)
-        
+
+        # extending the grid by a sqrt(2) factor to avoid interpolations effects at the corner when rotating the grid to get the planet position, using the same spacing of the original grid
         if self.p.rot_interp == True:
             x_grid_ext_l = np.arange(-np.sqrt(2)*self.p.r_outer, -self.p.r_outer, stepx_)
             y_grid_ext_l = np.arange(-np.sqrt(2)*self.p.r_outer, -self.p.r_outer, stepy_)
@@ -337,7 +338,7 @@ class _Grid:
         # update grid info
         self.info["Contains"] = "Zeros"
 
-    # add results from the linear regime nearby the planet onto the grid (old version)
+    # add results from the linear regime nearby the planet onto the grid
     def _add_linear_perturbations(self, LinearPerts : _LinearPerts, rho_background : "_Grid.rho") -> None:
         """Add results from the linear regime, stored in LinearPerts object, to the grid
 
@@ -352,18 +353,18 @@ class _Grid:
         # get linear solution           
         lp = LinearPerts
 
-        # segment radial size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs. bsl/r stands for box_size_left/right
-        r_bsl = lp.x_box_l
-        r_bsr = lp.x_box_r
-        # segment azimuthal size (in units of \pi). bst/b stands for box_size_top/bottom
-        phi_bst = lp.x_box_t / 2
-        phi_bsb = lp.x_box_b / 2
+        # segment radial size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs.
+        r_box_size_left = lp.x_box_left
+        r_box_size_right = lp.x_box_right
+        # segment azimuthal size (in units of \pi). 
+        phi_box_size_top = lp.x_box_top / 2
+        phi_box_size_bottom = lp.x_box_bottom / 2
         # segment radial extrema for masking
-        min_r = self.p.r_planet - r_bsl * self.p.l
-        max_r = self.p.r_planet + r_bsr * self.p.l
+        min_r = self.p.r_planet - r_box_size_left * self.p.l
+        max_r = self.p.r_planet + r_box_size_right * self.p.l
         # segment azimuthal extrema for masking
-        max_phi =  phi_bst * np.pi 
-        min_phi = -phi_bst * np.pi 
+        max_phi =  phi_box_size_top * np.pi 
+        min_phi = -phi_box_size_bottom * np.pi 
 
         # find (phi, r) grid for either Cartesian or Cylindrical global grid
         if self.info["Type"] == "cartesian":
@@ -796,7 +797,7 @@ class _Grid:
 
         print(f"{printed} saved to {savedir}")
 
-        # method to get the velocity perturbations to feed to the mcmc chain
+    # method to get the velocity perturbations to feed to the mcmc chain
     def _get_velocity_perturbations(self) -> float:
 
         return self.v_r, self.v_phi, self.X, self.Y

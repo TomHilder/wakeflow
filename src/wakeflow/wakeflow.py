@@ -164,20 +164,20 @@ class WakeflowModel():
         adiabatic_index       = 1.6666667     # adiabatic index
         damping_malpha        = 0.0           # artificial damping NOT IMPLEMENTED
         CFL                   = 0.5           # Courant stability factor (require <0.5)
-        scale_box_l           = 1.0           # linear box length scale factor in radial direction (left)
-        scale_box_r           = 1.0           # linear box length scale factor in radial direction (right)
-        scale_box_ang_t       = 1.0           # linear box length scale factor in angular direction (top)
-        scale_box_ang_b       = 1.0           # linear box length scale factor in angular direction (bottom)
+        scale_box_left        = 1.0           # linear box length scale factor in radial direction (left)
+        scale_box_right       = 1.0           # linear box length scale factor in radial direction (right)
+        scale_box_ang_top     = 1.0           # linear box length scale factor in angular direction (top)
+        scale_box_ang_bottom  = 1.0           # linear box length scale factor in angular direction (bottom)
         tf_fac                = 1.0           # scale factor for t coordinate where self-similar solution is used
         show_teta_debug_plots = False         # show (t,eta,chi) space developer plots
         box_warp              = True          # interpret y coordinate of linear regime as arc length, or truly vertical? True (default) for former
-        use_box_IC            = False         # use only part of linear regime in box as initial condition for non-linear evolution
+        use_box_IC            = False         # use linear regime in square box as initial condition for non-linear evolution
         use_old_vel           = False         # use old approximated formulas for u pert
         mcmc                  = False         # use wakeflow inside mcmc chain, pass perturbations without saving them
         rot_interp            = False         # expand grid to avoid border effects when interpolatin on rotated grid
         lin_type              = "global"      # Choose the perturbations to use in the linear regime. Supported options: global, simulation, shearing_sheet
         nl_wake               = False         # Add non linear correction to wake structure
-        r_cut_in_fac          = 2             # Cut numerical solution at r=r_planet/r_cut_in_fac
+        r_cut_inner_fac       = 2             # Cut numerical solution at r=r_planet/r_cut_in_fac
 
         # generate dictionary for model parameters by grabbing all local variables
         self.model_params = locals()
@@ -244,7 +244,10 @@ class WakeflowModel():
         for mass_p in planet_masses:
             params.m_planet = mass_p
             print(f"\n* Creating {mass_p} Mj model:")
-            self._run_wakeflow(params)
+            if not params.mcmc:
+                self._run_wakeflow(params)
+            else:
+                v_r, v_phi, xgrid, ygrid = self._run_wakeflow(params)
 
         # run mcfost for each model
         if params.run_mcfost == True:
@@ -306,10 +309,11 @@ class WakeflowModel():
             # initialise non-linear perturbations
             nonlin_perts = _NonLinearPerts(params, grid_nonlin_perts)
 
-            # extract initial condition from the linear perturbations
+            # extract initial condition from the linear perturbations using annulus segment
             nonlin_perts._extract_ICs_ann(lin_perts)
+            # extract initial condition from the linear perturbations using square box
             if params.use_box_IC:
-                nonlin_perts._extract_ICs_ann_old(lin_perts)
+                nonlin_perts._extract_ICs(lin_perts)
 
             # solve for non-linear perturbations
             nonlin_perts._get_non_linear_perts()

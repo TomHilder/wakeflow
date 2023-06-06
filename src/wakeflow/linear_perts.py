@@ -39,7 +39,7 @@ class _LinearPerts():
             }
         
         # Using linear perturbations computed following Bollati et al. 2021 with shearing sheet assumption
-        # DEPRECATED: THIS WILL PROBABLY LEAD TO WRONG RESULTS
+        # NOTE: this is deprecated and will probably lead to wrong results
         if self.p.lin_type == "shearing_sheet":
             # get location of linear perturbations data files
             pert_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations.npy')
@@ -84,10 +84,10 @@ class _LinearPerts():
             y = self.Y[:,0]
     
             # define constants for linear perts
-            self.x_box_l = 2 * self.p.scale_box_l
-            self.x_box_r = 2 * self.p.scale_box_r
-            self.x_box_t = 2 * self.p.scale_box_ang_t
-            self.x_box_b = 2 * self.p.scale_box_ang_b
+            self.x_box_left   = 2 * self.p.scale_box_left
+            self.x_box_right  = 2 * self.p.scale_box_right
+            self.x_box_top    = 2 * self.p.scale_box_ang_top
+            self.x_box_bottom = 2 * self.p.scale_box_ang_bottom
             
             # cut square box grid in linear regime
             self.x_cut = x[np.argmin(x < -self.x_box_l) : np.argmin(x < self.x_box_r) + 1]
@@ -164,10 +164,10 @@ class _LinearPerts():
             self.X, self.Y = np.meshgrid(x, y)
 
             # define constants for linear perts
-            self.x_box_l = 2 * self.p.scale_box_l
-            self.x_box_r = 2 * self.p.scale_box_r
-            self.x_box_t = 2 * self.p.scale_box_ang_t
-            self.x_box_b = 2 * self.p.scale_box_ang_b
+            self.x_box_left   = 2 * self.p.scale_box_left
+            self.x_box_right  = 2 * self.p.scale_box_right
+            self.x_box_top    = 2 * self.p.scale_box_ang_top
+            self.x_box_bottom = 2 * self.p.scale_box_ang_bottom
 
             #updating info of linear perts      
             self.info["Type"]    = "global"
@@ -221,10 +221,10 @@ class _LinearPerts():
             y = self.Y[:,0]
 
             # define constants for linear perts
-            self.x_box_l = 2 * self.p.scale_box_l
-            self.x_box_r = 2 * self.p.scale_box_r
-            self.x_box_t = 2 * self.p.scale_box_ang_t
-            self.x_box_b = 2 * self.p.scale_box_ang_b
+            self.x_box_left   = 2 * self.p.scale_box_left
+            self.x_box_right  = 2 * self.p.scale_box_right
+            self.x_box_top    = 2 * self.p.scale_box_ang_top
+            self.x_box_bottom = 2 * self.p.scale_box_ang_bottom
 
             #updating info of linear perts      
             self.info["Type"]    = "simulation"
@@ -239,7 +239,7 @@ class _LinearPerts():
         """
 
         # box size (in units of Hill radius), with default scale_box = 1. (note for conversions that self.p.l = 1 Hill radius in cgs)
-        box_size = 2*self.p.scale_box_l
+        box_size = 2*self.p.scale_box_left
         artificial_y_scale = 6
 
         # linear perturbations read in grid
@@ -289,12 +289,12 @@ class _LinearPerts():
         """Extract the part of the linear solution needed for the model, and interpolate onto appropriate grid
         """
 
-        # segment radial size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs. bsl/r stands for box_size_left/right
-        r_bsl = self.x_box_l
-        r_bsr = self.x_box_r
-        # segment azimuthal size (in units of \pi). bst/b stands for box_size_top/bottom
-        phi_bst = self.x_box_t / 2
-        phi_bsb = self.x_box_b / 2
+        # segment radial size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs. 
+        r_box_size_left  = self.x_box_left
+        r_box_size_right = self.x_box_right
+        # segment azimuthal size (in units of \pi). 
+        phi_box_size_top    = self.x_box_top / 2
+        phi_box_size_bottom = self.x_box_bottom / 2
 
         #interpolate perturbations on a cylindrical grid and evaluate them in the annulus segment
         if self.info["Type"] == "shearing_sheet" or self.info["Type"] == "simulation":
@@ -304,18 +304,18 @@ class _LinearPerts():
             y = self.Y[:,0]
 
             # cut square box in linear regime
-            x_cut = x[np.argmin(x < -r_bsl) : np.argmin(x < r_bsr) + 1]
+            x_cut = x[np.argmin(x < -r_box_size_left) : np.argmin(x < r_box_size_right) + 1]
 
             # annulus segment grid, radial granularity from square box, angular granularity fixed for now
             r = np.linspace(
-                self.p.r_planet - r_bsl*self.p.l, 
-                self.p.r_planet + r_bsr*self.p.l, 
+                self.p.r_planet - r_box_size_left*self.p.l, 
+                self.p.r_planet + r_box_size_right*self.p.l, 
                 len(x_cut)
             )
             
             phi = np.linspace(
-                -phi_bsb*np.pi,
-                phi_bst*np.pi,
+                -phi_box_size_bottom*np.pi,
+                phi_box_size_top*np.pi,
                 1000
             )
 
@@ -354,7 +354,7 @@ class _LinearPerts():
                 plt.ylabel(r'$\varphi$ [rad]')
                 plt.show()
             if False:
-                eta = _Eta_vector(self.p.r_planet + r_bsl*self.p.l, phi, self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.cw_rotation, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+                eta = _Eta_vector(self.p.r_planet + r_box_size_left*self.p.l, phi, self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.cw_rotation, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
                 plt.plot(phi, self.pert_rho_ann[:,-1])
                 ax = plt.gca()
                 ax.set_xlabel(r'$\varphi$ [rad]')
@@ -388,9 +388,9 @@ class _LinearPerts():
             phi = self.PHI[:,0]
 
             #masks for restriction
-            r_mask = np.logical_and(r >= self.p.r_planet - r_bsl*self.p.l, r <= self.p.r_planet + r_bsr*self.p.l)
-            phi_mask = np.logical_and(phi >= -phi_bsb*np.pi, phi <= phi_bst*np.pi)
-            print(r_mask.shape, phi_mask.shape)
+            r_mask = np.logical_and(r >= self.p.r_planet - r_box_size_left*self.p.l, r <= self.p.r_planet + r_box_size_right*self.p.l)
+            phi_mask = np.logical_and(phi >= -phi_box_size_bottom*np.pi, phi <= phi_box_size_top*np.pi)
+            #print(r_mask.shape, phi_mask.shape)
             #restricting grid to the annulus segment
             r_ann   = r[r_mask]
             phi_ann = phi[phi_mask]
@@ -419,7 +419,7 @@ class _LinearPerts():
                 plt.xlabel('R [au]')
                 plt.ylabel(r'$\varphi$ [rad]')
                 plt.show()
-            print(v_r_cyl.shape)
+            #print(v_r_cyl.shape)
 
             #flip perts  if rotation is clockwise
             if self.p.a_cw == -1:
@@ -450,7 +450,7 @@ class _LinearPerts():
                 plt.ylabel(r'$\varphi$ [rad]')
                 plt.show()
             if False:
-                eta = _Eta_vector(self.p.r_planet + r_bsl*self.p.l, phi_ann, self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.cw_rotation, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+                eta = _Eta_vector(self.p.r_planet + r_box_size_left*self.p.l, phi_ann, self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.cw_rotation, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
                 plt.plot(phi_ann, self.pert_rho_ann[:,-1])
                 ax = plt.gca()
                 ax.set_xlabel(r'$\varphi$ [rad]')
