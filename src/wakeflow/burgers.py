@@ -26,14 +26,14 @@ def _solve_burgers(
     linear_t, 
     show_teta, 
     tf_fac,
-    edge_limit
+    t_edge
 ): 
     """Propagate the wake in (t,eta,chi) space by solving Eq. 10 from Bollati et al. 2021 using Godunov scheme.
     """
 
     #Get eta step
     deta = eta[1] - eta[0]
-    print(len(eta))
+    #print(len(eta))
 
     # time required to develop N-wave for betap = 1
     tf_th = 300 
@@ -43,6 +43,10 @@ def _solve_burgers(
     tf *= tf_fac
     
     """
+    # Eq. (18) Bollati et al. 2021
+    eta_min = -eta_tilde - np.sqrt(2 * C * tf) - 3 
+    eta_max = -eta_tilde + np.sqrt(2 * C * tf) + 3
+
     # extend the profile domain due to profile broadening during evolution 
     extr = eta[-1]
 
@@ -117,7 +121,7 @@ def _solve_burgers(
         counter += 1
 
         # time step calculation
-        dt = min(deta * CFL / (max(abs(solution[-1]))+ 1e-8), 0.02)
+        dt = min(deta * CFL / (max(abs(solution[-1])) + 1e-8), 0.02)
 
         # update time
         time.append(time[-1] + dt)
@@ -142,12 +146,12 @@ def _solve_burgers(
         eta_minus = eta_tilde - np.sqrt(2 * C * tf)
         eta_plus = eta_tilde + np.sqrt(2 * C * tf)
 
-        if lapsed_time >= edge_limit:
+        if lapsed_time >= t_edge:
             break
     """
     # time integration until boundary of the disc
-    print(edge_limit)
-    while lapsed_time <= edge_limit:
+    #print(t_edge)
+    while lapsed_time <= t_edge:
 
         # increment
         counter += 1
@@ -201,8 +205,8 @@ def _solve_burgers(
     solution = np.array(solution).transpose()
     time     = np.array(time)
    
-    if True:
-
+    if False:
+        #plots for debugging: plot \eta profiles to check the evolution of the solution
         #colorbar
         n = len(time)
         norm = cl.Normalize(vmin=time.min(), vmax=time.max())
@@ -211,7 +215,7 @@ def _solve_burgers(
         
         plt.figure(figsize=(15,5))
         
-        idxp = int(n/5)
+        idxp = int(n/5) #index to plot 5 profiles equidistant in \t
         plt.plot(eta, solution[:,0*idxp], label = "$t=t_0+%.1lf$ "%time[0*idxp],
                 color = cmap.to_rgba(time[0*idxp] + 1), ls='-.')#+str(0*dt))
         plt.plot(eta, solution[:,1*idxp], label = "$t=t_0+%.1lf$ "%time[1*idxp],
@@ -224,65 +228,68 @@ def _solve_burgers(
                 color = cmap.to_rgba(time[4*idxp] + 1), ls='-.')#+str(round(T,2)))
         plt.plot(eta, solution[:,-1], label = "$t=t_0+%.1lf$ "%time[-1],
                 color = cmap.to_rgba(time[-1]), ls='-.')#+str(round(T,2)))
-    
-    if eta_tilde <= 0:
-        eta_plus = eta_tilde + np.sqrt(2*C*(time[-1]-t0))
-        eta_minus = eta_tilde - np.sqrt(2*C*(time[-1]-t0))
-        #plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),(eta-eta_tilde)/(time[-1]-t0),0), label='N')
-    else:
-        eta_plus = eta_tilde + np.sqrt(2*C*(time[-1]-t0))
-        eta_minus = eta_tilde - np.sqrt(2*C*(time[-1]-t0))
-        #plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),-(eta-eta_tilde)/(time[-1]-t0),0), label='N')
-    
-    plt.legend()
-    plt.xlim(-40,40)
-    plt.xlabel(r"$\eta$")
-    plt.ylabel(r"$\chi(t,\eta)$")
-    plt.grid(True)
-    cb = plt.colorbar(cmap, label = r't', shrink = 1)
-    #cb.ax.tick_params(labelsize=20)
-    cb.ax.set_ylabel(r't')#, fontsize=20)
-    cb.ax.yaxis.set_label_position('left')
-    cb.ax.set_aspect('auto')
-    """
-    cb2 = cb.ax.twinx() 
-    cb2.set_ylim([time[0], time[-1]])
-    
-    rticks=np.zeros(np.shape(time))
-    for i in range(len(time)):
-        if i%idxp == 0 or i == len(time)-1:
-            def invert_t(x, Rp, hr, q, p, m_p, m_th):
-                return _t_vector(x, Rp, hr, q, p, m_p, m_th) - time[i]
-            rticks[i] = fsolve(invert_t, args=(Rp, hr, q, p, m_p, m_th), x0 = 120)
-    cb2.set_yticks([time[0*idxp],time[1*idxp],time[2*idxp],time[3*idxp],time[4*idxp],time[-1]])
-    cb2.set_yticklabels([round(rticks[0*idxp]),round(rticks[1*idxp]),round(rticks[2*idxp]),
-                         round(rticks[3*idxp]),round(rticks[4*idxp]),round(rticks[-1])])
-    #cb2.set_yticks([tic for tic in pdfp])
-    cb2.set_ylabel(r'R/R$_{\rm p}$', labelpad=8)#, fontsize=20)
-    #cb2.tick_params(labelsize=20)
-    """
-    if eta_tilde <= 0:
-        plt.title(r'$\chi$ "evolution" $r > r_p$')
-    else:
-        plt.title(r'$\chi$ "evolution" $r < r_p$')
-    plt.show()
-    
-    plt.plot(eta, solution[:,-1], label = "$t=t_0+%.1lf$ "%time[-1])#+str(round(T,2)))
-    #plt.plot(eta, solution[:,-1], label = "$t=t_0+$ ")#+str(round(T,2)))
-    if eta_tilde <= 0:
-        plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),(eta-eta_tilde)/(time[-1]-t0),0), label='N')
-    else:
-        plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),(eta-eta_tilde)/(time[-1]-t0),0), label='N')
-    plt.legend()
-    plt.xlabel(r"$\eta$")
-    plt.ylabel(r"$\chi(t,\eta)$")
-    plt.grid(True)
-    #plt.xticks([-28, -27, -26, -25, -24, 0, 20, 21, 22])
-    plt.show()
+
+        #check last profile with analytic N wave to see if asymptotic limit already reached
+        if eta_tilde <= 0:
+            eta_plus = eta_tilde + np.sqrt(2*C*(time[-1]-t0))
+            eta_minus = eta_tilde - np.sqrt(2*C*(time[-1]-t0))
+            #plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),(eta-eta_tilde)/(time[-1]-t0),0), label='N')
+        else:
+            eta_plus = eta_tilde + np.sqrt(2*C*(time[-1]-t0))
+            eta_minus = eta_tilde - np.sqrt(2*C*(time[-1]-t0))
+            #plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),-(eta-eta_tilde)/(time[-1]-t0),0), label='N')
+        
+        plt.legend()
+        plt.xlim(-40,40)
+        plt.xlabel(r"$\eta$")
+        plt.ylabel(r"$\chi(t,\eta)$")
+        plt.grid(True)
+        cb = plt.colorbar(cmap, label = r't', shrink = 1)
+        #cb.ax.tick_params(labelsize=20)
+        cb.ax.set_ylabel(r't')#, fontsize=20)
+        cb.ax.yaxis.set_label_position('left')
+        cb.ax.set_aspect('auto')
+        #Trying to get nice double colorbars, failing miserably
+        """
+        cb2 = cb.ax.twinx() 
+        cb2.set_ylim([time[0], time[-1]])
+        
+        rticks=np.zeros(np.shape(time))
+        for i in range(len(time)):
+            if i%idxp == 0 or i == len(time)-1:
+                def invert_t(x, Rp, hr, q, p, m_p, m_th):
+                    return _t_vector(x, Rp, hr, q, p, m_p, m_th) - time[i]
+                rticks[i] = fsolve(invert_t, args=(Rp, hr, q, p, m_p, m_th), x0 = 120)
+        cb2.set_yticks([time[0*idxp],time[1*idxp],time[2*idxp],time[3*idxp],time[4*idxp],time[-1]])
+        cb2.set_yticklabels([round(rticks[0*idxp]),round(rticks[1*idxp]),round(rticks[2*idxp]),
+                            round(rticks[3*idxp]),round(rticks[4*idxp]),round(rticks[-1])])
+        #cb2.set_yticks([tic for tic in pdfp])
+        cb2.set_ylabel(r'R/R$_{\rm p}$', labelpad=8)#, fontsize=20)
+        #cb2.tick_params(labelsize=20)
+        """
+        if eta_tilde <= 0:
+            plt.title(r'$\chi$ "evolution" $r > r_p$')
+        else:
+            plt.title(r'$\chi$ "evolution" $r < r_p$')
+        plt.show()
+        
+        #Like before, check last profile with analytic N wave to see if asymptotic limit already reached
+        plt.plot(eta, solution[:,-1], label = "$t=t_0+%.1lf$ "%time[-1])#+str(round(T,2)))
+        #plt.plot(eta, solution[:,-1], label = "$t=t_0+$ ")#+str(round(T,2)))
+        if eta_tilde <= 0:
+            plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),(eta-eta_tilde)/(time[-1]-t0),0), label='N')
+        else:
+            plt.plot(eta, np.where(np.logical_and(eta>eta_minus,eta<eta_plus),(eta-eta_tilde)/(time[-1]-t0),0), label='N')
+        plt.legend()
+        plt.xlabel(r"$\eta$")
+        plt.ylabel(r"$\chi(t,\eta)$")
+        plt.grid(True)
+        #plt.xticks([-28, -27, -26, -25, -24, 0, 20, 21, 22])
+        plt.show()
         
     #plt.plot(time, rticks)
 
-    if False: # combining linear and non-linear solution and plotting
+    if show_teta: # combining linear and non-linear solution and plotting
         
         # scale linear solution
         linear_solution = linear_solution * (gamma + 1) * beta_p / 2**(3 / 4)
@@ -295,10 +302,10 @@ def _solve_burgers(
         cont = ax.contourf(total_time, eta, total_solution, levels=np.arange(-4, 4, 0.05), cmap='RdBu')
         for c in cont.collections:
             c.set_rasterized(True)
-        plt.colorbar(cont, label='$\chi$')
+        plt.colorbar(cont, label=r'$\chi$')
         ax.set_xlim(0,10)
-        ax.set_xlabel('$t$')
-        ax.set_ylabel('$\eta$')
+        ax.set_xlabel(r'$t$')
+        ax.set_ylabel(r'$\eta$')
     #    #plt.savefig("teta_badjoin.pdf")
         plt.show()
 

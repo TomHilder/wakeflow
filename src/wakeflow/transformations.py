@@ -17,7 +17,7 @@ from scipy.interpolate      import RectBivariateSpline
 
 # wake shape
 def _phi_wake(r, Rp, hr, q, p, cw, m_p, m_th, nl_wake): 
-    """Eq. (4) Bollati et al. 2021
+    """Eq. (4) Bollati et al. 2021, non-linear correction Eq. (32) Cimerman & Rafikov (2022)
     """
     rr = r / Rp
     phi_l = np.sign(r - Rp) * (1 / hr) * (rr**(q - 0.5) / (q - 0.5) - rr**(q + 1) / (q + 1) - 3 / ((2 * q - 1) * (q + 1)))
@@ -255,7 +255,7 @@ def _get_chi(
             extr_right = +cw * np.sign(rr - Rp) * eta_tilde_outer + np.sqrt(2 * C_outer * (t1 - t0_outer))
 
             if eta1 > extr_left and eta1 < extr_right:
-                Chi = (-cw * np.sign(rr - Rp) * eta1 + eta_tilde_outer) / (t1 - t0_outer)  #eq.(29) nonlinear.pdf
+                Chi = (-cw * np.sign(rr - Rp) * (eta1 - eta_tilde_outer)) / (t1 - t0_outer)  #eq.(29) nonlinear.pdf
             else:
                 Chi = 0
 
@@ -287,7 +287,7 @@ def _get_chi(
             extr_right = +cw * np.sign(rr - Rp) * eta_tilde_inner + np.sqrt(2 * C_inner * (t1 - t0_inner))
 
             if eta1 > extr_left and eta1 < extr_right:
-                Chi = (-cw * np.sign(rr - Rp) * eta1 + eta_tilde_inner) / (t1 - t0_inner)  #eq.(29) nonlinear.pdf
+                Chi = (-cw * np.sign(rr - Rp) * (eta1 - eta_tilde_inner)) / (t1 - t0_inner)  #eq.(29) nonlinear.pdf
             else:
                 Chi = 0
     

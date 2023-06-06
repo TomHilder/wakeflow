@@ -97,7 +97,7 @@ class _NonLinearPerts():
         phi_IC_outer = y_IC_outer / self.p.r_planet
         phi_IC_inner = y_IC_inner / self.p.r_planet
 
-        if True:
+        if False:
             plt.plot(phi_IC_outer, profile_rest_outer, label="outer")
             plt.plot(phi_IC_inner, profile_rest_inner, label="inner")
             plt.legend(loc="best")
@@ -135,9 +135,10 @@ class _NonLinearPerts():
         self.profile_outer = profile_rest_outer[(eta_IC_outer > -eta_max) & (eta_IC_outer < eta_max)]
         self.profile_inner = profile_rest_inner[(eta_IC_inner > -eta_max) & (eta_IC_inner < eta_max)]
 
-        plt.plot(self.eta_outer, self.profile_outer)
-        plt.plot(self.eta_inner, self.profile_inner)
-        plt.show()
+        if False:
+            plt.plot(self.eta_outer, self.profile_outer)
+            plt.plot(self.eta_inner, self.profile_inner)
+            plt.show()
 
         # set t0
         self.t0_outer = t_IC_outer[0]
@@ -179,14 +180,15 @@ class _NonLinearPerts():
         C0_inner = np.abs(np.trapz(profile0_inner, dx = deta_inner))
         self.C_inner = (self.p.gamma + 1) * C0_inner / 2**(3/4) #* (self.p.m_planet / self.p.m_thermal)
 
-        print('     Outer Wake:')
-        print('         eta_tilde = ', self.eta_tilde_outer)
-        print('         C0 = ', C0_outer)
-        print('         t0 = ', self.t0_outer)
-        print('     Inner Wake:')
-        print('         eta_tilde = ', self.eta_tilde_inner)
-        print('         C0 = ', C0_inner)
-        print('         t0 = ', self.t0_inner)
+        if False:
+            print('     Outer Wake:')
+            print('         eta_tilde = ', self.eta_tilde_outer)
+            print('         C0 = ', C0_outer)
+            print('         t0 = ', self.t0_outer)
+            print('     Inner Wake:')
+            print('         eta_tilde = ', self.eta_tilde_inner)
+            print('         C0 = ', C0_inner)
+            print('         t0 = ', self.t0_inner)
 
         # ======================================
         # === put linear solution into t,eta ===
@@ -274,8 +276,8 @@ class _NonLinearPerts():
             plt.plot(eta_lin[:,-1], chi0_v_phi, label="chi vphi")
             plt.legend(loc="lower left")
             plt.xlim(-10,10)
-            plt.xlabel('$\eta$')
-            plt.ylabel('$\chi$')
+            plt.xlabel(r'$\eta$')
+            plt.ylabel(r'$\chi$')
             plt.show()
 
 #            if True: # save results to file for plotting
@@ -286,13 +288,13 @@ class _NonLinearPerts():
 #                np.save(f"{name}_eta.npy", eta_save)
 #                np.save(f"{name}_chi.npy", chi_save)
 #
-            plt.plot(linear_eta[:,-1], linear_profile[:,-1], label="Approximate $\eta$ transformation")
-            plt.plot(eta_lin[:,-1], linear_profile[:,-1], label="Full $\eta$ transformation")
+            plt.plot(linear_eta[:,-1], linear_profile[:,-1], label=r"Approximate $\eta$ transformation")
+            plt.plot(eta_lin[:,-1], linear_profile[:,-1], label=r"Full $\eta$ transformation")
             #plt.plot(self.eta, self.profile, ls='--', label="Actual IC used")
             plt.legend(loc="lower left")
             plt.xlim(-10,10)
-            plt.xlabel('$\eta$')
-            plt.ylabel('$\chi$')
+            plt.xlabel(r'$\eta$')
+            plt.ylabel(r'$\chi$')
             plt.show()
 
             plt.scatter(t_lin, eta_lin)
@@ -337,7 +339,7 @@ class _NonLinearPerts():
             self.linear_solution = 0
             self.linear_t = 0
 
-    # alternative IC extraction using edge of box, old version
+    # alternative IC extraction using an annulus instead of the linear square box
     def _extract_ICs_ann(self, LinearPerts: '_LinearPerts') -> None:
         """Alternate initial condition extraction where the IC is read from the edges of the box as included in the final
         solution. Usually, far more y-extent of the linear regime is used than this. Using this method will invalidate the
@@ -394,7 +396,8 @@ class _NonLinearPerts():
             self.eta_outer[i] = _Eta(r_IC_outer, phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
             self.eta_inner[i] = _Eta(r_IC_inner, phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
         '''
-        plt.plot(self.eta_outer,self.profile_outer)
+        if False:
+            plt.plot(self.eta_outer,self.profile_outer)
         # set t0
         self.t0_outer = t_IC_outer
         self.t0_inner = t_IC_inner
@@ -407,7 +410,8 @@ class _NonLinearPerts():
                 zero_outer = 0.5 * (self.eta_outer[i] + self.eta_outer[i + 1])
         self.eta_tilde_outer = zero_outer
 
-        plt.plot(self.eta_inner,self.profile_inner)
+        if False:
+            plt.plot(self.eta_inner,self.profile_inner)
         # set eta_tilde for inner wake:
         for i in range(len(self.eta_inner)):
             if self.profile_inner[i] == 0 and self.eta_inner[i] > 0 and self.eta_inner[i] < 10:
@@ -427,15 +431,15 @@ class _NonLinearPerts():
         profile0_inner = self.profile_inner[self.eta_inner < self.eta_tilde_inner]
         C0_inner = np.abs(np.trapz(profile0_inner, dx = deta_inner))
         self.C_inner = C0_inner
-
-        print('     Outer Wake:')
-        print('         eta_tilde = ', self.eta_tilde_outer)
-        print('         C0 = ', C0_outer)
-        print('         t0 = ', self.t0_outer)
-        print('     Inner Wake:')
-        print('         eta_tilde = ', self.eta_tilde_inner)
-        print('         C0 = ', C0_inner)
-        print('         t0 = ', self.t0_inner)
+        if False:
+            print('     Outer Wake:')
+            print('         eta_tilde = ', self.eta_tilde_outer)
+            print('         C0 = ', C0_outer)
+            print('         t0 = ', self.t0_outer)
+            print('     Inner Wake:')
+            print('         eta_tilde = ', self.eta_tilde_inner)
+            print('         C0 = ', C0_inner)
+            print('         t0 = ', self.t0_inner)
 
         # hard to explain, but they're not needed so set to zero
         self.linear_solution = 0
@@ -449,8 +453,8 @@ class _NonLinearPerts():
 
         beta_p = self.p.m_planet / self.p.m_thermal
 
-        # outer edge limit for t
-        self.edge_limit = _t_vector(np.array(self.p.r_outer), self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
+        # outer edge limit for t. Needed to save computation time in case the disc parameters prevents the wake reaching the asymptotic limit before hitting the outer edge of the disc
+        self.t_edge_outer = _t_vector(np.array(self.p.r_outer), self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
 
         print('Propagating outer wake... ')
 
@@ -469,7 +473,7 @@ class _NonLinearPerts():
             self.linear_t, 
             self.p.show_teta_debug_plots,
             self.p.tf_fac,
-            self.edge_limit
+            self.t_edge_outer
         )
 
         timer_1 = time.perf_counter()
@@ -480,7 +484,8 @@ class _NonLinearPerts():
 
         timer_0 = time.perf_counter()
         
-        self.edge_limit = _t_vector(np.array(self.p.r_planet/5), self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
+        # inner edge limit for t. Needed to save computation time as we usually can not resolve the inner disc in observations. The r_cut_inner_fac can be changed to increase or decrease the computation in the inner disc, I still need to find a better way to do this
+        self.t_edge_inner = _t_vector(np.array(self.p.r_planet/self.p.r_cut_inner_fac), self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
 
         time_inner, eta_inner, solution_inner = _solve_burgers(
             self.eta_inner, 
@@ -495,7 +500,7 @@ class _NonLinearPerts():
             self.linear_t, 
             self.p.show_teta_debug_plots,
             self.p.tf_fac,
-            self.edge_limit
+            self.t_edge_inner
         )
 
         timer_1 = time.perf_counter()
@@ -518,8 +523,8 @@ class _NonLinearPerts():
 
         # parameters of run
         Rp      = self.p.r_planet
-        x_match_l = 2*self.p.scale_box_l
-        x_match_r = 2*self.p.scale_box_r
+        x_match_l = 2*self.p.scale_box_left
+        x_match_r = 2*self.p.scale_box_right
         l       = self.p.l
         cw      = -self.p.a_cw
         hr      = self.p.hr_planet
@@ -549,9 +554,11 @@ class _NonLinearPerts():
             pphi_grid = np.arctan2(y_grid, x_grid)
 
             tt = _t_vector(r_grid, Rp, hr, q, p, m_p, m_th)
-            plt.plot(eta_outer)
-            plt.plot(t0_outer + time_outer)
-            plt.show()
+            if False:
+                plt.plot(eta_outer)
+                plt.plot(t0_outer + time_outer)
+                plt.show()
+
             CChi = _get_chi_vector(
                 pphi_grid, 
                 r_grid,
