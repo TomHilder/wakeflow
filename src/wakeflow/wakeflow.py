@@ -64,7 +64,6 @@ class WakeflowModel():
         include_linear:      bool = True,
         save_perturbations:  bool = True,
         save_total:          bool = True,
-        mcmc:                bool = False,
         rot_interp:          bool = False,
         write_FITS:          bool = False,
         run_mcfost:          bool = False,
@@ -173,7 +172,6 @@ class WakeflowModel():
         box_warp              = True          # interpret y coordinate of linear regime as arc length, or truly vertical? True (default) for former
         use_box_IC            = False         # use linear regime in square box as initial condition for non-linear evolution
         use_old_vel           = False         # use old approximated formulas for u pert
-        mcmc                  = False         # use wakeflow inside mcmc chain, pass perturbations without saving them
         rot_interp            = False         # expand grid to avoid border effects when interpolatin on rotated grid
         lin_type              = "global"      # Choose the perturbations to use in the linear regime. Supported options: global, simulation, shearing_sheet
         nl_wake               = False         # Add non linear correction to wake structure
@@ -244,10 +242,7 @@ class WakeflowModel():
         for mass_p in planet_masses:
             params.m_planet = mass_p
             print(f"\n* Creating {mass_p} Mj model:")
-            if not params.mcmc:
-                self._run_wakeflow(params)
-            else:
-                v_r, v_phi, xgrid, ygrid = self._run_wakeflow(params)
+            self._run_wakeflow(params)
 
         # run mcfost for each model
         if params.run_mcfost == True:

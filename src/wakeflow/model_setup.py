@@ -109,9 +109,6 @@ class _Parameters(_Constants):
         self.v_max      = float(config["v_max"])
         self.n_v        = int  (config["n_v"])
 
-        # MCMC parameters
-        self.mcmc = bool (config["mcmc"])
-
         # physical parameters
         self.gamma  = float(config["adiabatic_index"])
         self.malpha = float(config["damping_malpha"])
@@ -247,10 +244,7 @@ class _Parameters(_Constants):
         if self.lin_type == "shearing_sheet":
             print("WARNING: The shearing sheet approximation may be invalid for a given choice of parameters. This may lead to incorrect results")
 
-        # Warning on mcmc fit with multiple planets
-        if self.m_planet_array != None and self.mcmc == True:
-            raise Exception("Multiple planet masses detected. Wakeflow is running in the MCMC mode, please provide only one planet mass.")
-# read in .yaml file, check keys correspond to parameters and return dictionary of parameters
+ # read in .yaml file, check keys correspond to parameters and return dictionary of parameters
 def _load_config_file(config_file: str, default_config_dict: dict = None) -> dict:
     """Reads .yaml parameter file into a dictionary so that Wakeflow may parse it.
     """
