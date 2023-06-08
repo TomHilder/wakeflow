@@ -22,8 +22,7 @@ class _WakeminerModel(WakeflowModel):
         assert self.model_params["make_midplane_plots"] == False
         assert self.model_params["save_total"]          == False
         assert self.model_params["save_perturbations"]  == False
-        assert self.model_params["m_planet_array"]      == None
-        
+        assert type(self.model_params["m_planet"])      is not list
         # run setup
         try:
             params = _run_setup(self.model_params)
