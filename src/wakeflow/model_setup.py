@@ -116,17 +116,23 @@ class _Parameters(_Constants):
         self.malpha = float(config["damping_malpha"])
 
         # numerical parameters
-        self.CFL             = float(config["CFL"])
-        self.smooth_box      = float(config["smooth_box"])
-        self.scale_box_l     = float(config["scale_box_l"])
-        self.scale_box_r     = float(config["scale_box_r"])
-        self.scale_box_ang_t = float(config["scale_box_ang_t"])
-        self.scale_box_ang_b = float(config["scale_box_ang_b"])
-        self.box_warp        = bool (config["box_warp"])
-        self.use_box_IC      = bool (config["use_box_IC"])
-        self.tf_fac          = float(config["tf_fac"])
-        self.use_old_vel     = bool (config["use_old_vel"])
-
+        self.CFL                  = float(config["CFL"])
+        self.smooth_box           = float(config["smooth_box"])
+        self.scale_box_left       = float(config["scale_box_left"])
+        self.scale_box_right      = float(config["scale_box_right"])
+        self.scale_box_ang_top    = float(config["scale_box_ang_top"])
+        self.scale_box_ang_bottom = float(config["scale_box_ang_bottom"])
+        self.box_warp             = bool (config["box_warp"])
+        self.use_box_IC           = bool (config["use_box_IC"])
+        self.tf_fac               = float(config["tf_fac"])
+        self.rot_interp           = bool (config["rot_interp"])
+        self.r_cut_inner_fac      = float(config["r_cut_inner_fac"])
+        
+        # Choice of physics
+        self.use_old_vel          = bool (config["use_old_vel"])
+        self.lin_type             = str  (config["lin_type"])
+        self.nl_wake              = bool (config["nl_wake"])
+        
         # get flaring at r_planet
         self.hr_planet = self.hr * (self.r_planet / self.r_ref) ** (0.5 - self.q)
 
@@ -206,15 +212,15 @@ class _Parameters(_Constants):
                 raise Exception("You must choose grid_type='cylindrical' to use smooth_box=True")
 
         # check linear box scale factor
-        if self.scale_box_l != 1 or self.scale_box_r != 1:
+        if self.scale_box_left != 1 or self.scale_box_right != 1:
             print("WARNING: Changing linear box scale factor can cause strange results.")
 
         # check linear box scale factor
-        if self.scale_box_l != self.scale_box_r:
+        if self.scale_box_left != self.scale_box_right:
             print("WARNING: Using a different linear box scale factor for left and right edge can cause strange results.")
 
         # check linear box scale factor
-        if self.scale_box_ang_t != self.scale_box_ang_b:
+        if self.scale_box_ang_top != self.scale_box_ang_bottom:
             print("WARNING: Using a different linear box scale factor for top and bottom edge can cause strange results.")
 
         # check CFL
@@ -238,8 +244,16 @@ class _Parameters(_Constants):
             print("WARNING: Choosing use_old_vel=True may cause a different velocity output.")
         print("Parameters Ok - continuing")
         return True
+            
+        # check linear perturbations input from user    
+        if self.lin_type != "shearing_sheet" and self.lin_type != "global" and self.lin_type != "simulation":
+            raise Exception("Invalid linear perturbation type. Choose either global or simulation or shearing_sheet)")
+            
+        # Warning on shearing sheet approximation
+        if self.lin_type == "shearing_sheet":
+            print("WARNING: The shearing sheet approximation may be invalid for a given choice of parameters. This may lead to incorrect results")
 
-# read in .yaml file, check keys correspond to parameters and return dictionary of parameters
+ # read in .yaml file, check keys correspond to parameters and return dictionary of parameters
 def _load_config_file(config_file: str, default_config_dict: dict = None) -> dict:
     """Reads .yaml parameter file into a dictionary so that Wakeflow may parse it.
     """

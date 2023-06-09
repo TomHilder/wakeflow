@@ -15,7 +15,7 @@ from scipy.interpolate      import griddata
 from copy                   import copy
 from tqdm                   import tqdm
 from .burgers               import _solve_burgers
-from .transformations       import _Eta, _t, _get_chi, _get_dens_vel, _plot_r_t, _t_vector, _get_chi_vector
+from .transformations       import _Eta, _Eta_vector, _t, _get_chi, _get_dens_vel, _plot_r_t, _t_vector, _get_chi_vector, _g, _Lambda_fu, _Lambda_fv
 
 if TYPE_CHECKING:
     from .model_setup       import _Parameters
@@ -72,6 +72,14 @@ class _NonLinearPerts():
         y_max = 30
         y_rest = y[(y > -y_max) & (y < y_max)]
 
+        # plot for debugging
+        if False:
+            plt.contourf(x[index_inner:index_outer], y_rest, lp.pert_rho[(y > -y_max) & (y < y_max),index_inner:index_outer], cmap="RdBu", vmin=-1, vmax=1, levels=100)
+            plt.show()
+            plt.contourf(x[index_inner:index_outer], y_rest, lp.pert_rho[(y > -y_max) & (y < y_max),index_inner:index_outer], cmap="RdBu", vmin=-1, vmax=1, levels=100)
+            plt.ylim(-2.0,2.0)
+            plt.show()
+            
         # restrict inner and outer IC
         profile_rest_outer = profile_outer[(y > -y_max) & (y < y_max)]
         profile_rest_inner = profile_inner[(y > -y_max) & (y < y_max)]
@@ -100,23 +108,37 @@ class _NonLinearPerts():
         eta_IC_inner = np.zeros(len(y_rest))
         t_IC_outer   = np.zeros(len(y_rest))
         t_IC_inner   = np.zeros(len(y_rest))
+        
+        eta_IC_outer = _Eta_vector(r_IC_outer, phi_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+        eta_IC_inner = _Eta_vector(r_IC_inner, phi_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
 
+        # t for outer and inner
+        t_IC_outer = _t_vector(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
+        t_IC_inner = _t_vector(r_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
+
+
+        """
         # perform transformation
         for i in range(len(y_rest)):
 
             # eta for outer and inner
-            eta_IC_outer[i] = _Eta(r_IC_outer[i], phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
-            eta_IC_inner[i] = _Eta(r_IC_inner[i], phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
+            eta_IC_outer[i] = _Eta(r_IC_outer[i], phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+            eta_IC_inner[i] = _Eta(r_IC_inner[i], phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
 
             # t for outer and inner
             t_IC_outer[i] = _t(r_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
             t_IC_inner[i] = _t(r_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
-
+        """
         # restrict eta range using eta_max
         self.eta_outer = eta_IC_outer[(eta_IC_outer > -eta_max) & (eta_IC_outer < eta_max)]
         self.eta_inner = eta_IC_inner[(eta_IC_inner > -eta_max) & (eta_IC_inner < eta_max)]
         self.profile_outer = profile_rest_outer[(eta_IC_outer > -eta_max) & (eta_IC_outer < eta_max)]
         self.profile_inner = profile_rest_inner[(eta_IC_inner > -eta_max) & (eta_IC_inner < eta_max)]
+
+        if False:
+            plt.plot(self.eta_outer, self.profile_outer)
+            plt.plot(self.eta_inner, self.profile_inner)
+            plt.show()
 
         # set t0
         self.t0_outer = t_IC_outer[0]
@@ -126,9 +148,9 @@ class _NonLinearPerts():
         if False:
             y_match = -np.sign(lp.x_box) * 0.5 * lp.x_box**2
             y_cut = y[(y - y_match > -eta_max) & (y - y_match < eta_max)]
-            self.profile = profile[(y - y_match > -eta_max) & (y - y_match < eta_max)]
+            self.profile = profile_outer[(y - y_match > -eta_max) & (y - y_match < eta_max)]
             self.eta = y_cut - y_match*np.ones(len(y_cut))
-            self.t0 = _t(self.p.r_planet + self.p.l * lp.x_box, self.p.r_planet, self.p.hr, self.p.q, self.p.p)
+            self.t0 = _t(self.p.r_planet + self.p.l * lp.x_box, self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
 
         # set eta_tilde for outer wake:
         for i in range(len(self.eta_outer)):
@@ -136,36 +158,37 @@ class _NonLinearPerts():
                 zero_outer = self.eta_outer[i]
             elif i!= (len(self.eta_outer) - 1) and self.profile_outer[i] * self.profile_outer[i + 1] < 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 0:
                 zero_outer = 0.5 * (self.eta_outer[i] + self.eta_outer[i + 1])
-        self.eta_tilde_outer = -zero_outer
+        self.eta_tilde_outer = zero_outer
 
         # set eta_tilde for inner wake:
         for i in range(len(self.eta_inner)):
-            if self.profile_inner[i] == 0 and self.eta_inner[i] > -10 and self.eta_inner[i] < 0:
+            if self.profile_inner[i] == 0 and self.eta_inner[i] > 0 and self.eta_inner[i] < 10:
                 zero_inner = self.eta_inner[i]
-            elif i!= (len(self.eta_inner) - 1) and self.profile_inner[i] * self.profile_inner[i + 1] < 0 and self.eta_inner[i] > -10 and self.eta_inner[i] < 0:
+            elif i!= (len(self.eta_inner) - 1) and self.profile_inner[i] * self.profile_inner[i + 1] < 0 and self.eta_inner[i] > 0 and self.eta_inner[i] < 10:
                 zero_inner = 0.5 * (self.eta_inner[i] + self.eta_inner[i + 1])
-        self.eta_tilde_inner = -zero_inner
+        self.eta_tilde_inner = zero_inner
 
         # set C for outer wake:
         deta_outer = self.eta_outer[1] - self.eta_outer[0]
-        profile0_outer = self.profile_outer[self.eta_outer < -self.eta_tilde_outer]
-        C0_outer = -np.trapz(profile0_outer, dx = deta_outer)
-        self.C_outer = (self.p.gamma + 1) * (self.p.m_planet / self.p.m_thermal) * C0_outer / 2**(3/4)
+        profile0_outer = self.profile_outer[self.eta_outer > self.eta_tilde_outer]
+        C0_outer = np.abs(np.trapz(profile0_outer, dx = deta_outer))
+        self.C_outer = (self.p.gamma + 1) * C0_outer / 2**(3/4) #* (self.p.m_planet / self.p.m_thermal)
 
         # set C for inner wake:
         deta_inner = self.eta_inner[1] - self.eta_inner[0]
-        profile0_inner = self.profile_inner[self.eta_inner < -self.eta_tilde_inner]
-        C0_inner = -np.trapz(profile0_inner, dx = deta_inner)
-        self.C_inner = (self.p.gamma + 1) * (self.p.m_planet / self.p.m_thermal) * C0_inner / 2**(3/4)
+        profile0_inner = self.profile_inner[self.eta_inner < self.eta_tilde_inner]
+        C0_inner = np.abs(np.trapz(profile0_inner, dx = deta_inner))
+        self.C_inner = (self.p.gamma + 1) * C0_inner / 2**(3/4) #* (self.p.m_planet / self.p.m_thermal)
 
-        #print('     Outer Wake:')
-        #print('         eta_tilde = ', self.eta_tilde_outer)
-        #print('         C0 = ', C0_outer)
-        #print('         t0 = ', self.t0_outer)
-        #print('     Inner Wake:')
-        #print('         eta_tilde = ', self.eta_tilde_inner)
-        #print('         C0 = ', C0_inner)
-        #print('         t0 = ', self.t0_inner)
+        if False:
+            print('     Outer Wake:')
+            print('         eta_tilde = ', self.eta_tilde_outer)
+            print('         C0 = ', C0_outer)
+            print('         t0 = ', self.t0_outer)
+            print('     Inner Wake:')
+            print('         eta_tilde = ', self.eta_tilde_inner)
+            print('         C0 = ', C0_inner)
+            print('         t0 = ', self.t0_inner)
 
         # ======================================
         # === put linear solution into t,eta ===
@@ -176,87 +199,87 @@ class _NonLinearPerts():
         beta_p = self.p.m_planet / self.p.m_thermal
         gamma  = self.p.gamma
 
-#        if self.p.show_teta_debug_plots:
-#
-#            index = index_outer
-#
-#            # run square box cut
-#            lp._cut_box_square()
-#
-#            # plot r, t
-#            _plot_r_t(self.p)
-#
-#            # Local Cartesian grid which the linear solution was calculated on, meshgrid version
-#            X, Y = np.meshgrid(lp.x_cut,lp.y_cut)
-#
-#            print("Y MIN MAX", np.min(Y),np.max(Y))
-#
-#            # grab positive x side of linear solution
-#            x_len = len(lp.x_cut) // 2
-#
-#            # restrict box to area considered
-#            X_rest = X[:,x_len:index]
-#            Y_rest = Y[:,x_len:index]
-#
-#            print("Y MIN MAX", np.min(Y_rest),np.max(Y_rest))
-#
-#            # Find chi for linear solution, only taking positive values of x
-#            # The "index" value also makes it so we do not go outside the linear box
-#            linear_profile = lp.cut_rho[:,x_len:index] / np.sqrt(np.abs(X_rest)) ###
-#            chi0_rho = linear_profile[:,-1]  * (gamma+1) * beta_p / 2**(3/4) 
-#
-#            # extract chi from velocity perturbations
-#            v_unit = (self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal))
-#            Rp     = self.p.r_planet
-#            cw     = -self.p.a_cw
-#            hr     = self.p.hr_planet
-#            q      = self.p.q
-#            gamma  = self.p.gamma
-#            csp    = self.p.c_s_planet
-#            p      = self.p.p
-#            l      = self.p.l
-#            linear_profile_v_r   = v_unit * (lp.cut_v_r[:,x_len:index]   / np.sqrt(np.abs(X_rest))) ###
-#            linear_profile_v_phi = v_unit * (lp.cut_v_phi[:,x_len:index] / np.sqrt(np.abs(X_rest))) ###
-#            R0  = np.sqrt((Rp + l*X_rest[:,-1])**2 + (l*Y_rest[:,-1])**2)
-#            Lfu = _Lambda_fu(R0, Rp, csp, hr, gamma, q, p)
-#            Lfv = _Lambda_fv(R0, Rp, csp, hr, gamma, q, p)
-#            chi0_v_r = linear_profile_v_r[:,-1] / (np.sign(R0 - Rp) * Lfu)
-#            chi0_v_phi = linear_profile_v_phi[:,-1] / (np.sign(R0 - Rp) * Lfv * (-cw))
-#
-#            # Find etas for the box using IC method
-#            linear_eta = Y_rest + np.sign(X_rest) * 0.5 * X_rest**2
-#
-#            # Find etas using proper transformations
-#            #hp = self.p.hr * self.p.r_planet
-#            hp = self.p.hr_planet * self.p.r_planet
-#            x_glob = 2 * hp * X_rest / 3.
-#            y_glob = 2 * hp * Y_rest / 3.
-#            r_glob = x_glob + self.p.r_planet
-#            phi_glob = y_glob / self.p.r_planet
-#            eta_lin = np.zeros(linear_profile.shape)
-#            t_lin = np.zeros(linear_profile.shape)
-#            for i in range(eta_lin.shape[0]):
-#                #print(str(i))
-#                for j in range(eta_lin.shape[1]):
-#                    eta_lin[i,j] = _Eta(r_glob[i,j], phi_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, -self.p.a_cw)
-#                    t_lin[i,j] = _t(r_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
-#
-#            # Plot Chi vs eta when using eta transformation used for IC cut out
-#
-#            #for i in range(0, len(linear_eta[0,:]), 10):
-#            #    plt.plot(linear_eta[:,i], linear_profile[:,i])
-#            #    plt.plot(eta_lin[:,i], linear_profile[:,i])
-#            #    plt.show()
-#
-#            plt.plot(eta_lin[:,-1], chi0_rho, label="chi rho")
-#            plt.plot(eta_lin[:,-1], chi0_v_r, label="chi vr")
-#            plt.plot(eta_lin[:,-1], chi0_v_phi, label="chi vphi")
-#            plt.legend(loc="lower left")
-#            plt.xlim(-10,10)
-#            plt.xlabel('$\eta$')
-#            plt.ylabel('$\chi$')
-#            plt.show()
-#
+        if False:
+
+            index = index_outer
+
+            # run square box cut
+            lp._cut_box_square()
+
+            # plot r, t
+            _plot_r_t(self.p)
+
+            # Local Cartesian grid which the linear solution was calculated on, meshgrid version
+            X, Y = np.meshgrid(lp.x_cut,lp.y_cut)
+
+            print("Y MIN MAX", np.min(Y),np.max(Y))
+
+            # grab positive x side of linear solution
+            x_len = len(lp.x_cut) // 2
+
+            # restrict box to area considered
+            X_rest = X[:,x_len:index]
+            Y_rest = Y[:,x_len:index]
+
+            print("Y MIN MAX", np.min(Y_rest),np.max(Y_rest))
+
+            # Find chi for linear solution, only taking positive values of x
+            # The "index" value also makes it so we do not go outside the linear box
+            linear_profile = lp.cut_rho[:,x_len:index] / np.sqrt(np.abs(X_rest)) ###
+            chi0_rho = linear_profile[:,-1]  * (gamma+1) * beta_p / 2**(3/4) 
+
+            # extract chi from velocity perturbations
+            v_unit = (self.p.c_s_planet*(self.p.m_planet/self.p.m_thermal))
+            Rp     = self.p.r_planet
+            cw     = -self.p.a_cw
+            hr     = self.p.hr_planet
+            q      = self.p.q
+            gamma  = self.p.gamma
+            csp    = self.p.c_s_planet
+            p      = self.p.p
+            l      = self.p.l
+            linear_profile_v_r   = v_unit * (lp.cut_v_r[:,x_len:index]   / np.sqrt(np.abs(X_rest))) ###
+            linear_profile_v_phi = v_unit * (lp.cut_v_phi[:,x_len:index] / np.sqrt(np.abs(X_rest))) ###
+            R0  = np.sqrt((Rp + l*X_rest[:,-1])**2 + (l*Y_rest[:,-1])**2)
+            Lfu = _Lambda_fu(R0, Rp, csp, hr, gamma, q, p)
+            Lfv = _Lambda_fv(R0, Rp, csp, hr, gamma, q, p)
+            chi0_v_r = linear_profile_v_r[:,-1] / (np.sign(R0 - Rp) * Lfu)
+            chi0_v_phi = linear_profile_v_phi[:,-1] / (np.sign(R0 - Rp) * Lfv * (-cw))
+
+            # Find etas for the box using IC method
+            linear_eta = Y_rest + np.sign(X_rest) * 0.5 * X_rest**2
+
+            # Find etas using proper transformations
+            #hp = self.p.hr * self.p.r_planet
+            hp = self.p.hr_planet * self.p.r_planet
+            x_glob = 2 * hp * X_rest / 3.
+            y_glob = 2 * hp * Y_rest / 3.
+            r_glob = x_glob + self.p.r_planet
+            phi_glob = y_glob / self.p.r_planet
+            eta_lin = np.zeros(linear_profile.shape)
+            t_lin = np.zeros(linear_profile.shape)
+            for i in range(eta_lin.shape[0]):
+                #print(str(i))
+                for j in range(eta_lin.shape[1]):
+                    eta_lin[i,j] = _Eta(r_glob[i,j], phi_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -self.p.a_cw, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+                    t_lin[i,j] = _t(r_glob[i,j], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
+
+            # Plot Chi vs eta when using eta transformation used for IC cut out
+
+            #for i in range(0, len(linear_eta[0,:]), 10):
+            #    plt.plot(linear_eta[:,i], linear_profile[:,i])
+            #    plt.plot(eta_lin[:,i], linear_profile[:,i])
+            #    plt.show()
+
+            plt.plot(eta_lin[:,-1], chi0_rho, label="chi rho")
+            plt.plot(eta_lin[:,-1], chi0_v_r, label="chi vr")
+            plt.plot(eta_lin[:,-1], chi0_v_phi, label="chi vphi")
+            plt.legend(loc="lower left")
+            plt.xlim(-10,10)
+            plt.xlabel(r'$\eta$')
+            plt.ylabel(r'$\chi$')
+            plt.show()
+
 #            if True: # save results to file for plotting
 #
 #                name = "sim_further"
@@ -265,58 +288,58 @@ class _NonLinearPerts():
 #                np.save(f"{name}_eta.npy", eta_save)
 #                np.save(f"{name}_chi.npy", chi_save)
 #
-#            plt.plot(linear_eta[:,-1], linear_profile[:,-1], label="Approximate $\eta$ transformation")
-#            plt.plot(eta_lin[:,-1], linear_profile[:,-1], label="Full $\eta$ transformation")
-#            plt.plot(self.eta, self.profile, ls='--', label="Actual IC used")
-#            plt.legend(loc="lower left")
-#            plt.xlim(-10,10)
-#            plt.xlabel('$\eta$')
-#            plt.ylabel('$\chi$')
-#            plt.show()
-#
-#            plt.scatter(t_lin, eta_lin)
-#            plt.show()
-#
-#            #eta_lin = linear_eta    ### TURN THIS ON AND OFF TO CHANGE ETA TRANSFORMATION --> COMMENT OUT TO USE INTEGRAL TRANSFORM
-#
-#            # get grid regular in (t,eta) to interpolate onto
-#            dt_lin = np.diff(np.sort(t_lin.flatten())).mean()       # find time step interval to use on regular grid from t_lin
-#                                                                    # takes minimum separation between points in original t_lin grid
-#            t_lin_reg = np.arange(0, self.t0, dt_lin)
-#            eta_lin_reg = copy(self.eta)
-#            T_lin_reg, ETA_lin_reg = np.meshgrid(t_lin_reg, eta_lin_reg)
-#
-#            # interpolate solution over irregular grid onto regular grid
-#            print("Interpolating Linear solution into (t, eta) space")
-#            lin_solution = griddata(
-#                (t_lin.flatten(), eta_lin.flatten()), 
-#                linear_profile.flatten(),
-#                (T_lin_reg, ETA_lin_reg),
-#                method='linear'
-#            )
-#
-#            #plt.plot(linear_eta[:,-1], linear_profile[:,-1])       # approx
-#            plt.plot(eta_lin[:,-1], linear_profile[:,-1])           # integral trans
-#            plt.plot(eta_lin_reg, lin_solution[:,-1])               # interpolated integral trans
-#            #plt.plot(self.eta, self.profile, c='k')                # IC
-#            plt.show()
-#
-#            # plotting (for debugging)
-#            _, ax = plt.subplots()
-#            myplot = ax.contourf(t_lin_reg, eta_lin_reg, np.nan_to_num(lin_solution), levels=np.arange(-4,4,0.1), cmap='RdBu', extend='both')
-#            plt.colorbar(myplot)
-#            plt.show()
-#
-#            # stick this into the solutions array, update later code so that solutions array builds on this one
-#            self.linear_solution = np.nan_to_num(lin_solution)
-#            self.linear_t = t_lin_reg
-#
-#        else:
-            
-        self.linear_solution = 0
-        self.linear_t = 0
+            plt.plot(linear_eta[:,-1], linear_profile[:,-1], label=r"Approximate $\eta$ transformation")
+            plt.plot(eta_lin[:,-1], linear_profile[:,-1], label=r"Full $\eta$ transformation")
+            #plt.plot(self.eta, self.profile, ls='--', label="Actual IC used")
+            plt.legend(loc="lower left")
+            plt.xlim(-10,10)
+            plt.xlabel(r'$\eta$')
+            plt.ylabel(r'$\chi$')
+            plt.show()
 
-    # alternative IC extraction using edge of box
+            plt.scatter(t_lin, eta_lin)
+            plt.show()
+
+            #eta_lin = linear_eta    ### TURN THIS ON AND OFF TO CHANGE ETA TRANSFORMATION --> COMMENT OUT TO USE INTEGRAL TRANSFORM
+
+            # get grid regular in (t,eta) to interpolate onto
+            dt_lin = np.diff(np.sort(t_lin.flatten())).mean()       # find time step interval to use on regular grid from t_lin
+                                                                    # takes minimum separation between points in original t_lin grid
+            t_lin_reg = np.arange(0, self.t0, dt_lin)
+            eta_lin_reg = copy(self.eta)
+            T_lin_reg, ETA_lin_reg = np.meshgrid(t_lin_reg, eta_lin_reg)
+
+            # interpolate solution over irregular grid onto regular grid
+            print("Interpolating Linear solution into (t, eta) space")
+            lin_solution = griddata(
+                (t_lin.flatten(), eta_lin.flatten()), 
+                linear_profile.flatten(),
+                (T_lin_reg, ETA_lin_reg),
+                method='linear'
+            )
+
+            #plt.plot(linear_eta[:,-1], linear_profile[:,-1])       # approx
+            plt.plot(eta_lin[:,-1], linear_profile[:,-1])           # integral trans
+            plt.plot(eta_lin_reg, lin_solution[:,-1])               # interpolated integral trans
+            #plt.plot(self.eta, self.profile, c='k')                # IC
+            plt.show()
+
+            # plotting (for debugging)
+            _, ax = plt.subplots()
+            myplot = ax.contourf(t_lin_reg, eta_lin_reg, np.nan_to_num(lin_solution), levels=np.arange(-4,4,0.1), cmap='RdBu', extend='both')
+            plt.colorbar(myplot)
+            plt.show()
+
+            # stick this into the solutions array, update later code so that solutions array builds on this one
+            self.linear_solution = np.nan_to_num(lin_solution)
+            self.linear_t = t_lin_reg
+
+        else:
+            
+            self.linear_solution = 0
+            self.linear_t = 0
+
+    # alternative IC extraction using an annulus instead of the linear square box
     def _extract_ICs_ann(self, LinearPerts: '_LinearPerts') -> None:
         """Alternate initial condition extraction where the IC is read from the edges of the box as included in the final
         solution. Usually, far more y-extent of the linear regime is used than this. Using this method will invalidate the
@@ -335,12 +358,9 @@ class _NonLinearPerts():
         r_IC_outer   = lp.r_ann[-1]
         r_IC_inner   = lp.r_ann[ 0]
 
-        # edge of box in local coords
-        x_box_outer = (r_IC_outer - self.p.r_planet) / self.p.l
-        x_box_inner = (r_IC_inner - self.p.r_planet) / self.p.l
-
-        self.profile_outer = (lp.pert_rho_ann[:,-1] / beta_p) / np.sqrt(np.abs(x_box_outer))
-        self.profile_inner = (lp.pert_rho_ann[:, 0] / beta_p) / np.sqrt(np.abs(x_box_inner))
+        #Evaluate Chi profile using global transformation
+        self.profile_outer = (lp.pert_rho_ann[:,-1] / beta_p) * (_g(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p) * (self.p.gamma + 1) / 2)
+        self.profile_inner = (lp.pert_rho_ann[:, 0] / beta_p) * (_g(r_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p) * (self.p.gamma + 1) / 2)
 
         if False:
          plt.plot(phi_IC_outer, self.profile_outer, label="outer")
@@ -349,18 +369,35 @@ class _NonLinearPerts():
          plt.show()
 
         # find t points
-        t_IC_outer = _t(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
-        t_IC_inner = _t(r_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p)
+        t_IC_outer = _t(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
+        t_IC_inner = _t(r_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
 
         # initialise arrays for corresponding eta points
         self.eta_outer = np.zeros(len(phi_IC_outer))
         self.eta_inner = np.zeros(len(phi_IC_outer))
 
         # perform transformation
-        for i in range(len(phi_IC_outer)):
-            self.eta_outer[i] = _Eta(r_IC_outer, phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
-            self.eta_inner[i] = _Eta(r_IC_inner, phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, -1)
+        self.eta_outer = _Eta_vector(r_IC_outer, phi_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+        self.eta_inner = _Eta_vector(r_IC_inner, phi_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+        
+        #Sorting eta and profile in order to have eta in ascending order
+        self.eta_outer = self.eta_outer[:-1]
+        idx_srt = np.argsort(self.eta_outer)
+        self.eta_outer = self.eta_outer[idx_srt]
+        self.profile_outer = self.profile_outer[idx_srt]
 
+        #Sorting eta and profile in order to have eta in ascending order
+        self.eta_inner = self.eta_inner[:-1]
+        idx_srt = np.argsort(self.eta_inner)
+        self.eta_inner = self.eta_inner[idx_srt]
+        self.profile_inner = self.profile_inner[idx_srt]
+        '''
+        for i in range(len(phi_IC_outer)):
+            self.eta_outer[i] = _Eta(r_IC_outer, phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+            self.eta_inner[i] = _Eta(r_IC_inner, phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+        '''
+        if False:
+            plt.plot(self.eta_outer,self.profile_outer)
         # set t0
         self.t0_outer = t_IC_outer
         self.t0_inner = t_IC_inner
@@ -371,36 +408,38 @@ class _NonLinearPerts():
                 zero_outer = self.eta_outer[i]
             elif i!= (len(self.eta_outer) - 1) and self.profile_outer[i] * self.profile_outer[i + 1] < 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 0:
                 zero_outer = 0.5 * (self.eta_outer[i] + self.eta_outer[i + 1])
-        self.eta_tilde_outer = -zero_outer
+        self.eta_tilde_outer = zero_outer
 
+        if False:
+            plt.plot(self.eta_inner,self.profile_inner)
         # set eta_tilde for inner wake:
         for i in range(len(self.eta_inner)):
-            if self.profile_inner[i] == 0 and self.eta_inner[i] > -10 and self.eta_inner[i] < 0:
+            if self.profile_inner[i] == 0 and self.eta_inner[i] > 0 and self.eta_inner[i] < 10:
                 zero_inner = self.eta_inner[i]
-            elif i!= (len(self.eta_inner) - 1) and self.profile_inner[i] * self.profile_inner[i + 1] < 0 and self.eta_inner[i] > -10 and self.eta_inner[i] < 0:
+            elif i!= (len(self.eta_inner) - 1) and self.profile_inner[i] * self.profile_inner[i + 1] < 0 and self.eta_inner[i] > 0 and self.eta_inner[i] < 10:
                 zero_inner = 0.5 * (self.eta_inner[i] + self.eta_inner[i + 1])
-        self.eta_tilde_inner = -zero_inner
+        self.eta_tilde_inner = zero_inner
 
         # set C for outer wake:
         deta_outer = self.eta_outer[1] - self.eta_outer[0]
-        profile0_outer = self.profile_outer[self.eta_outer < -self.eta_tilde_outer]
-        C0_outer = -np.trapz(profile0_outer, dx = deta_outer)
-        self.C_outer = (self.p.gamma + 1) * (self.p.m_planet / self.p.m_thermal) * C0_outer / 2**(3/4)
+        profile0_outer = self.profile_outer[self.eta_outer > self.eta_tilde_outer]
+        C0_outer = np.abs(np.trapz(profile0_outer, dx = deta_outer))
+        self.C_outer =  C0_outer 
 
         # set C for inner wake:
         deta_inner = self.eta_inner[1] - self.eta_inner[0]
-        profile0_inner = self.profile_inner[self.eta_inner < -self.eta_tilde_inner]
-        C0_inner = -np.trapz(profile0_inner, dx = deta_inner)
-        self.C_inner = (self.p.gamma + 1) * (self.p.m_planet / self.p.m_thermal) * C0_inner / 2**(3/4)
-
-        #print('     Outer Wake:')
-        #print('         eta_tilde = ', self.eta_tilde_outer)
-        #print('         C0 = ', C0_outer)
-        #print('         t0 = ', self.t0_outer)
-        #print('     Inner Wake:')
-        #print('         eta_tilde = ', self.eta_tilde_inner)
-        #print('         C0 = ', C0_inner)
-        #print('         t0 = ', self.t0_inner)
+        profile0_inner = self.profile_inner[self.eta_inner < self.eta_tilde_inner]
+        C0_inner = np.abs(np.trapz(profile0_inner, dx = deta_inner))
+        self.C_inner = C0_inner
+        if False:
+            print('     Outer Wake:')
+            print('         eta_tilde = ', self.eta_tilde_outer)
+            print('         C0 = ', C0_outer)
+            print('         t0 = ', self.t0_outer)
+            print('     Inner Wake:')
+            print('         eta_tilde = ', self.eta_tilde_inner)
+            print('         C0 = ', C0_inner)
+            print('         t0 = ', self.t0_inner)
 
         # hard to explain, but they're not needed so set to zero
         self.linear_solution = 0
@@ -413,6 +452,9 @@ class _NonLinearPerts():
         """
 
         beta_p = self.p.m_planet / self.p.m_thermal
+
+        # outer edge limit for t. Needed to save computation time in case the disc parameters prevents the wake reaching the asymptotic limit before hitting the outer edge of the disc
+        self.t_edge_outer = _t_vector(np.array(self.p.r_outer), self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
 
         print('Propagating outer wake... ')
 
@@ -431,6 +473,7 @@ class _NonLinearPerts():
             self.linear_t, 
             self.p.show_teta_debug_plots,
             self.p.tf_fac,
+            self.t_edge_outer
         )
 
         timer_1 = time.perf_counter()
@@ -440,6 +483,9 @@ class _NonLinearPerts():
         print('Propagating inner wake... ')
 
         timer_0 = time.perf_counter()
+        
+        # inner edge limit for t. Needed to save computation time as we usually can not resolve the inner disc in observations. The r_cut_inner_fac can be changed to increase or decrease the computation in the inner disc, I still need to find a better way to do this
+        self.t_edge_inner = _t_vector(np.array(self.p.r_planet/self.p.r_cut_inner_fac), self.p.r_planet, self.p.hr, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
 
         time_inner, eta_inner, solution_inner = _solve_burgers(
             self.eta_inner, 
@@ -453,7 +499,8 @@ class _NonLinearPerts():
             self.linear_solution, 
             self.linear_t, 
             self.p.show_teta_debug_plots,
-            self.p.tf_fac
+            self.p.tf_fac,
+            self.t_edge_inner
         )
 
         timer_1 = time.perf_counter()
@@ -463,6 +510,8 @@ class _NonLinearPerts():
         # final time of solutions before N-wave behaviour
         tf_outer = time_outer[-1]
         tf_inner = time_inner[-1]
+
+       
 
         # needed constants from solutions, inner and outer
         eta_tilde_outer = self.eta_tilde_outer
@@ -474,14 +523,17 @@ class _NonLinearPerts():
 
         # parameters of run
         Rp      = self.p.r_planet
-        x_match_l = 2*self.p.scale_box_l
-        x_match_r = 2*self.p.scale_box_r
+        x_match_l = 2*self.p.scale_box_left
+        x_match_r = 2*self.p.scale_box_right
         l       = self.p.l
         cw      = -self.p.a_cw
         hr      = self.p.hr_planet
         q       = self.p.q
         csp     = self.p.c_s_planet
         p       = self.p.p
+        m_p     = self.p.m_planet
+        m_th    = self.p.m_thermal
+        nl_wake = self.p.nl_wake
 
         # physical parameters
         gamma = self.p.gamma
@@ -501,7 +553,11 @@ class _NonLinearPerts():
             r_grid = np.sqrt(x_grid**2 + y_grid**2)
             pphi_grid = np.arctan2(y_grid, x_grid) - self.p.phi_planet
 
-            tt = _t_vector(r_grid, Rp, hr, q, p)
+            tt = _t_vector(r_grid, Rp, hr, q, p, m_p, m_th)
+            if False:
+                plt.plot(eta_outer)
+                plt.plot(t0_outer + time_outer)
+                plt.show()
 
             CChi = _get_chi_vector(
                 pphi_grid, 
@@ -529,6 +585,9 @@ class _NonLinearPerts():
                 hr, 
                 q, 
                 p,
+                m_p,
+                m_th,
+                nl_wake
             )
 
             # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
@@ -542,7 +601,9 @@ class _NonLinearPerts():
                 hr, 
                 q, 
                 p,
-                self.p.use_old_vel
+                self.p.use_old_vel,
+                self.p.m_planet,
+                self.p.m_thermal
             )
 
         # if using a cylindrical grid
@@ -552,7 +613,7 @@ class _NonLinearPerts():
 
             r_grid, pphi_grid = np.meshgrid(r, phi)
 
-            tt = _t_vector(r_grid, Rp, hr, q, p)
+            tt = _t_vector(r_grid, Rp, hr, q, p, m_p, m_th)
 
             Chi = _get_chi_vector(
                 pphi_grid, 
@@ -579,7 +640,10 @@ class _NonLinearPerts():
                 cw, 
                 hr, 
                 q, 
-                p
+                p,
+                m_p,
+                m_th, 
+                nl_wake
             )
 
             # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
@@ -593,7 +657,9 @@ class _NonLinearPerts():
                 hr, 
                 q, 
                 p,
-                self.p.use_old_vel
+                self.p.use_old_vel,
+                self.p.m_planet,
+                self.p.m_thermal
             )
         
         timer_1 = time.perf_counter()

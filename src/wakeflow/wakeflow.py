@@ -12,6 +12,7 @@ from .grid                import _Grid
 from .linear_perts        import _LinearPerts
 from .non_linear_perts    import _NonLinearPerts
 #from phantom_interface   import PhantomDump
+from typing import Optional
 
 # class for use by the user to interact with Wakeflow
 class WakeflowModel():
@@ -66,6 +67,7 @@ class WakeflowModel():
         include_linear:      bool = True,
         save_perturbations:  bool = True,
         save_total:          bool = True,
+        rot_interp:          bool = False,
         write_FITS:          bool = False,
         run_mcfost:          bool = False,
         inclination:        float = -225,
@@ -141,6 +143,8 @@ class WakeflowModel():
             Save the perturbations?
         save_total : bool
             Save the totals (perturbations + background disk)?
+        rot_interp : bool
+            Extend grid by a factor sqrt(2) to account for interpolation on corners over rotated grid (working only for cartesian)
         write_FITS : bool
             Generate a .FITS file to run in MCFOST? Requires "mcfost" grid type.
         run_mcfost : bool
@@ -167,15 +171,19 @@ class WakeflowModel():
         damping_malpha        = 0.0           # artificial damping NOT IMPLEMENTED
         smooth_box            = False         # whether to smooth over the edge of the linear box
         CFL                   = 0.5           # Courant stability factor (require <0.5)
-        scale_box_l           = 1.0           # linear box length scale factor in radial direction (left)
-        scale_box_r           = 1.0           # linear box length scale factor in radial direction (right)
-        scale_box_ang_t       = 1.0           # linear box length scale factor in angular direction (top)
-        scale_box_ang_b       = 1.0           # linear box length scale factor in angular direction (bottom)
+        scale_box_left        = 1.0           # linear box length scale factor in radial direction (left)
+        scale_box_right       = 1.0           # linear box length scale factor in radial direction (right)
+        scale_box_ang_top     = 1.0           # linear box length scale factor in angular direction (top)
+        scale_box_ang_bottom  = 1.0           # linear box length scale factor in angular direction (bottom)
         tf_fac                = 1.0           # scale factor for t coordinate where self-similar solution is used
         show_teta_debug_plots = False         # show (t,eta,chi) space developer plots
         box_warp              = True          # interpret y coordinate of linear regime as arc length, or truly vertical? True (default) for former
-        use_box_IC            = False         # use only part of linear regime in box as initial condition for non-linear evolution
+        use_box_IC            = False         # use linear regime in square box as initial condition for non-linear evolution
         use_old_vel           = False         # use old approximated formulas for u pert
+        rot_interp            = False         # expand grid to avoid border effects when interpolatin on rotated grid
+        lin_type              = "global"      # Choose the perturbations to use in the linear regime. Supported options: global, simulation, shearing_sheet
+        nl_wake               = False         # Add non linear correction to wake structure
+        r_cut_inner_fac       = 2             # Cut numerical solution at r=r_planet/r_cut_in_fac
 
         # generate dictionary for model parameters by grabbing all local variables
         self.model_params = locals()
@@ -212,7 +220,7 @@ class WakeflowModel():
         print(f"Model configuration read from file: {param_file}")
 
     # generate the model using the configuration specified by the user
-    def run(self, overwrite: bool = False) -> None:
+    def run(self, overwrite: bool = False) -> Optional[float]:
         """
         Generate results for model, requires user to have called either configure or configure_from_file first.
 
@@ -261,7 +269,7 @@ class WakeflowModel():
 
     # internal method that is called by self.run to generate the results for a specific set of parameters
     # may be called more than once if the user has specified multiple planet masses
-    def _run_wakeflow(self, params: _Parameters) -> None:
+    def _run_wakeflow(self, params: _Parameters) -> Optional[float]:
         """
         Internal use method for generating the planet wake by calling other parts of Wakeflow.
 
@@ -291,7 +299,7 @@ class WakeflowModel():
 
             # extract linear perturbations from file
             lin_perts = _LinearPerts(params)
-            lin_perts._cut_box_annulus_segment()
+            lin_perts._cut_annulus_segment()
 
             # add the linear perturbations onto grid
             grid_lin_perts._add_linear_perturbations(lin_perts, grid_background.rho)
@@ -324,10 +332,11 @@ class WakeflowModel():
             # initialise non-linear perturbations
             nonlin_perts = _NonLinearPerts(params, grid_nonlin_perts)
 
-            # extract initial condition from the linear perturbations
-            nonlin_perts._extract_ICs(lin_perts)
+            # extract initial condition from the linear perturbations using annulus segment
+            nonlin_perts._extract_ICs_ann(lin_perts)
+            # extract initial condition from the linear perturbations using square box
             if params.use_box_IC:
-                nonlin_perts._extract_ICs_ann(lin_perts)
+                nonlin_perts._extract_ICs(lin_perts)
 
             # solve for non-linear perturbations
             nonlin_perts._get_non_linear_perts()

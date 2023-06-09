@@ -122,9 +122,20 @@ class _Grid:
         """
         
         # make grid from specified parameters
-        self.x    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_x)
-        self.y    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_y)
-        self.z_xy = np.linspace(0, self.height, self.p.n_z)
+        self.x, stepx_    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_x, retstep="True")
+        self.y, stepy_    = np.linspace(-self.p.r_outer, self.p.r_outer, self.p.n_y, retstep="True")
+        self.z_xy         = np.linspace(0, self.height, self.p.n_z)
+
+        # extending the grid by a sqrt(2) factor to avoid interpolations effects at the corner when rotating the grid to get the planet position, using the same spacing of the original grid
+        if self.p.rot_interp == True:
+            x_grid_ext_l = np.arange(-np.sqrt(2)*self.p.r_outer, -self.p.r_outer, stepx_)
+            y_grid_ext_l = np.arange(-np.sqrt(2)*self.p.r_outer, -self.p.r_outer, stepy_)
+            
+            x_grid_ext_r = -x_grid_ext_l[::-1]
+            y_grid_ext_r = -y_grid_ext_l[::-1]
+            
+            self.x = np.concatenate([x_grid_ext_l, self.x, x_grid_ext_r])
+            self.y = np.concatenate([y_grid_ext_l, self.y, y_grid_ext_r])
 
         self.X, self.Z_xy, self.Y  = np.meshgrid(self.x, self.z_xy, self.y, indexing='ij')
 
@@ -345,6 +356,29 @@ class _Grid:
             unperturbed density from Grid object where make_keplerian_disk has been used.
         """
 
+        # === Daniele code === #
+
+        # get linear solution           
+        lp = LinearPerts
+
+        # segment radial size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs.
+        r_box_size_left = lp.x_box_left
+        r_box_size_right = lp.x_box_right
+        # segment azimuthal size (in units of \pi). 
+        phi_box_size_top = lp.x_box_top / 2
+        phi_box_size_bottom = lp.x_box_bottom / 2
+        # segment radial extrema for masking
+        min_r = self.p.r_planet - r_box_size_left * self.p.l
+        max_r = self.p.r_planet + r_box_size_right * self.p.l
+        # segment azimuthal extrema for masking
+        max_phi =  phi_box_size_top * np.pi 
+        min_phi = -phi_box_size_bottom * np.pi 
+        
+        # === #
+
+        """
+        # === Tom code === #
+        
         # box size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs
         x_box_size_l = 2 * self.p.scale_box_l
         x_box_size_r = 2 * self.p.scale_box_r
@@ -369,6 +403,9 @@ class _Grid:
         else:
             max_phi = np.arctan2(max_y, max_r) #+ (np.pi / 2)
             min_phi = np.arctan2(min_y, max_r) #+ (np.pi / 2)
+            
+        # === #
+        """
 
         # find (phi, r) grid for either Cartesian or Cylindrical global grid
         if self.info["Type"] == "cartesian":
@@ -385,6 +422,17 @@ class _Grid:
         
         # new PHI grid to use (-pi,pi) instead of (0,2pi), where values are swapped in place, also ditch z coordinate
         # also construct a mask that contains 0 outside linear annulus and 1 inside
+        # === Daniele code === #
+  
+        R_new       = R[:,0,:]
+        PHI_new     = np.where(PHI[:,0,:]>np.pi, PHI[:,0,:] - 2*np.pi, PHI[:,0,:])
+        linear_mask = np.where(np.logical_and(np.logical_and(PHI_new>=min_phi,PHI_new<=max_phi), np.logical_and(R_new>min_r,R_new<max_r)), 1, 0)
+        
+        # === #
+
+        """
+        # === Tom code === #
+
         PHI_new     = np.zeros((PHI.shape[0],PHI.shape[2]))
         PHI_new_p   = np.zeros((PHI.shape[0],PHI.shape[2]))
         linear_mask = np.zeros((PHI.shape[0],PHI.shape[2]))
@@ -424,6 +472,9 @@ class _Grid:
                         linear_mask[i,j] = 1
                     else:
                         linear_mask[i,j] = 0
+        
+        # === #
+        """
 
         # get linear solution           
         lp = LinearPerts
@@ -443,6 +494,17 @@ class _Grid:
                 PHI_flat_new[i] = PHI_flat[i]
         
         # assemble interpolation functions over linear perts grid
+        # === Daniele code === #
+
+        interp_v_r   = RectBivariateSpline(lp.phi_ann, lp.r_ann, lp.pert_v_r_ann)
+        interp_v_phi = RectBivariateSpline(lp.phi_ann, lp.r_ann, lp.pert_v_phi_ann)
+        interp_rho   = RectBivariateSpline(lp.phi_ann, lp.r_ann, lp.pert_rho_ann)
+        
+        # === #
+
+        """
+        # === Tom code === #
+        
         interp_v_r   = LinearNDInterpolator(np.transpose([PHI_flat_new, R_flat]), lp.pert_v_r_ann  .flatten())
         interp_v_phi = LinearNDInterpolator(np.transpose([PHI_flat_new, R_flat]), lp.pert_v_phi_ann.flatten())
         interp_rho   = LinearNDInterpolator(np.transpose([PHI_flat_new, R_flat]), lp.pert_rho_ann  .flatten())
@@ -454,6 +516,10 @@ class _Grid:
         PHI_planet_new = np.zeros((PHI_planet.shape[0],PHI_planet.shape[1]))
         for i in range(PHI_planet.shape[0]):
             for j in range(PHI_planet.shape[1]):
+        
+        # === #
+        """
+
 
                 # transforming phi coordinate in place
                 if PHI_planet[i,j] > np.pi:
@@ -462,6 +528,18 @@ class _Grid:
                     PHI_planet_new[i,j] = PHI_planet[i,j]
         
         # evaluate interpolations on global grid
+        
+        # === Daniele code === #
+
+        global_lin_v_r   = interp_v_r.ev  (PHI_new, R_new)
+        global_lin_v_phi = interp_v_phi.ev(PHI_new, R_new)
+        global_lin_rho   = interp_rho.ev  (PHI_new, R_new)
+        
+        # === #
+
+        """
+        # === Tom code === #
+
         global_lin_v_r   = np.nan_to_num(interp_v_r  (PHI_planet_new, R_new))
         global_lin_v_phi = np.nan_to_num(interp_v_phi(PHI_planet_new, R_new))
         global_lin_rho   = np.nan_to_num(interp_rho  (PHI_planet_new, R_new))
@@ -471,6 +549,9 @@ class _Grid:
         #plt.title("first one")
         #plt.imshow(global_lin_v_r, cmap="RdBu", origin="lower")
         #plt.show()
+        
+        # === #
+        """
 
         # apply mask to only get solution in valid domain. This transpose business is confusing but works
         if self.p.grid_type == "cartesian":
@@ -648,7 +729,7 @@ class _Grid:
 #            return False
 #
 #        # merge data arrays
-#        self.rho = g.rho
+#        self.rho = g.rho 
 
     # create plots of a constant z slice, mostly used for debugging but also shows midplane results to user
     # if they set show_midplane_plots=True
@@ -699,6 +780,13 @@ class _Grid:
             plt.close("all")
             fig, ax = plt.subplots(dpi=150)
             c       = ax.pcolormesh(self.x, self.y, np.transpose(self.v_r[:,z_slice,:]), vmin=-vr_max, vmax=vr_max, cmap='RdBu', rasterized=True)
+            if False:
+                from .transformations import _phi_wake
+                r_wake = np.linspace(5, self.p.r_outer, 1000)
+                wake_ = _phi_wake(r_wake, self.p.r_planet, self.p.hr, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, True)
+                ax.plot(r_wake*np.cos(wake_), r_wake*np.sin(wake_), ls = '--', c='r', linewidth=0.5)
+                wake_ = _phi_wake(r_wake, self.p.r_planet, self.p.hr, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, False)
+                ax.plot(r_wake*np.cos(wake_), r_wake*np.sin(wake_), ls = '--', c='k', linewidth=0.5)
             ax.axis('scaled')
             ax.set_title(r"$\delta v_r$")
             if not dimless:
@@ -718,6 +806,13 @@ class _Grid:
             plt.close("all")
             fig, ax = plt.subplots(dpi=150)
             c       = ax.pcolormesh(self.x, self.y, np.transpose(self.v_phi[:,z_slice,:]), vmin=-vphi_max, vmax=vphi_max, cmap='RdBu', rasterized=True)
+            if False:
+                from .transformations import _phi_wake
+                r_wake = np.linspace(5, self.p.r_outer, 1000)
+                wake_ = _phi_wake(r_wake, self.p.r_planet, self.p.hr, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, True)
+                ax.plot(r_wake*np.cos(wake_), r_wake*np.sin(wake_), ls = '--', c='r', linewidth=0.5)
+                wake_ = _phi_wake(r_wake, self.p.r_planet, self.p.hr, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, False)
+                ax.plot(r_wake*np.cos(wake_), r_wake*np.sin(wake_), ls = '--', c='k', linewidth=0.5)
             ax.axis('scaled')
             ax.set_title(r"$\delta v_{\phi}$")
             if not dimless:
@@ -737,6 +832,13 @@ class _Grid:
             plt.close("all")
             fig, ax = plt.subplots(dpi=150)
             c       = ax.pcolormesh(self.x, self.y, np.transpose(self.rho[:,z_slice,:]), vmin=-rho_max, vmax=rho_max, cmap='RdBu', rasterized=True)
+            if False:
+                from .transformations import _phi_wake
+                r_wake = np.linspace(5, self.p.r_outer, 1000)
+                wake_ = _phi_wake(r_wake, self.p.r_planet, self.p.hr, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, True)
+                ax.plot(r_wake*np.cos(wake_), r_wake*np.sin(wake_), ls = '--', c='r', linewidth=0.5)
+                wake_ = _phi_wake(r_wake, self.p.r_planet, self.p.hr, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, False)
+                ax.plot(r_wake*np.cos(wake_), r_wake*np.sin(wake_), ls = '--', c='k', linewidth=0.5)
             ax.axis('scaled')
             ax.set_title(r"$\delta \rho \, / \rho$")
             if not dimless:
@@ -907,4 +1009,5 @@ class _Grid:
 
         print(f"{printed} saved to {savedir}")
 
-        
+
+
