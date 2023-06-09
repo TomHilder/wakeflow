@@ -9,12 +9,13 @@ import numpy                as np
 import matplotlib.pyplot    as plt
 import astropy.io.fits      as fits
 import shutil               as sh
-from scipy.interpolate  import RectBivariateSpline
+from scipy.interpolate  import RectBivariateSpline, LinearNDInterpolator
 from matplotlib.colors  import LogNorm
 from .mcfost_interface  import _read_mcfost_grid_data
 from .model_setup       import _Parameters
 from .linear_perts      import _LinearPerts
 from .non_linear_perts  import _NonLinearPerts
+from .utilities         import sigmoid_smoothing
 
 # NOTE: contents are intended mostly for internal use and should not really be accessed by users, but I have still provided
 # documentation in the case that advanced users want to mess around with any of it.
@@ -101,7 +102,7 @@ class _Grid:
         """
 
         # define disk height (not used for mcfost grid)
-        self.height = self.p.hr * (self.p.r_outer / self.p.r_ref)**(0.5 - self.p.q) * self.p.r_outer
+        self.height = self.p.z_max * self.p.hr * (self.p.r_outer / self.p.r_ref)**(0.5 - self.p.q) * self.p.r_outer
 
         # make cartesian grid
         if self.p.grid_type == "cartesian":
@@ -295,9 +296,14 @@ class _Grid:
         hrf = hr * (r / r_ref) ** (0.5 - q)
 
         # pressure and gravity height dependent correction
-        corr = np.sqrt(
-            (-1* (p + 2 * q) * hrf**2) + (1 - 2 * q) + (2 * q * r / np.sqrt(r**2 + z**2))
-        )
+        if r_c == 0: # no taper
+            corr = np.sqrt(
+                (-1* (p + 2 * q) * hrf**2) + (1 - 2 * q) + (2 * q * r / np.sqrt(r**2 + z**2))
+                )
+        else: #taper
+            corr = np.sqrt(
+                (-1* ((p + 2 * q) + (2 - p + 3/2 - q)* (r/r_c)**(2-p+3/2-q))* hrf**2) + (1 - 2 * q) + (2 * q * r / np.sqrt(r**2 + z**2))
+                )
 
         # perform correction
         self.v_phi *= corr
@@ -350,6 +356,8 @@ class _Grid:
             unperturbed density from Grid object where make_keplerian_disk has been used.
         """
 
+        # === Daniele code === #
+
         # get linear solution           
         lp = LinearPerts
 
@@ -365,6 +373,39 @@ class _Grid:
         # segment azimuthal extrema for masking
         max_phi =  phi_box_size_top * np.pi 
         min_phi = -phi_box_size_bottom * np.pi 
+        
+        # === #
+
+        """
+        # === Tom code === #
+        
+        # box size (in units of Hill radius), note for conversions that self.p.l = 1 Hill radius in cgs
+        x_box_size_l = 2 * self.p.scale_box_l
+        x_box_size_r = 2 * self.p.scale_box_r
+        y_box_size_t = 2 * self.p.scale_box_ang_t
+        y_box_size_b = 2 * self.p.scale_box_ang_b
+
+        min_r = self.p.r_planet - x_box_size_l * self.p.l
+        max_r = self.p.r_planet + x_box_size_r * self.p.l
+        
+        self.BOX_R_MIN = min_r
+        self.BOX_R_MAX = max_r
+        
+        # debug
+        #print(f"MIN R = {self.BOX_R_MIN}, MAX R = {self.BOX_R_MAX}")
+        
+        min_y = -y_box_size_b * self.p.l
+        max_y =  y_box_size_t * self.p.l
+
+        if self.p.grid_type == "cartesian":
+            max_phi = np.arctan2(max_y, max_r) + (np.pi / 2)
+            min_phi = np.arctan2(min_y, max_r) + (np.pi / 2)
+        else:
+            max_phi = np.arctan2(max_y, max_r) #+ (np.pi / 2)
+            min_phi = np.arctan2(min_y, max_r) #+ (np.pi / 2)
+            
+        # === #
+        """
 
         # find (phi, r) grid for either Cartesian or Cylindrical global grid
         if self.info["Type"] == "cartesian":
@@ -372,30 +413,163 @@ class _Grid:
             R, PHI = self.R_xy, self.PHI_xy
         else:
             R, PHI = self.R, self.PHI
-
+            
+        self.BOX_PHI_MIN = min_phi
+        self.BOX_PHI_MAX = max_phi
+        
+        # debug
+        #print(f"MIN PHI = {self.BOX_PHI_MIN}, MAX PHI = {self.BOX_PHI_MAX}")
+        
         # new PHI grid to use (-pi,pi) instead of (0,2pi), where values are swapped in place, also ditch z coordinate
         # also construct a mask that contains 0 outside linear annulus and 1 inside
+        # === Daniele code === #
+  
         R_new       = R[:,0,:]
         PHI_new     = np.where(PHI[:,0,:]>np.pi, PHI[:,0,:] - 2*np.pi, PHI[:,0,:])
         linear_mask = np.where(np.logical_and(np.logical_and(PHI_new>=min_phi,PHI_new<=max_phi), np.logical_and(R_new>min_r,R_new<max_r)), 1, 0)
+        
+        # === #
+
+        """
+        # === Tom code === #
+
+        PHI_new     = np.zeros((PHI.shape[0],PHI.shape[2]))
+        PHI_new_p   = np.zeros((PHI.shape[0],PHI.shape[2]))
+        linear_mask = np.zeros((PHI.shape[0],PHI.shape[2]))
+
+        R_new = R[:,0,:]
+
+        # don't modify the following if you want to keep your sanity
+        for i in range(PHI.shape[0]):
+            for j in range(PHI.shape[2]):
+
+                # transforming phi coordinate in place
+                if PHI[i,0,j] > np.pi:
+                    PHI_new[i,j] = PHI[i,0,j] - 2*np.pi
+                else:
+                    PHI_new[i,j] = PHI[i,0,j]
+                    
+                # transforming phi coordinate in place for mask
+                inter_phi = np.mod(PHI[i,0,j] - self.p.phi_planet, 2*np.pi)
+                if inter_phi > np.pi:
+                    PHI_new_p[i,j] = inter_phi - 2*np.pi
+                else:
+                    PHI_new_p[i,j] = inter_phi
+
+                # constructing mask
+                if self.p.grid_type == "cartesian":
+                    if np.mod(PHI_new[i,j] + self.p.phi_planet, 2*np.pi) > min_phi \
+                        and np.mod(PHI_new[i,j] + self.p.phi_planet, 2*np.pi) < max_phi \
+                        and R_new[i,j] > min_r and R_new[i,j] < max_r:
+                        linear_mask[i,j] = 1
+                    else:
+                        linear_mask[i,j] = 0
+                
+                else:
+                    if PHI_new_p[i,j] > min_phi \
+                        and PHI_new_p[i,j] < max_phi \
+                        and R_new[i,j] > min_r and R_new[i,j] < max_r:
+                        linear_mask[i,j] = 1
+                    else:
+                        linear_mask[i,j] = 0
+        
+        # === #
+        """
 
         # get linear solution           
         lp = LinearPerts
+        
+        # get flattened grids
+        PHI_flat = np.mod(lp.PHI_ann.flatten(), 2*np.pi)
+        R_flat   = lp.R_ann.flatten()
+        
+        # convert PHI_flat to (-pi, pi)
+        PHI_flat_new = np.zeros(PHI_flat.shape[0])
+        for i in range(PHI_flat.shape[0]):
 
+            # transforming phi coordinate in place
+            if PHI_flat[i] > np.pi:
+                PHI_flat_new[i] = PHI_flat[i] - 2*np.pi
+            else:
+                PHI_flat_new[i] = PHI_flat[i]
+        
         # assemble interpolation functions over linear perts grid
+        # === Daniele code === #
+
         interp_v_r   = RectBivariateSpline(lp.phi_ann, lp.r_ann, lp.pert_v_r_ann)
         interp_v_phi = RectBivariateSpline(lp.phi_ann, lp.r_ann, lp.pert_v_phi_ann)
         interp_rho   = RectBivariateSpline(lp.phi_ann, lp.r_ann, lp.pert_rho_ann)
+        
+        # === #
 
+        """
+        # === Tom code === #
+        
+        interp_v_r   = LinearNDInterpolator(np.transpose([PHI_flat_new, R_flat]), lp.pert_v_r_ann  .flatten())
+        interp_v_phi = LinearNDInterpolator(np.transpose([PHI_flat_new, R_flat]), lp.pert_v_phi_ann.flatten())
+        interp_rho   = LinearNDInterpolator(np.transpose([PHI_flat_new, R_flat]), lp.pert_rho_ann  .flatten())
+        
+        # get new phi accounting for planet
+        PHI_planet = np.mod(PHI_new - self.p.phi_planet, 2*np.pi)
+        
+        # convert PHI_planet to (-pi, pi)
+        PHI_planet_new = np.zeros((PHI_planet.shape[0],PHI_planet.shape[1]))
+        for i in range(PHI_planet.shape[0]):
+            for j in range(PHI_planet.shape[1]):
+        
+        # === #
+        """
+
+
+                # transforming phi coordinate in place
+                if PHI_planet[i,j] > np.pi:
+                    PHI_planet_new[i,j] = PHI_planet[i,j] - 2*np.pi
+                else:
+                    PHI_planet_new[i,j] = PHI_planet[i,j]
+        
         # evaluate interpolations on global grid
+        
+        # === Daniele code === #
+
         global_lin_v_r   = interp_v_r.ev  (PHI_new, R_new)
         global_lin_v_phi = interp_v_phi.ev(PHI_new, R_new)
         global_lin_rho   = interp_rho.ev  (PHI_new, R_new)
+        
+        # === #
 
-        # apply mask to only get solution in valid domain
-        global_lin_v_r   = global_lin_v_r   * linear_mask
-        global_lin_v_phi = global_lin_v_phi * linear_mask
-        global_lin_rho   = global_lin_rho   * linear_mask
+        """
+        # === Tom code === #
+
+        global_lin_v_r   = np.nan_to_num(interp_v_r  (PHI_planet_new, R_new))
+        global_lin_v_phi = np.nan_to_num(interp_v_phi(PHI_planet_new, R_new))
+        global_lin_rho   = np.nan_to_num(interp_rho  (PHI_planet_new, R_new))
+        
+        # for debugging phi_planet
+        #plt.figure(figsize=[6,6], dpi=150)
+        #plt.title("first one")
+        #plt.imshow(global_lin_v_r, cmap="RdBu", origin="lower")
+        #plt.show()
+        
+        # === #
+        """
+
+        # apply mask to only get solution in valid domain. This transpose business is confusing but works
+        if self.p.grid_type == "cartesian":
+            global_lin_v_r   = global_lin_v_r   * linear_mask.transpose()
+            global_lin_v_phi = global_lin_v_phi * linear_mask.transpose()
+            global_lin_rho   = global_lin_rho   * linear_mask.transpose()
+        else:
+            global_lin_v_r   = global_lin_v_r   * linear_mask
+            global_lin_v_phi = global_lin_v_phi * linear_mask
+            global_lin_rho   = global_lin_rho   * linear_mask
+        
+        # for debugging phi_planet
+        #plt.figure(figsize=[6,6], dpi=150)
+        #plt.imshow(linear_mask, origin="lower")
+        #plt.show()
+        #plt.figure(figsize=[6,6], dpi=150)
+        #plt.imshow(global_lin_v_r, cmap="RdBu", origin="lower")
+        #plt.show()
 
         # Add velocities, identical at all heights for now
         self.v_r   += global_lin_v_r  [:, np.newaxis, :]
@@ -500,9 +674,47 @@ class _Grid:
         self.v_r   += g.v_r
         self.v_phi += g.v_phi
         self.rho   += g.rho
+        
+        # add info about linear box (this is needed for smoothing)
+        try:
+            self.BOX_R_MIN   = g.BOX_R_MIN
+            self.BOX_R_MAX   = g.BOX_R_MAX
+            self.BOX_PHI_MIN = g.BOX_PHI_MIN
+            self.BOX_PHI_MAX = g.BOX_PHI_MAX
+        except:
+            pass
 
         # update info
         self.info["Contains"] += " AND " + g.info["Contains"]
+        
+    def _smooth_box(self, big_box_grid : "_Grid") -> None:
+        """Under development. Smooths the solution between the linear and non-linear regimes. Currently
+        only smooths in v_r (it would be easy to extend to the other components if you need it).
+        """
+        
+        if self.p.grid_type == "cartesian":
+            raise Exception("Cannot perform box smoothing on Cartesian grid.")
+
+        if type(big_box_grid) is not _Grid:
+            raise Exception("Must be given a Grid object. Smoothing failed.")
+        
+        s2 = big_box_grid
+        
+        # smoothing scale in AU
+        smoothing_scale = 3
+        
+        # middle points for smoothing
+        left_boundary_av  = (self.BOX_R_MIN + s2.BOX_R_MIN) / 2
+        right_boundary_av = (self.BOX_R_MAX + s2.BOX_R_MAX) / 2
+        
+        # smooth left boundary
+        smooth_left_boundary = sigmoid_smoothing(            self.v_r,   s2.v_r, self.R,  left_boundary_av, smoothing_scale)
+        
+        # smooth right boundary
+        smooth_both_boundary = sigmoid_smoothing(smooth_left_boundary, self.v_r, self.R, right_boundary_av, smoothing_scale)
+        
+        # update with smoothed version
+        self.v_r = smooth_both_boundary
 
 #    def merge_phantom_densities(self, grid_to_merge):
 #
@@ -580,7 +792,7 @@ class _Grid:
             if not dimless:
                 ax.set_xlabel(r"$x \, [\mathrm{AU}]$")
                 ax.set_ylabel(r"$y \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+                fig.colorbar(c, extend="both", label=r"$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$x$")
                 ax.set_ylabel(r"$y$")
@@ -606,7 +818,7 @@ class _Grid:
             if not dimless:
                 ax.set_xlabel(r"$x \, [\mathrm{AU}]$")
                 ax.set_ylabel(r"$y \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+                fig.colorbar(c, extend="both", label=r"$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$x$")
                 ax.set_ylabel(r"$y$")
@@ -652,7 +864,7 @@ class _Grid:
             if not dimless:
                 ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
                 ax.set_ylabel(r"$r \, \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+                fig.colorbar(c, extend="both", label=r"$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
                 ax.set_ylabel(r"$r$")
@@ -670,7 +882,7 @@ class _Grid:
             if not dimless:
                 ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
                 ax.set_ylabel(r"$r \, \, [\mathrm{AU}]$")
-                fig.colorbar(c, extend="both", label="$[\mathrm{km / s}]$")
+                fig.colorbar(c, extend="both", label=r"$[\mathrm{km / s}]$")
             else:
                 ax.set_xlabel(r"$\phi \, [\mathrm{rad}]$")
                 ax.set_ylabel(r"$r$")
@@ -786,9 +998,9 @@ class _Grid:
             np.save(f"{savedir}/Z.npy", self.Z_xy)
             np.save(f"{savedir}/Y.npy", self.Y)
         else:
-            np.save(f"{savedir}/{label}_PHI.npy", self.PHI)
-            np.save(f"{savedir}/{label}_Z.npy", self.Z)
-            np.save(f"{savedir}/{label}_R.npy", self.R)
+            np.save(f"{savedir}/PHI.npy", self.PHI)
+            np.save(f"{savedir}/Z.npy", self.Z)
+            np.save(f"{savedir}/R.npy", self.R)
 
         # save results:
         np.save(f"{savedir}/{label}_v_r.npy", self.v_r)

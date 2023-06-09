@@ -10,8 +10,10 @@ m_planet: 0.1                                # mass of embedded planet(s) in Jup
 r_outer: 500                                 # outer radius of disk in au
 r_inner: 100                                 # inner radius of disk in au (does not apply for Cartesian grid)
 r_planet: 250                                # orbital radius of embedded planet in au
+phi_planet: 0                                # azimuthal position of the planet in radians.
 r_ref: null                                  # reference radius R0 for H/R -- YOU MUST USE null INSTEAD OF None IN A YAML FILE
 r_c: 0                                       # critical radius for exponentially tapered density profile. set to 0 for power law
+z_max: 3                                     # vertical extent of disk in units of scale height at r_outer
 q: 0.25                                      # q index, defined as c_s \propto R^{-q}
 p: 1.0                                       # p index, defined as rho \propto R^{-p} or \propto R^{-p}*\exp{-R/r_c}^{2-p}
 hr: 0.10                                     # disc flaring H/R at R0
@@ -63,10 +65,11 @@ damping_malpha: 0.0                          # artificial damping
 
 #numerical:
 CFL: 0.5                                     # CFL safety factor for Godunov scheme that solves Burger's eqn
-scale_box_l: 1.0                               # scale factor for linear regime box side length (left side)      -- default is 1
-scale_box_r: 1.0                               # scale factor for linear regime box side length (right side)     -- default is 1
-scale_box_ang_b: 1.0                           # scale factor for linear regime box angular extent (bottom side) -- default is 1
-scale_box_ang_t: 1.0                           # scale factor for linear regime box angular extent (top side)    -- default is 1
+smooth_box: False                            # whether to smooth over the edge of the linear box (requires grid_type="cylindrical") -- default is False
+scale_box_l: 1.0                             # scale factor for linear regime box side length (left side)      -- default is 1
+scale_box_r: 1.0                             # scale factor for linear regime box side length (right side)     -- default is 1
+scale_box_ang_b: 1.0                         # scale factor for linear regime box angular extent (bottom side) -- default is 1
+scale_box_ang_t: 1.0                         # scale factor for linear regime box angular extent (top side)    -- default is 1
 tf_fac: 1.0                                  # factor to multiply the final time Burger's equation is evolved to -- default is 1
 
 # developer

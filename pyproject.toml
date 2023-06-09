@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wakeflow"
-version = "1.2.0"
+version = "1.4.0"
 description = "Generate and manipulate semi-analytic models of planet wakes"
 readme = "README.md"
 authors = [{ name = "Thomas Hilder", email = "tom.hilder.dlhp@gmail.com" }]
@@ -42,7 +42,7 @@ testpaths = [
 ]
 
 [tool.bumpver]
-current_version = "1.2.0"
+current_version = "1.4.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
