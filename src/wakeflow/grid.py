@@ -517,8 +517,7 @@ class _Grid:
         for i in range(PHI_planet.shape[0]):
             for j in range(PHI_planet.shape[1]):
         
-        # === #
-        """
+        
 
 
                 # transforming phi coordinate in place
@@ -526,6 +525,9 @@ class _Grid:
                     PHI_planet_new[i,j] = PHI_planet[i,j] - 2*np.pi
                 else:
                     PHI_planet_new[i,j] = PHI_planet[i,j]
+                    
+        # === #
+        """
         
         # evaluate interpolations on global grid
         
@@ -771,7 +773,7 @@ class _Grid:
         vphi_max = np.max(self.v_phi[:,z_slice,:]) * vphi_lim
         if cw == True:
             vphi_max = np.min(self.v_phi[:,z_slice,:]) * vphi_lim
-        rho_max  = np.percentile(self.rho[:,z_slice,:], 99.9)
+        rho_max  = np.percentile(self.rho[:,z_slice,:], 99)
 
         # Cartesian grid plots
         if self.info["Type"] == "cartesian":

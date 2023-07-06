@@ -357,14 +357,43 @@ class _NonLinearPerts():
         phi_IC_inner = lp.PHI_ann[:,0]
         r_IC_outer   = lp.r_ann[-1]
         r_IC_inner   = lp.r_ann[ 0]
-
+        
         #Evaluate Chi profile using global transformation
-        self.profile_outer = (lp.pert_rho_ann[:,-1] / beta_p) * (_g(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p) * (self.p.gamma + 1) / 2)
-        self.profile_inner = (lp.pert_rho_ann[:, 0] / beta_p) * (_g(r_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p) * (self.p.gamma + 1) / 2)
+        self.profile_outer_dens = (lp.pert_rho_ann[:,-1] / beta_p) * (_g(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p) * (self.p.gamma + 1) / 2)
+        self.profile_inner_dens = (lp.pert_rho_ann[:, 0] / beta_p) * (_g(r_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p) * (self.p.gamma + 1) / 2)
+        
+        def get_profile_from_u(u, r_IC):
+            # calculate g
+            g_fac = _g(
+                r_IC, 
+                self.p.r_planet, 
+                self.p.hr_planet, 
+                self.p.q, 
+                self.p.p
+            )
+            # redefine variable to be shorter name
+            gamma = self.p.gamma
+            # calculate sound speed at the edges of the box
+            c_s_edge = self.p.c_s_planet * (r_IC / self.p.r_planet)**-self.p.q
+            #c_s_edge = self.p.c_s_planet
+            # calculate brackets term
+            brackets = (1 + u * ((gamma - 1) / (2 * c_s_edge)))**(2 / (gamma - 1)) - 1
+            # calculate chi
+            chi = ((gamma + 1) / 2) * g_fac * brackets * (1 / beta_p)
+            #chi = - 0.5 * u * (g_fac * (gamma + 1)) / c_s_edge
+            return chi
+        
+        u_outer = lp.pert_v_r_ann[:,-1] / 1e-5
+        u_inner = lp.pert_v_r_ann[:, 0] / 1e-5
+        
+        self.profile_outer = -get_profile_from_u(u_outer, r_IC_outer)
+        self.profile_inner = get_profile_from_u(u_inner, r_IC_inner)
 
-        if False:
-         plt.plot(phi_IC_outer, self.profile_outer, label="outer")
-         plt.plot(phi_IC_inner, self.profile_inner, label="inner")
+        if True:
+         plt.plot(phi_IC_outer, self.profile_outer_dens, label="outer dens", c="C0")
+         plt.plot(phi_IC_inner, self.profile_inner_dens, label="inner dens", c="C1")
+         plt.plot(phi_IC_outer, self.profile_outer, label="outer vr", c="C0", ls="--")
+         plt.plot(phi_IC_inner, self.profile_inner, label="inner vr", c="C1", ls="--")
          plt.legend(loc="best")
          plt.show()
 
@@ -397,16 +426,29 @@ class _NonLinearPerts():
             self.eta_inner[i] = _Eta(r_IC_inner, phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
         '''
         if False:
-            plt.plot(self.eta_outer,self.profile_outer)
+            plt.plot(self.eta_outer,self.eta_outer*np.zeros(self.eta_outer.shape))
+            #plt.plot(self.eta_outer,self.profile_outer)
+            plt.scatter(self.eta_outer,self.profile_outer, s=1)
+            plt.show()
+            
+            plt.plot(
+                np.where(
+                    np.isclose(self.profile_outer, 0), 
+                    self.profile_outer,
+                    np.zeros(self.profile_outer.shape)
+                    )
+            )
+            plt.show()
+        
         # set t0
         self.t0_outer = t_IC_outer
         self.t0_inner = t_IC_inner
 
         # set eta_tilde for outer wake:
         for i in range(len(self.eta_outer)):
-            if self.profile_outer[i] == 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 0:
+            if self.profile_outer[i] == 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 10:
                 zero_outer = self.eta_outer[i]
-            elif i!= (len(self.eta_outer) - 1) and self.profile_outer[i] * self.profile_outer[i + 1] < 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 0:
+            elif i!= (len(self.eta_outer) - 1) and self.profile_outer[i] * self.profile_outer[i + 1] < 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 10:
                 zero_outer = 0.5 * (self.eta_outer[i] + self.eta_outer[i + 1])
         self.eta_tilde_outer = zero_outer
 
@@ -414,9 +456,9 @@ class _NonLinearPerts():
             plt.plot(self.eta_inner,self.profile_inner)
         # set eta_tilde for inner wake:
         for i in range(len(self.eta_inner)):
-            if self.profile_inner[i] == 0 and self.eta_inner[i] > 0 and self.eta_inner[i] < 10:
+            if self.profile_inner[i] == 0 and self.eta_inner[i] > -10 and self.eta_inner[i] < 10:
                 zero_inner = self.eta_inner[i]
-            elif i!= (len(self.eta_inner) - 1) and self.profile_inner[i] * self.profile_inner[i + 1] < 0 and self.eta_inner[i] > 0 and self.eta_inner[i] < 10:
+            elif i!= (len(self.eta_inner) - 1) and self.profile_inner[i] * self.profile_inner[i + 1] < 0 and self.eta_inner[i] > -10 and self.eta_inner[i] < 10:
                 zero_inner = 0.5 * (self.eta_inner[i] + self.eta_inner[i + 1])
         self.eta_tilde_inner = zero_inner
 
