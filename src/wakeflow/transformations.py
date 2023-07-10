@@ -424,7 +424,7 @@ def _get_chi_vector(
     return Chi
 
 # get the density and velocity perturbations at the grid point from chi
-def _get_dens_vel_old(rr, Chi, gamma, Rp, cw, csp, hr, q, p, use_old_vel, m_p, m_th):
+def _get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p, use_old_vel, m_p, m_th):
 
     g1  = _g(rr, Rp, hr, q, p)
     dnl = Chi * 2 / (g1 * (gamma + 1))*(m_p/m_th)     # Eq. (11) Bollati et al. 2021
@@ -443,12 +443,12 @@ def _get_dens_vel_old(rr, Chi, gamma, Rp, cw, csp, hr, q, p, use_old_vel, m_p, m
         c0 = csp * (rr / Rp)**(-q)
         
         # get perturbations
-        unl = np.sign(rr - Rp) * (2 * c0) / (gamma+1) * psi
-        vnl = (-cw) * c0 * unl / dOmega_r
+        unl = (m_p/m_th)*np.sign(rr - Rp) * (2 * c0) / (gamma+1) * psi
+        vnl = (m_p/m_th)*(-cw) * c0 * unl / dOmega_r
 
     return dnl, unl, vnl
 
-def _get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p, use_old_vel, m_p, m_th):
+def _get_dens_vel_from_vr(rr, Chi, gamma, Rp, cw, csp, hr, q, p, use_old_vel, m_p, m_th):
 
     # calculate g
     g1  = _g(rr, Rp, hr, q, p)
@@ -457,16 +457,63 @@ def _get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p, use_old_vel, m_p, m_th)
     c0 = csp * (rr / Rp)**(-q)
     
     # calculate unl from chi
-    unl = np.sign(rr - Rp) * (-2 * c0 / (gamma + 1)) * (Chi / g1) * (m_p/m_th)
+    unl = np.sign(rr - Rp) * (2 * c0 / (gamma + 1)) * (Chi / g1) * (m_p/m_th)
     
     # calculate dnl from chi
-    dnl = - (Chi * 2) / ((gamma + 1) * g1) * (m_p/m_th)
+    dnl = (Chi * 2) / ((gamma + 1) * g1) * (m_p/m_th)
     
     # calculate vnl from chi
     dOmega_r = np.abs(csp * Rp**-1 * hr**-1 * ((rr / Rp)**(-3 / 2) - 1)) * rr
     vnl = (-cw) * c0 * unl / dOmega_r
     
     return dnl, unl, vnl
+
+# get the intial condition for chi by mapping from sigma
+def get_profile_from_sigma(
+    sigma,
+    r_IC,
+    gamma,
+    r_planet, 
+    hr_planet, 
+    q_index, 
+    p_index,
+):
+    # calculate g
+    g_fac = _g(
+        r_IC, 
+        r_planet, 
+        hr_planet, 
+        q_index, 
+        p_index
+    )
+    # return chi
+    return sigma * g_fac * (gamma + 1) / 2
+    
+# get the intial condition for chi by mapping from u instead of density perturbation
+def get_profile_from_u(
+        u, 
+        r_IC, 
+        gamma, 
+        cs_planet, 
+        r_planet, 
+        hr_planet, 
+        q_index, 
+        p_index,
+    ):
+        # calculate g
+        g_fac = _g(
+            r_IC, 
+            r_planet, 
+            hr_planet, 
+            q_index, 
+            p_index
+        )
+        # calculate sound speed at the edges of the box
+        c_s_edge = cs_planet * (r_IC / r_planet)**-q_index
+        # calculate brackets term
+        brackets = (1 + u * ((gamma - 1) / (2 * c_s_edge)))**(2 / (gamma - 1)) - 1
+        # calculate chi
+        return ((gamma + 1) / 2) * g_fac * brackets
 
 # plot the t coordinate as a function of radius
 def _plot_r_t(params):

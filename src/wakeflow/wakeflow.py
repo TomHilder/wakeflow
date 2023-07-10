@@ -183,6 +183,7 @@ class WakeflowModel():
         rot_interp            = False         # expand grid to avoid border effects when interpolatin on rotated grid
         lin_type              = "global"      # Choose the perturbations to use in the linear regime. Supported options: global, simulation, shearing_sheet
         nl_wake               = False         # Add non linear correction to wake structure
+        vr_evolution          = False         # Use vr to take the initial value of chi instead of density perturbation (breaks solution)
         r_cut_inner_fac       = 2             # Cut numerical solution at r=r_planet/r_cut_in_fac
 
         # generate dictionary for model parameters by grabbing all local variables

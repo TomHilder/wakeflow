@@ -129,9 +129,10 @@ class _Parameters(_Constants):
         self.r_cut_inner_fac      = float(config["r_cut_inner_fac"])
         
         # Choice of physics
-        self.use_old_vel          = bool (config["use_old_vel"])
-        self.lin_type             = str  (config["lin_type"])
-        self.nl_wake              = bool (config["nl_wake"])
+        self.use_old_vel          = bool(config["use_old_vel"])
+        self.lin_type             = str (config["lin_type"])
+        self.nl_wake              = bool(config["nl_wake"])
+        self.vr_evolution         = bool(config["vr_evolution"])
         
         # get flaring at r_planet
         self.hr_planet = self.hr * (self.r_planet / self.r_ref) ** (0.5 - self.q)

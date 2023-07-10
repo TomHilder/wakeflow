@@ -15,7 +15,7 @@ from scipy.interpolate      import griddata
 from copy                   import copy
 from tqdm                   import tqdm
 from .burgers               import _solve_burgers
-from .transformations       import _Eta, _Eta_vector, _t, _get_chi, _get_dens_vel, _plot_r_t, _t_vector, _get_chi_vector, _g, _Lambda_fu, _Lambda_fv
+from .transformations       import _Eta, _Eta_vector, _t, _get_chi, _get_dens_vel, _plot_r_t, _t_vector, _get_chi_vector, _g, _Lambda_fu, _Lambda_fv, get_profile_from_sigma, get_profile_from_u
 
 if TYPE_CHECKING:
     from .model_setup       import _Parameters
@@ -341,15 +341,14 @@ class _NonLinearPerts():
 
     # alternative IC extraction using an annulus instead of the linear square box
     def _extract_ICs_ann(self, LinearPerts: '_LinearPerts') -> None:
-        """Alternate initial condition extraction where the IC is read from the edges of the box as included in the final
-        solution. Usually, far more y-extent of the linear regime is used than this. Using this method will invalidate the
-        solution and is meant for developer use only.
+        """Extract the initial condition on the edge of the linear regime at a fixed radial distance
+        from the planet orbital radius.
         """
         
         # grab linear perturbations object
         lp = LinearPerts
 
-        # mass unit
+        # scale factor for solution
         beta_p = self.p.m_planet / self.p.m_thermal
 
         # grab radius and phi values for edge of box
@@ -358,52 +357,89 @@ class _NonLinearPerts():
         r_IC_outer   = lp.r_ann[-1]
         r_IC_inner   = lp.r_ann[ 0]
         
-        #Evaluate Chi profile using global transformation
-        self.profile_outer_dens = (lp.pert_rho_ann[:,-1] / beta_p) * (_g(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p) * (self.p.gamma + 1) / 2)
-        self.profile_inner_dens = (lp.pert_rho_ann[:, 0] / beta_p) * (_g(r_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p) * (self.p.gamma + 1) / 2)
-        
-        def get_profile_from_u(u, r_IC):
-            # calculate g
-            g_fac = _g(
-                r_IC, 
-                self.p.r_planet, 
-                self.p.hr_planet, 
-                self.p.q, 
-                self.p.p
-            )
-            # redefine variable to be shorter name
-            gamma = self.p.gamma
-            # calculate sound speed at the edges of the box
-            c_s_edge = self.p.c_s_planet * (r_IC / self.p.r_planet)**-self.p.q
-            #c_s_edge = self.p.c_s_planet
-            # calculate brackets term
-            brackets = (1 + u * ((gamma - 1) / (2 * c_s_edge)))**(2 / (gamma - 1)) - 1
-            # calculate chi
-            chi = ((gamma + 1) / 2) * g_fac * brackets * (1 / beta_p)
-            #chi = - 0.5 * u * (g_fac * (gamma + 1)) / c_s_edge
-            return chi
-        
+        # get sigma and u on inner and outer edge of the linear solution annulus
+        sigma_outer = lp.pert_rho_ann[:,-1]
+        sigma_inner = lp.pert_rho_ann[:, 0]
         u_outer = lp.pert_v_r_ann[:,-1] / 1e-5
         u_inner = lp.pert_v_r_ann[:, 0] / 1e-5
         
-        self.profile_outer = -get_profile_from_u(u_outer, r_IC_outer)
-        self.profile_inner = get_profile_from_u(u_inner, r_IC_inner)
-
+        # divide by scale factor to ensure self-similarity of solution
+        sigma_outer /= beta_p
+        sigma_inner /= beta_p
+        u_outer /= beta_p
+        u_inner /= beta_p
+        
+        # debug plot
         if True:
-         plt.plot(phi_IC_outer, self.profile_outer_dens, label="outer dens", c="C0")
-         plt.plot(phi_IC_inner, self.profile_inner_dens, label="inner dens", c="C1")
-         plt.plot(phi_IC_outer, self.profile_outer, label="outer vr", c="C0", ls="--")
-         plt.plot(phi_IC_inner, self.profile_inner, label="inner vr", c="C1", ls="--")
-         plt.legend(loc="best")
-         plt.show()
-
+            plt.plot(phi_IC_outer, u_outer/u_outer.max(), label="u outer edge")
+            plt.plot(phi_IC_outer, sigma_outer/sigma_outer.max(), label="sigma outer edge")
+            plt.legend(loc="best")
+            plt.show()
+        
+        # get outer profile from sigma
+        profile_outer_sigma = get_profile_from_sigma(
+            sigma_outer,
+            r_IC_outer,
+            self.p.gamma,
+            self.p.r_planet,
+            self.p.hr_planet,
+            self.p.q,
+            self.p.p
+        )
+        # get inner profile from sigma
+        profile_inner_sigma = get_profile_from_sigma(
+            sigma_inner,
+            r_IC_inner,
+            self.p.gamma,
+            self.p.r_planet,
+            self.p.hr_planet,
+            self.p.q,
+            self.p.p
+        )
+        # get outer profile from u
+        profile_outer_u = get_profile_from_u(
+            u_outer,  
+            r_IC_outer, 
+            self.p.gamma, 
+            self.p.c_s_planet, 
+            self.p.r_planet, 
+            self.p.hr_planet, 
+            self.p.q, 
+            self.p.p,
+        )
+        # get inner profile from u
+        profile_inner_u = -get_profile_from_u(
+            u_inner, 
+            r_IC_inner, 
+            self.p.gamma, 
+            self.p.c_s_planet, 
+            self.p.r_planet, 
+            self.p.hr_planet, 
+            self.p.q, 
+            self.p.p,
+        )
+        
+        # debug plot        
+        if True:
+            plt.plot(phi_IC_outer, profile_outer_sigma, label="outer dens", c="C0")
+            plt.plot(phi_IC_inner, profile_inner_sigma, label="inner dens", c="C1")
+            plt.plot(phi_IC_outer, profile_outer_u, label="outer vr", c="C0", ls="--")
+            plt.plot(phi_IC_inner, profile_inner_u, label="inner vr", c="C1", ls="--")
+            plt.legend(loc="best")
+            plt.show()
+        
+        # pick which solution to use for initial condition, by default taken from sigma
+        # taking the initial condition from v_r yields incorrect result
+        if not self.p.vr_evolution:
+            self.profile_outer = profile_outer_sigma
+            self.profile_inner = profile_inner_sigma
+        else:
+            self.profile_outer = profile_outer_u
+            self.profile_inner = profile_inner_u
+        
         # find t points
         t_IC_outer = _t(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
         t_IC_inner = _t(r_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
-
-        # initialise arrays for corresponding eta points
-        self.eta_outer = np.zeros(len(phi_IC_outer))
-        self.eta_inner = np.zeros(len(phi_IC_outer))
 
         # perform transformation
         self.eta_outer = _Eta_vector(r_IC_outer, phi_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
@@ -446,9 +482,9 @@ class _NonLinearPerts():
 
         # set eta_tilde for outer wake:
         for i in range(len(self.eta_outer)):
-            if self.profile_outer[i] == 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 10:
+            if self.profile_outer[i] == 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 0:
                 zero_outer = self.eta_outer[i]
-            elif i!= (len(self.eta_outer) - 1) and self.profile_outer[i] * self.profile_outer[i + 1] < 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 10:
+            elif i!= (len(self.eta_outer) - 1) and self.profile_outer[i] * self.profile_outer[i + 1] < 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 0:
                 zero_outer = 0.5 * (self.eta_outer[i] + self.eta_outer[i + 1])
         self.eta_tilde_outer = zero_outer
 
@@ -456,9 +492,9 @@ class _NonLinearPerts():
             plt.plot(self.eta_inner,self.profile_inner)
         # set eta_tilde for inner wake:
         for i in range(len(self.eta_inner)):
-            if self.profile_inner[i] == 0 and self.eta_inner[i] > -10 and self.eta_inner[i] < 10:
+            if self.profile_inner[i] == 0 and self.eta_inner[i] > 0 and self.eta_inner[i] < 10:
                 zero_inner = self.eta_inner[i]
-            elif i!= (len(self.eta_inner) - 1) and self.profile_inner[i] * self.profile_inner[i + 1] < 0 and self.eta_inner[i] > -10 and self.eta_inner[i] < 10:
+            elif i!= (len(self.eta_inner) - 1) and self.profile_inner[i] * self.profile_inner[i + 1] < 0 and self.eta_inner[i] > 0 and self.eta_inner[i] < 10:
                 zero_inner = 0.5 * (self.eta_inner[i] + self.eta_inner[i + 1])
         self.eta_tilde_inner = zero_inner
 
@@ -710,3 +746,15 @@ class _NonLinearPerts():
         self.rho = dnl
         self.vr = 1e-5*unl
         self.vphi = 1e-5*vnl
+
+
+# def sort_profile_ascending_eta(eta_vals, profile_vals):
+#     # reverse list
+#     eta_reverse = eta_vals[:-1]
+#     indices_sorted = np.argsort(eta_vals)
+
+
+# self.eta_outer = self.eta_outer[:-1]
+# idx_srt = np.argsort(self.eta_outer)
+# self.eta_outer = self.eta_outer[idx_srt]
+# self.profile_outer = self.profile_outer[idx_srt]
