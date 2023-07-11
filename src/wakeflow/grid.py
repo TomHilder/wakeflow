@@ -1,5 +1,5 @@
 # grid.py
-# Written by Thomas Hilder
+# Written by Thomas Hilder and Daniele Fasano
 
 """
 Contains the Grid class on which all Wakeflow models are run/stored.

@@ -1,5 +1,5 @@
 # linear_perts.py
-# Written by Thomas Hilder and Francesco Bollati
+# Written by Thomas Hilder, Daniele Fasano and Francesco Bollati
 
 """
 Contains the LinearPerts class responsible for handling the linear regime of the models.

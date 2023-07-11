@@ -1,19 +1,22 @@
-# discminer_interface.py
-# Written by Daniele Fasano, based on wakefit_interface.py by Thomas Hilder
+# v_perts_only.py
+# Written by Thomas Hilder
 
 """
-Contains the Discminer class, intended for use in Discminer to generate wake models
+Contains the _VelocityPerturbations class, intended for returning only velocity perturbations and not creating files, idea for use in a fitting procedure.
 """
 
 import subprocess, os
+import numpy as np
 from .model_setup         import _run_setup, _Parameters
 from .grid                import _Grid
 from .linear_perts        import _LinearPerts
 from .non_linear_perts    import _NonLinearPerts
 from .wakeflow            import WakeflowModel
+from typing               import Tuple
 
-# class for wakefit to use to generate velocity perturbations for models
-class _WakeminerModel(WakeflowModel):
+
+# class to generate velocity perturbations for models without saving to files
+class _VelocityPerturbations(WakeflowModel):
 
     # generate the model using the configuration specified by the user
     def run(self) -> None:
@@ -22,18 +25,19 @@ class _WakeminerModel(WakeflowModel):
         assert self.model_params["make_midplane_plots"] == False
         assert self.model_params["save_total"]          == False
         assert self.model_params["save_perturbations"]  == False
-        assert type(self.model_params["m_planet"])      is not list
+        
         # run setup
         try:
             params = _run_setup(self.model_params)
         except ArithmeticError:
             raise Exception("Model has not been configured.")
 
-        # run wakeflow using custom method for discminer
-        return self._run_wakeflow_for_discminer(params)
+        # run wakeflow using custom method for wakefit
+        return self._run_wakeflow(params)
 
     # internal method that is called by self.run to generate the results for a specific set of parameters
-    def _run_wakeflow_for_discminer(self, params: _Parameters) -> None:
+    # overwrites inherited method
+    def _run_wakeflow(self, params: _Parameters) -> Tuple[np.ndarray, ...]:
         """
         Internal use method for generating the planet wake by calling other parts of Wakeflow.
 
@@ -52,7 +56,7 @@ class _WakeminerModel(WakeflowModel):
 
         # extract linear perturbations from file
         lin_perts = _LinearPerts(params)
-        lin_perts._cut_annulus_segment()
+        lin_perts._cut_box_annulus_segment()
 
         # add the linear perturbations onto grid
         grid_lin_perts._add_linear_perturbations(lin_perts, rho_background=0.0)
@@ -66,7 +70,7 @@ class _WakeminerModel(WakeflowModel):
         nonlin_perts = _NonLinearPerts(params, grid_nonlin_perts)
 
         # extract initial condition from the linear perturbations
-        nonlin_perts._extract_ICs_ann(lin_perts)
+        nonlin_perts._extract_ICs(lin_perts)
 
         # solve for non-linear perturbations
         nonlin_perts._get_non_linear_perts()
