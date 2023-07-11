@@ -15,7 +15,7 @@ from scipy.interpolate      import griddata
 from copy                   import copy
 from tqdm                   import tqdm
 from .burgers               import _solve_burgers
-from .transformations       import _Eta, _Eta_vector, _t, _get_chi, _get_dens_vel, _plot_r_t, _t_vector, _get_chi_vector, _g, _Lambda_fu, _Lambda_fv, get_profile_from_sigma, get_profile_from_u
+from .transformations       import _Eta, _Eta_vector, _t, _get_chi, _get_dens_vel, _get_dens_vel_from_vr, _plot_r_t, _t_vector, _get_chi_vector, _g, _Lambda_fu, _Lambda_fv, get_profile_from_sigma, get_profile_from_u
 
 if TYPE_CHECKING:
     from .model_setup       import _Parameters
@@ -431,95 +431,48 @@ class _NonLinearPerts():
         # pick which solution to use for initial condition, by default taken from sigma
         # taking the initial condition from v_r yields incorrect result
         if not self.p.vr_evolution:
-            self.profile_outer = profile_outer_sigma
-            self.profile_inner = profile_inner_sigma
+            profile_outer = profile_outer_sigma
+            profile_inner = profile_inner_sigma
         else:
-            self.profile_outer = profile_outer_u
-            self.profile_inner = profile_inner_u
+            profile_outer = profile_outer_u
+            profile_inner = profile_inner_u
         
         # find t points
         t_IC_outer = _t(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
         t_IC_inner = _t(r_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
 
         # perform transformation
-        self.eta_outer = _Eta_vector(r_IC_outer, phi_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
-        self.eta_inner = _Eta_vector(r_IC_inner, phi_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+        eta_outer = _Eta_vector(r_IC_outer, phi_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+        eta_inner = _Eta_vector(r_IC_inner, phi_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
         
-        #Sorting eta and profile in order to have eta in ascending order
-        self.eta_outer = self.eta_outer[:-1]
-        idx_srt = np.argsort(self.eta_outer)
-        self.eta_outer = self.eta_outer[idx_srt]
-        self.profile_outer = self.profile_outer[idx_srt]
-
-        #Sorting eta and profile in order to have eta in ascending order
-        self.eta_inner = self.eta_inner[:-1]
-        idx_srt = np.argsort(self.eta_inner)
-        self.eta_inner = self.eta_inner[idx_srt]
-        self.profile_inner = self.profile_inner[idx_srt]
-        '''
-        for i in range(len(phi_IC_outer)):
-            self.eta_outer[i] = _Eta(r_IC_outer, phi_IC_outer[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
-            self.eta_inner[i] = _Eta(r_IC_inner, phi_IC_inner[i], self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
-        '''
-        if False:
-            plt.plot(self.eta_outer,self.eta_outer*np.zeros(self.eta_outer.shape))
-            #plt.plot(self.eta_outer,self.profile_outer)
-            plt.scatter(self.eta_outer,self.profile_outer, s=1)
-            plt.show()
-            
-            plt.plot(
-                np.where(
-                    np.isclose(self.profile_outer, 0), 
-                    self.profile_outer,
-                    np.zeros(self.profile_outer.shape)
-                    )
-            )
-            plt.show()
-        
+        # sort eta and profile values such that eta is in ascending order
+        self.eta_outer, self.profile_outer = sort_profile_ascending_eta(eta_outer, profile_outer)
+        self.eta_inner, self.profile_inner = sort_profile_ascending_eta(eta_inner, profile_inner)
+  
         # set t0
         self.t0_outer = t_IC_outer
         self.t0_inner = t_IC_inner
+        
+        # evaluate eta_tilde (value of eta for which chi crosses zero)
+        self.eta_tilde_outer = get_eta_tilde(self.eta_outer, self.profile_outer, outer=True,  vr_evolution=self.p.vr_evolution)
+        self.eta_tilde_inner = get_eta_tilde(self.eta_inner, self.profile_inner, outer=False, vr_evolution=self.p.vr_evolution)
 
-        # set eta_tilde for outer wake:
-        for i in range(len(self.eta_outer)):
-            if self.profile_outer[i] == 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 0:
-                zero_outer = self.eta_outer[i]
-            elif i!= (len(self.eta_outer) - 1) and self.profile_outer[i] * self.profile_outer[i + 1] < 0 and self.eta_outer[i] > -10 and self.eta_outer[i] < 0:
-                zero_outer = 0.5 * (self.eta_outer[i] + self.eta_outer[i + 1])
-        self.eta_tilde_outer = zero_outer
+        # evaluate C
+        self.C_outer = get_C(self.eta_outer, self.profile_outer, self.eta_tilde_outer)
+        self.C_inner = get_C(self.eta_inner, self.profile_inner, self.eta_tilde_inner, outer=False)
+        
+        # print diagnostics
+        if True:
+            print_diagnostics(
+                self.eta_tilde_outer,
+                self.eta_tilde_inner,
+                self.C_outer,
+                self.C_inner,
+                self.t0_outer,
+                self.t0_inner
+            )
 
-        if False:
-            plt.plot(self.eta_inner,self.profile_inner)
-        # set eta_tilde for inner wake:
-        for i in range(len(self.eta_inner)):
-            if self.profile_inner[i] == 0 and self.eta_inner[i] > 0 and self.eta_inner[i] < 10:
-                zero_inner = self.eta_inner[i]
-            elif i!= (len(self.eta_inner) - 1) and self.profile_inner[i] * self.profile_inner[i + 1] < 0 and self.eta_inner[i] > 0 and self.eta_inner[i] < 10:
-                zero_inner = 0.5 * (self.eta_inner[i] + self.eta_inner[i + 1])
-        self.eta_tilde_inner = zero_inner
-
-        # set C for outer wake:
-        deta_outer = self.eta_outer[1] - self.eta_outer[0]
-        profile0_outer = self.profile_outer[self.eta_outer > self.eta_tilde_outer]
-        C0_outer = np.abs(np.trapz(profile0_outer, dx = deta_outer))
-        self.C_outer =  C0_outer 
-
-        # set C for inner wake:
-        deta_inner = self.eta_inner[1] - self.eta_inner[0]
-        profile0_inner = self.profile_inner[self.eta_inner < self.eta_tilde_inner]
-        C0_inner = np.abs(np.trapz(profile0_inner, dx = deta_inner))
-        self.C_inner = C0_inner
-        if False:
-            print('     Outer Wake:')
-            print('         eta_tilde = ', self.eta_tilde_outer)
-            print('         C0 = ', C0_outer)
-            print('         t0 = ', self.t0_outer)
-            print('     Inner Wake:')
-            print('         eta_tilde = ', self.eta_tilde_inner)
-            print('         C0 = ', C0_inner)
-            print('         t0 = ', self.t0_inner)
-
-        # hard to explain, but they're not needed so set to zero
+        # these are left-over from a deprecated feature that we might want back in the future
         self.linear_solution = 0
         self.linear_t = 0
 
@@ -589,8 +542,6 @@ class _NonLinearPerts():
         tf_outer = time_outer[-1]
         tf_inner = time_inner[-1]
 
-       
-
         # needed constants from solutions, inner and outer
         eta_tilde_outer = self.eta_tilde_outer
         eta_tilde_inner = self.eta_tilde_inner
@@ -615,6 +566,12 @@ class _NonLinearPerts():
 
         # physical parameters
         gamma = self.p.gamma
+        
+        # decide on function to get perturbations
+        if not self.p.vr_evolution:
+            get_perturbations = _get_dens_vel
+        else:
+            get_perturbations = _get_dens_vel_from_vr
 
 
         # if using a Cartesian grid
@@ -669,7 +626,7 @@ class _NonLinearPerts():
             )
 
             # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
-            dnl, unl, vnl = _get_dens_vel(
+            dnl, unl, vnl = get_perturbations(
                 np.transpose(r_grid), 
                 np.transpose(CChi), 
                 gamma, 
@@ -725,7 +682,7 @@ class _NonLinearPerts():
             )
 
             # COMPUTE DENSITY AND VELOCITY PERTURBATIONS
-            dnl, unl, vnl = _get_dens_vel(
+            dnl, unl, vnl = get_perturbations(
                 r_grid, 
                 Chi, 
                 gamma, 
@@ -748,13 +705,71 @@ class _NonLinearPerts():
         self.vphi = 1e-5*vnl
 
 
-# def sort_profile_ascending_eta(eta_vals, profile_vals):
-#     # reverse list
-#     eta_reverse = eta_vals[:-1]
-#     indices_sorted = np.argsort(eta_vals)
+def sort_profile_ascending_eta(eta_vals, profile_vals):
+    # remove last element as it is repeated
+    eta_vals = eta_vals[:-1]
+    # find indicies that would sort eta_vals
+    indices_sorted = np.argsort(eta_vals)
+    # sort both eta_vals and profile vals and return
+    eta_sorted     = eta_vals    [indices_sorted]
+    profile_sorted = profile_vals[indices_sorted]
+    # return sorted arrays
+    return eta_sorted, profile_sorted
 
 
-# self.eta_outer = self.eta_outer[:-1]
-# idx_srt = np.argsort(self.eta_outer)
-# self.eta_outer = self.eta_outer[idx_srt]
-# self.profile_outer = self.profile_outer[idx_srt]
+def get_eta_tilde(eta_vals, profile_vals, outer=True, vr_evolution=False):
+    # set eta min and max values
+    if outer:
+        ETA_MIN = -10
+        ETA_MAX = 0
+        if vr_evolution:
+            ETA_MAX = 10
+    else:
+        ETA_MIN = 0
+        ETA_MAX = 10
+        if vr_evolution:
+            ETA_MIN = -10      
+    # intialise eta_tilde to nan
+    eta_tilde = np.nan
+    # loop over all values of eta
+    for i, eta in enumerate(eta_vals):
+        # check that value of eta is in acceptable range and is not the last point
+        if eta > ETA_MIN and eta < ETA_MAX and i < len(eta_vals) - 1:
+            # if there is already a point with profile = 0 in the range we take that
+            if profile_vals[i] == 0:
+                eta_tilde = eta
+            # if not, look for points either side of zero and interpolate
+            elif profile_vals[i] * profile_vals[i+1] < 0:
+                eta_1 = eta
+                eta_2 = eta_vals[i+1]
+                eta_tilde = eta - profile_vals[i] * (eta_2 - eta_1) / (profile_vals[i+1] - profile_vals[i])
+    # if we did not find a value, raise an exception
+    if np.isnan(eta_tilde):
+        raise Exception("Could not find a value for eta_tilde")
+    else:
+        return eta_tilde
+
+
+def get_C(eta_vals, profile_vals, eta_tilde, outer=True):
+    # get grid spacing of eta from first two values
+    delta_eta = eta_vals[1] - eta_vals[0]
+    # restrict profile
+    if outer:
+        profile_0 = profile_vals[eta_vals > eta_tilde]
+    else:
+        profile_0 = profile_vals[eta_vals < eta_tilde]
+    # integrate over profile_0 and return absolute value
+    return np.abs(
+        np.trapz(profile_0, dx=delta_eta)
+    )
+
+
+def print_diagnostics(eta_tilde_outer, eta_tilde_inner, C0_outer, C0_inner, t0_outer, t0_inner):
+    print('     Outer Wake:')
+    print(f'         eta_tilde = {eta_tilde_outer:.4f}')
+    print(f'         C0        = {C0_outer:.4f}')
+    print(f'         t0        = {t0_outer:.4f}')
+    print('     Inner Wake:')
+    print(f'         eta_tilde = {eta_tilde_inner:.4f}')
+    print(f'         C0        = {C0_inner:.4f}')
+    print(f'         t0        = {t0_inner:.4f}')
