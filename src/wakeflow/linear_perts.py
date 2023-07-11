@@ -90,8 +90,8 @@ class _LinearPerts():
             self.x_box_bottom = 2 * self.p.scale_box_ang_bottom
             
             # cut square box grid in linear regime
-            self.x_cut = x[np.argmin(x < -self.x_box_l) : np.argmin(x < self.x_box_r) + 1]
-            self.y_cut = y[np.argmin(y < -self.x_box_b) : np.argmin(y < self.x_box_t) + 1]
+            self.x_cut = x[np.argmin(x < -self.x_box_left)   : np.argmin(x < self.x_box_right) + 1]
+            self.y_cut = y[np.argmin(y < -self.x_box_bottom) : np.argmin(y < self.x_box_top) + 1]
     
             # test plot
             if False:
