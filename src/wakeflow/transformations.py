@@ -443,8 +443,8 @@ def _get_dens_vel(rr, Chi, gamma, Rp, cw, csp, hr, q, p, use_old_vel, m_p, m_th)
         c0 = csp * (rr / Rp)**(-q)
         
         # get perturbations
-        unl = (m_p/m_th)*np.sign(rr - Rp) * (2 * c0) / (gamma+1) * psi
-        vnl = (m_p/m_th)*(-cw) * c0 * unl / dOmega_r
+        unl = np.sign(rr - Rp) * (2 * c0) / (gamma+1) * psi
+        vnl = (-cw) * c0 * unl / dOmega_r
 
     return dnl, unl, vnl
 
