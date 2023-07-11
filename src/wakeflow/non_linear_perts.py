@@ -462,7 +462,7 @@ class _NonLinearPerts():
         self.C_inner = get_C(self.eta_inner, self.profile_inner, self.eta_tilde_inner, outer=False)
         
         # print diagnostics
-        if True:
+        if False:
             print_diagnostics(
                 self.eta_tilde_outer,
                 self.eta_tilde_inner,
