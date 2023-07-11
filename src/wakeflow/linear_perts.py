@@ -38,200 +38,64 @@ class _LinearPerts():
             "Size": [0, 0, 0]
             }
         
+        # read in perturbations from data files
+        mesh, perts = read_perturbation_files(self.p.lin_type)
+        
+        # get perturbation arrays
+        self.pert_v_r   = perts[0]
+        self.pert_v_phi = perts[1]
+        self.pert_rho   = perts[2]
+        
+        # define constants for linear perts
+        self.x_box_left   = 2 * self.p.scale_box_left
+        self.x_box_right  = 2 * self.p.scale_box_right
+        self.x_box_top    = 2 * self.p.scale_box_ang_top
+        self.x_box_bottom = 2 * self.p.scale_box_ang_bottom
+        
         # Using linear perturbations computed following Bollati et al. 2021 with shearing sheet assumption
         # NOTE: this is deprecated and will probably lead to wrong results
         if self.p.lin_type == "shearing_sheet":
-            # get location of linear perturbations data files
-            pert_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations.npy')
-            mesh_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations_mesh.npy')
-    
-            # read perturbations from files
-            try:
-                perts = np.load(pert_loc)
-                mesh  = np.load(mesh_loc)
-    
-            # in the case files have not been extracted from tarballs yet, extract them
-            except FileNotFoundError:
-    
-                # open tarballs
-                pert_tar = tarfile.open(f"{pert_loc}.tar.gz")
-                mesh_tar = tarfile.open(f"{mesh_loc}.tar.gz")
-    
-                # extract npy files
-                loc = pkg_resources.resource_filename('wakeflow', 'data')
-                pert_tar.extractall(loc)
-                mesh_tar.extractall(loc)
-    
-                # close tarballs
-                pert_tar.close()
-                mesh_tar.close()
-    
-                # read perturbations from files
-                perts = np.load(pert_loc)
-                mesh  = np.load(mesh_loc)
-    
-            # get perturbation arrays
-            self.pert_v_r   = perts[0]
-            self.pert_v_phi = perts[1]
-            self.pert_rho   = perts[2]
-    
             # grid
             self.X = mesh[0]
             self.Y = mesh[1]
-    
             # linear perturbations read in grid
             x = self.X[0,:]
             y = self.Y[:,0]
-    
-            # define constants for linear perts
-            self.x_box_left   = 2 * self.p.scale_box_left
-            self.x_box_right  = 2 * self.p.scale_box_right
-            self.x_box_top    = 2 * self.p.scale_box_ang_top
-            self.x_box_bottom = 2 * self.p.scale_box_ang_bottom
-            
             # cut square box grid in linear regime
             self.x_cut = x[np.argmin(x < -self.x_box_left)   : np.argmin(x < self.x_box_right) + 1]
             self.y_cut = y[np.argmin(y < -self.x_box_bottom) : np.argmin(y < self.x_box_top) + 1]
-    
-            # test plot
-            if False:
-                plt.figure()
-                plt.contourf(x, y, self.pert_rho, levels=100, cmap='RdBu')
-                plt.xlim(self.x_cut[0],self.x_cut[-1])
-                plt.ylim(self.y_cut[0],self.y_cut[-1])
-                plt.colorbar()
-                plt.show()
-
             #updating info of linear perts        
             self.info["Type"]    = "shearing_sheet"
             self.info["Grid"]    = "cartesian"
             self.info["Size"][0] = x.shape[0]
             self.info["Size"][1] = y.shape[0]
             self.info["Size"][2] = self.p.n_z
-
+            
         #Using global linear perturbations computed using Miranda's code.         
         elif self.p.lin_type == "global":
-            # get location of linear perturbations data files
-            pert_loc = pkg_resources.resource_filename('wakeflow', 'data/global_linear_perturbations.npy')
-            mesh_loc = pkg_resources.resource_filename('wakeflow', 'data/global_linear_perturbations_mesh.npy')
-    
-            # read perturbations from files
-            try:
-                perts = np.load(pert_loc)
-                mesh  = np.load(mesh_loc)
-    
-            # in the case files have not been extracted from tarballs yet, extract them
-            except FileNotFoundError:
-    
-                # open tarballs
-                pert_tar = tarfile.open(f"{pert_loc}.tar.gz")
-                mesh_tar = tarfile.open(f"{mesh_loc}.tar.gz")
-    
-                # extract npy files
-                loc = pkg_resources.resource_filename('wakeflow', 'data')
-                pert_tar.extractall(loc)
-                mesh_tar.extractall(loc)
-    
-                # close tarballs
-                pert_tar.close()
-                mesh_tar.close()
-    
-                # read perturbations from files
-                perts = np.load(pert_loc)
-                mesh  = np.load(mesh_loc)
-                
-            # get perturbation arrays
-            self.pert_v_r   = perts[0]
-            self.pert_v_phi = perts[1]
-            self.pert_rho   = perts[2]
-    
             # grid
             self.R   = mesh[0]
             self.PHI = mesh[1]
-
             #Rescale R with planet radius
             self.R *= self.p.r_planet
-    
             # linear perturbations read in grid
             r   = self.R[0,:]
             phi = self.PHI[:,0]
-
             #defining cartesian grid
             x = np.linspace(-np.max(r), np.max(r), len(r))
             y = np.linspace(-np.max(r), np.max(r), len(r))
-
             #creating cartesian mesh
             self.X, self.Y = np.meshgrid(x, y)
-
-            # define constants for linear perts
-            self.x_box_left   = 2 * self.p.scale_box_left
-            self.x_box_right  = 2 * self.p.scale_box_right
-            self.x_box_top    = 2 * self.p.scale_box_ang_top
-            self.x_box_bottom = 2 * self.p.scale_box_ang_bottom
-
             #updating info of linear perts      
             self.info["Type"]    = "global"
             self.info["Grid"]    = "cylindrical"
             self.info["Size"][0] = r.shape[0]
             self.info["Size"][1] = phi.shape[0]
             self.info["Size"][2] = self.p.n_z
-
+            
         #Using perturbations from hydro simulation (not yet implemented)
         elif self.p.lin_type == "simulation":
-            # get location of linear perturbations data files
-            pert_loc = pkg_resources.resource_filename('wakeflow', 'data/simulation_linear_perturbations.npy')
-            mesh_loc = pkg_resources.resource_filename('wakeflow', 'data/simulation_linear_perturbations_mesh.npy')
-    
-            # read perturbations from files
-            try:
-                perts = np.load(pert_loc)
-                mesh  = np.load(mesh_loc)
-    
-            # in the case files have not been extracted from tarballs yet, extract them
-            except FileNotFoundError:
-    
-                # open tarballs
-                pert_tar = tarfile.open(f"{pert_loc}.tar.gz")
-                mesh_tar = tarfile.open(f"{mesh_loc}.tar.gz")
-    
-                # extract npy files
-                loc = pkg_resources.resource_filename('wakeflow', 'data')
-                pert_tar.extractall(loc)
-                mesh_tar.extractall(loc)
-    
-                # close tarballs
-                pert_tar.close()
-                mesh_tar.close()
-    
-                # read perturbations from files
-                perts = np.load(pert_loc)
-                mesh  = np.load(mesh_loc)
-                
-            # get perturbation arrays
-            self.pert_v_r   = perts[0]
-            self.pert_v_phi = perts[1]
-            self.pert_rho   = perts[2]
-    
-            # grid
-            self.X = mesh[0]
-            self.Y = mesh[1]
-    
-            # linear perturbations read in grid
-            x = self.X[0,:]
-            y = self.Y[:,0]
-
-            # define constants for linear perts
-            self.x_box_left   = 2 * self.p.scale_box_left
-            self.x_box_right  = 2 * self.p.scale_box_right
-            self.x_box_top    = 2 * self.p.scale_box_ang_top
-            self.x_box_bottom = 2 * self.p.scale_box_ang_bottom
-
-            #updating info of linear perts      
-            self.info["Type"]    = "simulation"
-            self.info["Grid"]    = "cartesian"
-            self.info["Size"][0] = self.x.shape[0]
-            self.info["Size"][1] = self.y.shape[0]
-            self.info["Size"][2] = self.p.n_z
+            raise NotImplementedError("Reading perturbations from a simulation is not yet supported.")
 
     # old method of extracting linear perturbations 
     def _cut_box_square(self) -> None:
@@ -478,6 +342,35 @@ class _LinearPerts():
 
 
 
-
-
-
+def read_perturbation_files(lin_type="global"):
+    # get location of linear perturbations data files
+    if lin_type == "global":
+        pert_loc = pkg_resources.resource_filename('wakeflow', 'data/global_linear_perturbations.npy')
+        mesh_loc = pkg_resources.resource_filename('wakeflow', 'data/global_linear_perturbations_mesh.npy')
+    elif lin_type == "shearing_sheet":
+        pert_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations.npy')
+        mesh_loc = pkg_resources.resource_filename('wakeflow', 'data/linear_perturbations_mesh.npy')
+    elif lin_type == "simulation":
+        raise NotImplementedError("Reading the perturbations from simulation data is not supported yet.")
+    else:
+        raise ValueError("lin_type must be either 'global' or 'shearing_sheet'")
+    # try to read perturbations from files
+    try:
+        perts = np.load(pert_loc)
+        mesh  = np.load(mesh_loc)
+    # if files are note unzipped yet, do that
+    except FileNotFoundError:
+        # open tarballs
+        pert_tar = tarfile.open(f"{pert_loc}.tar.gz")
+        mesh_tar = tarfile.open(f"{mesh_loc}.tar.gz")
+        # extract npy files
+        loc = pkg_resources.resource_filename('wakeflow', 'data')
+        pert_tar.extractall(loc)
+        mesh_tar.extractall(loc)
+        # close tarballs
+        pert_tar.close()
+        mesh_tar.close()
+        # read perturbations from files
+        perts = np.load(pert_loc)
+        mesh  = np.load(mesh_loc)
+    return mesh, perts
