@@ -440,22 +440,40 @@ class _NonLinearPerts():
         # find t points
         t_IC_outer = _t(r_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
         t_IC_inner = _t(r_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, self.p.m_planet, self.p.m_thermal)
+        
+        # set t0
+        self.t0_outer = t_IC_outer
+        self.t0_inner = t_IC_inner
 
         # perform transformation
-        eta_outer = _Eta_vector(r_IC_outer, phi_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
-        eta_inner = _Eta_vector(r_IC_inner, phi_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake)
+        eta_outer = _Eta_vector(r_IC_outer, phi_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake, self.t0_outer)
+        eta_inner = _Eta_vector(r_IC_inner, phi_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, self.p.nl_wake, self.t0_inner)
+        
+        # get non-linear correction for eta
+        if self.p.nl_wake:
+            eta_outer_lin = _Eta_vector(r_IC_outer, phi_IC_outer, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, False, self.t0_outer)
+            eta_inner_lin = _Eta_vector(r_IC_inner, phi_IC_inner, self.p.r_planet, self.p.hr_planet, self.p.q, self.p.p, -1, self.p.m_planet, self.p.m_thermal, False, self.t0_inner)
+            # print("all outer corrs")
+            # print(eta_outer - eta_outer_lin)
+            # print("all inner corrs")
+            # print(eta_inner - eta_inner_lin)
+            # version for minus in correction
+            #eta_outer_corr = (eta_outer - eta_outer_lin).max()
+            #eta_inner_corr = (eta_inner - eta_inner_lin).min()
+            # version for plus in correction
+            eta_outer_corr = (eta_outer - eta_outer_lin).min()
+            eta_inner_corr = (eta_inner - eta_inner_lin).max()
+        else:
+            eta_outer_corr = None
+            eta_inner_corr = None
         
         # sort eta and profile values such that eta is in ascending order
         self.eta_outer, self.profile_outer = sort_profile_ascending_eta(eta_outer, profile_outer)
         self.eta_inner, self.profile_inner = sort_profile_ascending_eta(eta_inner, profile_inner)
-  
-        # set t0
-        self.t0_outer = t_IC_outer
-        self.t0_inner = t_IC_inner
         
         # evaluate eta_tilde (value of eta for which chi crosses zero)
-        self.eta_tilde_outer = get_eta_tilde(self.eta_outer, self.profile_outer, outer=True,  vr_evolution=self.p.vr_evolution)
-        self.eta_tilde_inner = get_eta_tilde(self.eta_inner, self.profile_inner, outer=False, vr_evolution=self.p.vr_evolution)
+        self.eta_tilde_outer = get_eta_tilde(self.eta_outer, self.profile_outer, outer=True,  vr_evolution=self.p.vr_evolution, eta_corr=eta_outer_corr)
+        self.eta_tilde_inner = get_eta_tilde(self.eta_inner, self.profile_inner, outer=False, vr_evolution=self.p.vr_evolution, eta_corr=eta_inner_corr)
 
         # evaluate C
         self.C_outer = get_C(self.eta_outer, self.profile_outer, self.eta_tilde_outer)
@@ -717,7 +735,7 @@ def sort_profile_ascending_eta(eta_vals, profile_vals):
     return eta_sorted, profile_sorted
 
 
-def get_eta_tilde(eta_vals, profile_vals, outer=True, vr_evolution=False):
+def get_eta_tilde(eta_vals, profile_vals, outer=True, vr_evolution=False, eta_corr=None):
     # set eta min and max values
     if outer:
         ETA_MIN = -10
@@ -729,6 +747,11 @@ def get_eta_tilde(eta_vals, profile_vals, outer=True, vr_evolution=False):
         ETA_MAX = 10
         if vr_evolution:
             ETA_MIN = -10      
+    # aaccount for nl correction if needed
+    if eta_corr is not None:
+        print(f"eta correction: {eta_corr}")
+        ETA_MIN -= eta_corr
+        ETA_MAX -= eta_corr
     # intialise eta_tilde to nan
     eta_tilde = np.nan
     # loop over all values of eta
