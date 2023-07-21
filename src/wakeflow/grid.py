@@ -10,12 +10,13 @@ import matplotlib.pyplot    as plt
 import astropy.io.fits      as fits
 import shutil               as sh
 from scipy.interpolate  import RectBivariateSpline, LinearNDInterpolator
+from scipy.ndimage      import gaussian_filter
 from matplotlib.colors  import LogNorm
 from .mcfost_interface  import _read_mcfost_grid_data
 from .model_setup       import _Parameters
 from .linear_perts      import _LinearPerts
 from .non_linear_perts  import _NonLinearPerts
-from .utilities         import sigmoid_smoothing
+from .utilities         import sigmoid_smoothing, sigmoid_smoothing_3_component
 
 # NOTE: contents are intended mostly for internal use and should not really be accessed by users, but I have still provided
 # documentation in the case that advanced users want to mess around with any of it.
@@ -689,7 +690,7 @@ class _Grid:
         # update info
         self.info["Contains"] += " AND " + g.info["Contains"]
         
-    def _smooth_box(self, big_box_grid : "_Grid") -> None:
+    def _smooth_box_old(self, big_box_grid: "_Grid") -> None:
         """Under development. Smooths the solution between the linear and non-linear regimes. Currently
         only smooths in v_r (it would be easy to extend to the other components if you need it).
         """
@@ -717,6 +718,190 @@ class _Grid:
         
         # update with smoothed version
         self.v_r = smooth_both_boundary
+        
+    def _smooth_box(self) -> None:
+        """Under development. Convol
+        """
+        
+        # Standard deviation for Gaussian convolution
+        SIGMA_PHYSICAL = 0.4 * self.p.r_planet * self.p.hr_planet
+        
+        # Get global coords
+        x = self.x
+        y = self.y
+        
+        # Get pixel scale
+        PIXEL_SCALE = (y.max() - y.min()) / len(y)
+        
+        # Get sigma in pixels
+        SIGMA = SIGMA_PHYSICAL / PIXEL_SCALE
+        
+        # function for convolutions
+        def get_convolved(component, width):
+            return gaussian_filter(
+                input=component,
+                sigma=width,
+                order=0,
+                axes=(0,2),
+            )
+        
+        # convolve each component
+        self.rho   = get_convolved(self.rho, SIGMA)
+        self.v_r   = get_convolved(self.v_r, SIGMA)
+        self.v_phi = get_convolved(self.v_phi, SIGMA)
+    
+    
+    # def _smooth_box(self, grid_nl_perts: "_Grid", background_rho) -> None:
+    #     """Under development. Smooths the solution between the linear and non-linear regimes.
+    #     """
+        
+    #     sigma = grid_nl_perts.rho / background_rho
+    #     v_r   = grid_nl_perts.v_r / 1e-5
+        
+    #     # get constants
+    #     GAMMA     = self.p.gamma
+    #     CS_PLANET = self.p.c_s_planet
+    #     R_PLANET  = self.p.r_planet
+    #     HR_PLANET = self.p.hr_planet
+    #     Q_INDEX   = self.p.q
+        
+    #     # get radii
+    #     rad = self.R_xy
+    #     phi = self.PHI_xy
+        
+    #     psi = (np.power(sigma + 1, (GAMMA - 1) / 2) - 1) * ((GAMMA + 1) / (GAMMA - 1))
+
+    #     # get constants
+    #     dOmega_r = np.abs(CS_PLANET * R_PLANET**-1 * HR_PLANET**-1 * ((rad / R_PLANET)**(-3 / 2) - 1)) * rad
+    #     c_0 = CS_PLANET * (rad / R_PLANET)**(-Q_INDEX)
+
+    #     # get perturbations
+    #     unl = np.sign(rad - R_PLANET) * (2 * c_0) / (GAMMA + 1) * psi
+    #     vnl = c_0 * unl / dOmega_r
+        
+    #     # get outer and inner edge of box in global AU coords
+    #     FACTOR = 1
+    #     R_BOX_OUTER = self.p.r_planet + FACTOR * (2 * self.p.scale_box_right * self.p.l)
+    #     R_BOX_INNER = self.p.r_planet - FACTOR * (2 * self.p.scale_box_left  * self.p.l)
+        
+    #     print(f"BOX WIDTH = {R_BOX_OUTER - R_BOX_INNER}")
+        
+    #     print(f"Scale height at planet is {HR_PLANET*R_PLANET}")
+        
+    #     # perform re-weighting
+    #     # smoothed = sigmoid_smoothing(
+    #     #     f1 = v_r,
+    #     #     f2 = unl,
+    #     #     x  = rad,
+    #     #     x0 = R_BOX_OUTER,
+    #     #     a  = HR_PLANET*R_PLANET
+    #     # )
+    #     smoothed = sigmoid_smoothing_3_component(
+    #         f1 = unl,
+    #         f2 = v_r,
+    #         f3 = unl,
+    #         x = rad,
+    #         x0_1 = R_BOX_INNER,
+    #         x0_2 = R_BOX_OUTER,
+    #         a = 1. * HR_PLANET * R_PLANET,
+    #     )
+        
+    #     # get coords
+    #     x = self.x
+    #     y = self.y
+        
+    #     pixel_scale = (y.max() - y.min()) / len(y)
+    #     print(f"PIXEL SCALE = {pixel_scale}")
+        
+    #     convolved = gaussian_filter(
+    #         input = v_r,
+    #         sigma = (0.4 * HR_PLANET * R_PLANET) / pixel_scale,
+    #         order = 0,
+    #         axes = (0, 2),
+    #     )
+        
+    #     V_MAX = 0.7 * unl.max()
+    #     V_MIN = -V_MAX
+
+    #     plot_kw = dict(vmin=V_MIN, vmax=V_MAX, cmap="RdBu")
+        
+    #     fig, ax = plt.subplots(1, 3, dpi=250, figsize=[10,5])
+    #     ax[0].pcolormesh(x, y, v_r     [:,0,:].T, **plot_kw)
+    #     ax[1].pcolormesh(x, y, unl     [:,0,:].T, **plot_kw)
+    #     ax[2].pcolormesh(x, y, smoothed[:,0,:].T, **plot_kw)
+    #     #ax[2].pcolormesh(phi[:,0,:], rad[:,0,:], v_r[:,0,:] - unl[:,0,:], **plot_kw)
+        
+    #     # for i in range(3):
+    #     #     ax[i].scatter(0, R_BOX_OUTER, c="k", s=1)
+
+    #     ax[0].set_title("Solution")
+    #     ax[1].set_title("Mapped from density")
+    #     ax[2].set_title("Smoothed")
+
+    #     for i in range(3):
+    #         ax[i].axis('scaled')
+    #         ax[i].set_xticklabels([])
+    #         ax[i].set_yticklabels([])
+    #         ax[i].tick_params(axis='both', direction='in')
+
+    #     fig.subplots_adjust(wspace=0.01)
+    #     plt.show()
+        
+    #     fig, ax = plt.subplots(1, 3, dpi=250, figsize=[10,5])
+    #     ax[0].pcolormesh(x, y, v_r      [:,0,:].T, **plot_kw)
+    #     ax[1].pcolormesh(x, y, smoothed [:,0,:].T, **plot_kw)
+    #     ax[2].pcolormesh(x, y, convolved[:,0,:].T, **plot_kw)
+    #     #ax[2].pcolormesh(phi[:,0,:], rad[:,0,:], v_r[:,0,:] - unl[:,0,:], **plot_kw)
+        
+    #     # for i in range(3):
+    #     #     ax[i].scatter(0, R_BOX_OUTER, c="k", s=1)
+
+    #     ax[0].set_title("Solution")
+    #     ax[1].set_title("Smoothed")
+    #     ax[2].set_title("Convolved")
+
+    #     for i in range(3):
+    #         ax[i].axis('scaled')
+    #         ax[i].set_xticklabels([])
+    #         ax[i].set_yticklabels([])
+    #         ax[i].tick_params(axis='both', direction='in')
+
+    #     fig.subplots_adjust(wspace=0.01)
+    #     plt.show()
+        
+    #     print("NOT CONVOLVED:")
+    #     print("  positive")
+    #     print(f"    99: {np.percentile(v_r, 99):.3f}")
+    #     print(f"    95: {np.percentile(v_r, 95):.3f}")
+    #     print(f"    90: {np.percentile(v_r, 90):.3f}")
+    #     print(f"    75: {np.percentile(v_r, 75):.3f}")
+    #     print(f"    60: {np.percentile(v_r, 60):.3f}")
+    #     print("  negative")
+    #     print(f"    99: {np.percentile(-v_r, 99):.3f}")
+    #     print(f"    95: {np.percentile(-v_r, 95):.3f}")
+    #     print(f"    90: {np.percentile(-v_r, 90):.3f}")
+    #     print(f"    75: {np.percentile(-v_r, 75):.3f}")
+    #     print(f"    60: {np.percentile(-v_r, 60):.3f}")
+        
+    #     print("CONVOLVED:")
+    #     print("  positive")
+    #     print(f"    99: {np.percentile(convolved, 99):.3f}")
+    #     print(f"    95: {np.percentile(convolved, 95):.3f}")
+    #     print(f"    90: {np.percentile(convolved, 90):.3f}")
+    #     print(f"    75: {np.percentile(convolved, 75):.3f}")
+    #     print(f"    60: {np.percentile(convolved, 60):.3f}")
+    #     print("  negative")
+    #     print(f"    99: {np.percentile(-convolved, 99):.3f}")
+    #     print(f"    95: {np.percentile(-convolved, 95):.3f}")
+    #     print(f"    90: {np.percentile(-convolved, 90):.3f}")
+    #     print(f"    75: {np.percentile(-convolved, 75):.3f}")
+    #     print(f"    60: {np.percentile(-convolved, 60):.3f}")
+        
+    #     #plt.imshow(unl[:,0,:], origin="lower")
+    #     #plt.show()
+        
+        
+        
 
 #    def merge_phantom_densities(self, grid_to_merge):
 #

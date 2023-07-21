@@ -304,26 +304,6 @@ class WakeflowModel():
 
             # add the linear perturbations onto grid
             grid_lin_perts._add_linear_perturbations(lin_perts, grid_background.rho)
-            
-            # grab a box of double size as well if using smoothing
-            if params.smooth_box:
-                
-                # set box size to twice as big
-                params_s2 = deepcopy(params)
-                params_s2.scale_box_l = 2 * params.scale_box_l
-                params_s2.scale_box_r = 2 * params.scale_box_r
-                
-                # make empty grid for linear perturbations with big box
-                grid_lin_perts_s2 = _Grid(params_s2)
-                grid_lin_perts_s2._make_grid()
-                grid_lin_perts_s2._make_empty_disk()
-
-                # extract linear perturbations from file
-                lin_perts_s2 = _LinearPerts(params_s2)
-                lin_perts_s2._cut_box_annulus_segment()
-
-                # add the linear perturbations onto grid with big box
-                grid_lin_perts_s2._add_linear_perturbations(lin_perts_s2, grid_background.rho)
 
             # make empty grid for non-linear perturbations
             grid_nonlin_perts = _Grid(params)
@@ -347,15 +327,15 @@ class WakeflowModel():
 
             # merge grids for result
             if params.include_linear:
-                grid_background._merge_grids(grid_lin_perts)
+                grid_nonlin_perts._merge_grids(grid_lin_perts)
 
             # merge grids for results
             grid_background._merge_grids(grid_nonlin_perts)
 
             # if box smoothing is on
             if params.smooth_box:
-                print("Smoothing join between regimes")
-                grid_background._smooth_box(grid_lin_perts_s2)
+                print("Convolving results with Gaussian with sigma=0.4H")
+                grid_background._smooth_box()
 
             # flip results if desired
             if params.user_cw_rotation:
@@ -363,9 +343,6 @@ class WakeflowModel():
 
             # merge grids to save or plot perturbations
             if params.make_midplane_plots or params.save_perturbations:
-
-                if params.include_linear:
-                    grid_nonlin_perts._merge_grids(grid_lin_perts)
 
                 # flip results if desired
                 if params.user_cw_rotation:

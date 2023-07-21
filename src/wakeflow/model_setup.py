@@ -209,8 +209,8 @@ class _Parameters(_Constants):
         # check if box smoothing is enabled
         if self.smooth_box:
             print("WARNING: Using smooth_box=True can cause strange results.")
-            if self.grid_type != "cylindrical":
-                raise Exception("You must choose grid_type='cylindrical' to use smooth_box=True")
+            if self.grid_type != "cartesian":
+                raise Exception("You must choose grid_type='cartesian' to use smooth_box=True")
 
         # check linear box scale factor
         if self.scale_box_left != 1 or self.scale_box_right != 1:
