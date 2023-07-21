@@ -336,6 +336,7 @@ class WakeflowModel():
             if params.smooth_box:
                 print("Convolving results with Gaussian with sigma=0.4H")
                 grid_background._smooth_box()
+                grid_nonlin_perts._smooth_box()
 
             # flip results if desired
             if params.user_cw_rotation:
