@@ -9,6 +9,7 @@ import numpy                as np
 import matplotlib.pyplot    as plt
 import astropy.io.fits      as fits
 import shutil               as sh
+from copy               import copy
 from scipy.interpolate  import RectBivariateSpline, LinearNDInterpolator
 from scipy.ndimage      import gaussian_filter
 from matplotlib.colors  import LogNorm
@@ -604,6 +605,17 @@ class _Grid:
         """
 
         nonlin = NonLinearPerts
+        
+        # Copy 2d non-linear results
+        vr_2d   = copy(nonlin.vr)
+        vphi_2d = copy(nonlin.vphi)
+        rho_2d  = copy(nonlin.rho)
+        
+        # Rotate the grid as desired by the user
+        if self.p.phi_planet != 0:
+            vr_2d   = rotate_planet(vr_2d)
+            vphi_2d = rotate_planet(vphi_2d)
+            rho_2d  = rotate_planet(rho_2d)
 
         # Add velocities, identical at all heights for now
         nl_vr   = nonlin.vr  [:, np.newaxis, :]
