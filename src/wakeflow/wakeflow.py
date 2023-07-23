@@ -331,6 +331,7 @@ class WakeflowModel():
                 
             # rotate results if desired
             if params.rot_interp is True:
+                print("Rotating results to match phi_planet")
                 grid_nonlin_perts.rotate(grid_background.rho)
 
             # merge grids for results

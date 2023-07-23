@@ -10,7 +10,7 @@ import matplotlib.pyplot    as plt
 import astropy.io.fits      as fits
 import shutil               as sh
 from copy               import copy
-from scipy.interpolate  import RectBivariateSpline, LinearNDInterpolator
+from scipy.interpolate  import RectBivariateSpline, RegularGridInterpolator
 from scipy.ndimage      import gaussian_filter
 from matplotlib.colors  import LogNorm
 from .mcfost_interface  import _read_mcfost_grid_data
@@ -692,7 +692,77 @@ class _Grid:
         self.info["Contains"] += " AND " + g.info["Contains"]
         
     def rotate(self, rho_background : "_Grid.rho") -> None:
-        pass
+        
+        # copy arrays containing the perturbations
+        v_r   = copy(self.v_r)
+        v_phi = copy(self.v_phi)
+        rho   = copy(self.rho)
+        
+        # unscale rho by background density
+        rho /= rho_background
+        
+        # take only midplane solution of each
+        v_r   = v_r  [:,0,:]
+        v_phi = v_phi[:,0,:]
+        rho   = rho  [:,0,:]
+        
+        # copy points
+        x = copy(self.x)
+        y = copy(self.y)
+        
+        # copy grid
+        x_mesh = copy(self.X[:,0,:])
+        y_mesh = copy(self.Y[:,0,:])
+        
+        # rotation of phi_planet
+        rot_x_mesh =  np.cos(self.p.phi_planet) * x_mesh + np.sin(self.p.phi_planet) * y_mesh
+        rot_y_mesh = -np.sin(self.p.phi_planet) * x_mesh + np.cos(self.p.phi_planet) * y_mesh
+        
+        # interpolation functions
+        v_r_func = RegularGridInterpolator(
+            points = (x, y),
+            values = v_r,
+            method = 'linear',
+            bounds_error = False,
+            fill_value = 0.0,
+        )
+        # interpolation functions
+        v_phi_func = RegularGridInterpolator(
+            points = (x, y),
+            values = v_phi,
+            method = 'linear',
+            bounds_error = False,
+            fill_value = 0.0,
+        )
+        # interpolation functions
+        rho_func = RegularGridInterpolator(
+            points = (x, y),
+            values = rho,
+            method = 'linear',
+            bounds_error = False,
+            fill_value = 0.0,
+        )
+        
+        # get points to evaluate over
+        points = np.array([rot_x_mesh.flatten(), rot_y_mesh.flatten()]).T
+        
+        # evalute over inverse rotation grid
+        v_r_rot   = v_r_func  (points)
+        v_phi_rot = v_phi_func(points)
+        rho_rot   = rho_func  (points)
+        
+        # reshape
+        v_r_rot   = v_r_rot  .reshape(v_r.shape)
+        v_phi_rot = v_phi_rot.reshape(v_phi.shape)
+        rho_rot   = rho_rot  .reshape(rho.shape)
+        
+        plt.imshow(v_r_rot, origin="lower")
+        plt.show()
+        
+        # add back to results
+        self.v_r   = v_r_rot  [:, np.newaxis, :]
+        self.v_phi = v_phi_rot[:, np.newaxis, :]
+        self.rho   = rho_rot  [:, np.newaxis, :] * rho_background
         
     def _smooth_box_old(self, big_box_grid: "_Grid") -> None:
         """Under development. Smooths the solution between the linear and non-linear regimes. Currently

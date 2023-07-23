@@ -211,6 +211,10 @@ class _Parameters(_Constants):
             elif self.write_FITS != True:
                 raise Exception("Cannot run mcfost without writing FITS file (ie. require write_FITS: True)")
 
+        # check for planet rotation
+        if self.rot_interp is True and self.grid_type != "cartesian":
+            raise Exception("Currently you must choose grid_type='cartesian' to use non-zero phi_planet.")
+
         # check if box smoothing is enabled
         if self.smooth_box:
             print("WARNING: Using smooth_box=True can cause strange results.")

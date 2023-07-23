@@ -604,7 +604,7 @@ class _NonLinearPerts():
 
             [x_grid, y_grid] = np.meshgrid(x, y)
             r_grid = np.sqrt(x_grid**2 + y_grid**2)
-            pphi_grid = np.arctan2(y_grid, x_grid) - self.p.phi_planet
+            pphi_grid = np.arctan2(y_grid, x_grid) #- self.p.phi_planet
 
             tt = _t_vector(r_grid, Rp, hr, q, p, m_p, m_th)
             if False:
@@ -662,7 +662,7 @@ class _NonLinearPerts():
         # if using a cylindrical grid
         else:
             r = self.g.r
-            phi = self.g.phi - self.p.phi_planet
+            phi = self.g.phi #- self.p.phi_planet
 
             r_grid, pphi_grid = np.meshgrid(r, phi)
 
