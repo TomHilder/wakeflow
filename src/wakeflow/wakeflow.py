@@ -44,7 +44,7 @@ class WakeflowModel():
         r_outer:            float = 500,
         r_inner:            float = 100,
         r_planet:           float = 250,
-        phi_planet:         float = 0,
+        phi_planet:         float = 0.0,
         r_ref:              float = None,
         r_c:                float = 0,
         z_max:              float = 3,

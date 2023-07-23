@@ -125,7 +125,6 @@ class _Parameters(_Constants):
         self.box_warp             = bool (config["box_warp"])
         self.use_box_IC           = bool (config["use_box_IC"])
         self.tf_fac               = float(config["tf_fac"])
-        self.rot_interp           = bool (config["rot_interp"])
         self.r_cut_inner_fac      = float(config["r_cut_inner_fac"])
         
         # Choice of physics
@@ -151,6 +150,12 @@ class _Parameters(_Constants):
         #    self.a_cw = -1
         #else:
         self.a_cw = 1
+        
+        # check if phi planet is not zero
+        if self.phi_planet != 0.:
+            self.rot_interp = True
+        else:
+            self.rot_interp = False
 
         # get height scale at reference radius
         self.h_ref = self.hr * self.r_ref
