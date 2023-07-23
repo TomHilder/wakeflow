@@ -328,6 +328,10 @@ class WakeflowModel():
             # merge grids for result
             if params.include_linear:
                 grid_nonlin_perts._merge_grids(grid_lin_perts)
+                
+            # rotate results if desired
+            if params.rot_interp is True:
+                grid_nonlin_perts.rotate(grid_background.rho)
 
             # merge grids for results
             grid_background._merge_grids(grid_nonlin_perts)

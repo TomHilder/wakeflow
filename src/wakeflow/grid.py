@@ -605,17 +605,6 @@ class _Grid:
         """
 
         nonlin = NonLinearPerts
-        
-        # # Copy 2d non-linear results
-        # vr_2d   = copy(nonlin.vr)
-        # vphi_2d = copy(nonlin.vphi)
-        # rho_2d  = copy(nonlin.rho)
-        
-        # # Rotate the grid as desired by the user
-        # if self.p.phi_planet != 0:
-        #     vr_2d   = rotate_planet(vr_2d)
-        #     vphi_2d = rotate_planet(vphi_2d)
-        #     rho_2d  = rotate_planet(rho_2d)
 
         # Add velocities, identical at all heights for now
         nl_vr   = nonlin.vr  [:, np.newaxis, :]
@@ -701,6 +690,9 @@ class _Grid:
 
         # update info
         self.info["Contains"] += " AND " + g.info["Contains"]
+        
+    def rotate(self, rho_background : "_Grid.rho") -> None:
+        pass
         
     def _smooth_box_old(self, big_box_grid: "_Grid") -> None:
         """Under development. Smooths the solution between the linear and non-linear regimes. Currently
