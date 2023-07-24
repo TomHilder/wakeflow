@@ -800,25 +800,47 @@ class _Grid:
         # Standard deviation for Gaussian convolution
         SIGMA_PHYSICAL = 0.4 * self.p.r_planet * self.p.hr_planet
         
-        # Get global coords
-        x = self.x
-        y = self.y
+        if self.p.grid_type == 'mcfost':
+            
+            # Get global coords
+            r = self.r
+            
+            # Get pixel scale near planet
+            ind = np.argmin(r < self.p.r_planet)
+            PIXEL_SCALE = (r[ind+1] - r[ind])
+            
+            # Get Sigma in pixels
+            SIGMA = SIGMA_PHYSICAL / PIXEL_SCALE
+            
+            # function for convolutions
+            def get_convolved(component, width):
+                return gaussian_filter(
+                    input=component,
+                    sigma=width,
+                    order=0,
+                    axes=(2,),
+                )
+                     
+        else:
         
-        # Get pixel scale
-        PIXEL_SCALE = (y.max() - y.min()) / len(y)
-        
-        # Get sigma in pixels
-        SIGMA = SIGMA_PHYSICAL / PIXEL_SCALE
-        
-        # function for convolutions
-        def get_convolved(component, width):
-            return gaussian_filter(
-                input=component,
-                sigma=width,
-                order=0,
-                axes=(0,2),
-            )
-        
+            # Get global coords
+            y = self.y
+            
+            # Get pixel scale
+            PIXEL_SCALE = (y.max() - y.min()) / len(y)
+            
+            # Get sigma in pixels
+            SIGMA = SIGMA_PHYSICAL / PIXEL_SCALE
+            
+            # function for convolutions
+            def get_convolved(component, width):
+                return gaussian_filter(
+                    input=component,
+                    sigma=width,
+                    order=0,
+                    axes=(0,2),
+                )
+            
         # convolve each component
         self.rho   = get_convolved(self.rho, SIGMA)
         self.v_r   = get_convolved(self.v_r, SIGMA)
