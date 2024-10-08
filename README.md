@@ -185,7 +185,7 @@ If you are experiencing issues with `wakeflow`, please try the following:
 
 If you are having difficulties installing or using `wakeflow`, please let us know! We are happy to answer any questions or provide assistance. 
 
-Thomas Hilder - thil0004@student.monash.edu
+Thomas Hilder - Thomas.Hilder@monash.edu
 
 Project Link: [https://github.com/TomHilder/wakeflow](https://github.com/TomHilder/wakeflow)
 
